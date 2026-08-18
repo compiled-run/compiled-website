@@ -659,7 +659,7 @@ const SIDEBAR_WIDEN: Record<string, number> = { async: 7, storage: 7 };
  * splits the pair evenly, clipping both. Measured off the light half; the dark
  * half shares the layout.
  */
-const SIDEBAR_BAND_OVERRIDE: Record<string, [number, number]> = { lists: [666, 712], async: [714, 759] };
+const SIDEBAR_BAND_OVERRIDE: Record<string, [number, number]> = { lists: [666, 709], async: [714, 759] };
 
 /** How many icons sit in each titled group of a column, top to bottom. */
 const SIDEBAR_GROUPS = { A: [3, 7], B: [4, 3, 1] } as const;
@@ -773,6 +773,22 @@ function sidebarRows(
  * thresholded, so the sticker keeps its white border and the drop shadow fades
  * out instead of ending on a hard edge.
  */
+/**
+ * The top and bottom three rows of a piece are where a neighbour's sticker glow
+ * survives the crop; fading them out costs nothing of the icon, whose own ink sits
+ * inside the grown band.
+ */
+function trimSidebarEdges(file: string, size: { w: number; h: number }): void {
+	magick([
+		file,
+		'(', '+clone', '-alpha', 'extract',
+		'(', '-size', `${size.w}x${size.h}`, 'xc:white', '-fill', 'black',
+		'-draw', `rectangle 0,0 ${size.w},2`, '-draw', `rectangle 0,${size.h - 3} ${size.w},${size.h}`, ')',
+		'-compose', 'multiply', '-composite', ')',
+		'-alpha', 'off', '-compose', 'copy_opacity', '-composite', file,
+	]);
+}
+
 function cutSidebarPiece(sheet: string, crop: string, background: readonly number[], out: string): { w: number; h: number } {
 	const piece = resolve(work, 'sidebar-piece.png');
 	const pieceMask = resolve(work, 'sidebar-piece-mask.png');
@@ -907,6 +923,15 @@ function cutSidebar(): { name: string; variant: string; w: number; h: number }[]
 				const pad = 2;
 				const override = SIDEBAR_BAND_OVERRIDE[name];
 				if (override) band = override;
+				// The dark half's sticker glow reaches past the light silhouette, so
+				// its rows grow toward the neighbours, stopping halfway to each.
+				if (variant === 'dark') {
+					const prev = bands[index - 1];
+					const next = bands[index + 1];
+					const up = prev ? Math.floor((prev[1] + band[0]) / 2) + 1 : band[0] - 10;
+					const down = next ? Math.floor((band[1] + next[0]) / 2) - 1 : band[1] + 10;
+					band = [Math.max(up, band[0] - 6), Math.min(down, band[1] + 1)];
+				}
 				const [x0, x1] = column[key];
 				const right = Math.min(half - 1, x1 + (SIDEBAR_WIDEN[name] ?? 0));
 				const top = Math.max(0, band[0] - pad);
@@ -914,6 +939,7 @@ function cutSidebar(): { name: string; variant: string; w: number; h: number }[]
 				const crop = `${right - x0}x${bottom - top + 1}+${x0}+${top}`;
 				const out = resolve(outDir, `${name}-${variant}.png`);
 				const size = cutSidebarPiece(halfPath, crop, column.background, out);
+				trimSidebarEdges(out, size);
 				manifest.push({ name, variant, w: size.w, h: size.h });
 				console.log(`  ${name}-${variant} ${size.w}x${size.h}`);
 			});

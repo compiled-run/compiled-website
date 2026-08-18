@@ -47,7 +47,7 @@
 			"name": "lists",
 			"variant": "light",
 			"w": 69,
-			"h": 51
+			"h": 48
 		},
 		{
 			"name": "async",
@@ -119,19 +119,19 @@
 			"name": "first-app",
 			"variant": "dark",
 			"w": 81,
-			"h": 67
+			"h": 68
 		},
 		{
 			"name": "reading-tsrx",
 			"variant": "dark",
 			"w": 68,
-			"h": 76
+			"h": 77
 		},
 		{
 			"name": "state",
 			"variant": "dark",
 			"w": 81,
-			"h": 78
+			"h": 79
 		},
 		{
 			"name": "computed",
@@ -155,7 +155,7 @@
 			"name": "lists",
 			"variant": "dark",
 			"w": 70,
-			"h": 51
+			"h": 52
 		},
 		{
 			"name": "async",
@@ -173,25 +173,25 @@
 			"name": "components",
 			"variant": "dark",
 			"w": 106,
-			"h": 67
+			"h": 72
 		},
 		{
 			"name": "elements",
 			"variant": "dark",
 			"w": 96,
-			"h": 60
+			"h": 64
 		},
 		{
 			"name": "storage",
 			"variant": "dark",
 			"w": 87,
-			"h": 84
+			"h": 86
 		},
 		{
 			"name": "shared",
 			"variant": "dark",
 			"w": 99,
-			"h": 42
+			"h": 43
 		},
 		{
 			"name": "pages",
@@ -209,7 +209,7 @@
 			"name": "data",
 			"variant": "dark",
 			"w": 90,
-			"h": 82
+			"h": 83
 		},
 		{
 			"name": "how-it-works",
