@@ -1,4 +1,4 @@
-import Sidebar from './components/docs/Sidebar.tsrx';
+import Sidebar from './components/docs/sidebar.tsrx';
 import stylesheet from './styles/global.css?url';
 
 export default function Document({

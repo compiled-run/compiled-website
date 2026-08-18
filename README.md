@@ -1,8 +1,21 @@
 # compiled-website
 
 The Markless documentation site, served at `compiled.run/markless`. It is a real Markless app built
-on the published `@markless/*` packages, so everything on it is doing what a reader's own app would
-do.
+on released `@markless/*` packages, so everything on it is doing what a reader's own app would do.
+
+## Where the framework comes from right now
+
+**Interim.** The site is on `@markless/*` 0.3.0, which is not on npm yet, so it installs nine
+tarballs committed under `vendor/` (596 KB total) and packed from the framework repo's `main` at
+release commit `b12b7806`. The four packages the app names directly carry a `file:vendor/…tgz`
+specifier; the five they pull in transitively are pinned to their tarballs through `overrides`,
+because otherwise npm would go looking for 0.3.0 on the registry and not find it.
+
+When 0.3.0 is published: delete `vendor/`, drop the `@markless/*` entries from `overrides`, and put
+`^0.3.0` back in `dependencies` and `devDependencies`.
+
+The `"@tsrx/core": "0.1.58"` override is not interim in the same way — it works around an
+unpublished `@tsrx/runtime`, and 0.3.0 still needs it. `NOTES.md` findings 1 and 13 have the detail.
 
 ## Run it
 
@@ -61,5 +74,5 @@ In a `tsrx` fence, the TSRX constructs and the framework calls carry a hover doc
 sentences live in `tooling/tsrx-docs.ts`. There is no JavaScript behind them; the box is a child of
 the token, shown by CSS on hover and on focus. `NOTES.md` section 9 says why it is not an island.
 
-`NOTES.md` records what published 0.2.2 could and could not do while this was built. Read it before
+`NOTES.md` records what 0.2.2 and then 0.3.0 could and could not do while this was built. Read it before
 changing the shell or the build config.

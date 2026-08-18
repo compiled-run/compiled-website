@@ -24,11 +24,27 @@ check(
 	'this does not look like a markless app (no @markless/* dependencies)',
 );
 
-const versions = new Set(marklessDeps.map(([, version]) => version));
+// Compare what is INSTALLED, not what is declared. Two `^` ranges can resolve to
+// different versions, and four `file:` tarballs are four different strings for one
+// version; only the installed manifest answers "is this app on one Markless".
+const installedVersion = (name) => {
+	try {
+		return JSON.parse(
+			readFileSync(resolve(root, 'node_modules', name, 'package.json'), 'utf8'),
+		).version;
+	} catch {
+		return undefined;
+	}
+};
+const resolvedVersions = marklessDeps.map(([name, declared]) => [
+	name,
+	installedVersion(name) ?? declared,
+]);
+const versions = new Set(resolvedVersions.map(([, version]) => version));
 check(
 	'markless dependency versions aligned',
 	versions.size <= 1,
-	[...versions].join(' vs '),
+	resolvedVersions.map(([name, version]) => `${name}@${version}`).join(', '),
 	'mismatched @markless/* versions cause protocol drift between compiler and runtime — align them',
 );
 

@@ -2,12 +2,13 @@
 // plugin renders into shiki-highlighted markup, and wraps the TSRX tokens
 // inside them in hover targets.
 //
-// Colours are not baked in. The theme is shiki's CSS-variable theme with a
-// `--code-` prefix, so every colour resolves against the variables declared in
-// styles/global.css, which are themselves derived from the site's paper tokens.
+// Colours come from shiki's built-in `github-light` theme, so the token palette
+// is one somebody already balanced rather than a mapping invented here. The two
+// colours the theme picks for the surface are dropped on the way out: the block
+// keeps the site's paper ground and ink body text (see styles/global.css).
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { createCssVariablesTheme, createHighlighter, type HighlighterGeneric } from 'shiki';
+import { createHighlighter, type HighlighterGeneric } from 'shiki';
 import { docForToken, knownTokens, tooltipLabel, tooltipTitle } from './tsrx-docs.ts';
 
 /** Fence language -> the language shiki is asked for. */
@@ -22,7 +23,7 @@ const FENCE_ALIASES: Readonly<Record<string, string>> = {
 	zsh: 'shellscript',
 };
 
-const THEME_NAME = 'paper';
+const THEME_NAME = 'github-light';
 
 let highlighterPromise: Promise<HighlighterGeneric<string, string>> | undefined;
 
@@ -32,9 +33,7 @@ export function getHighlighter(): Promise<HighlighterGeneric<string, string>> {
 			await readFile(fileURLToPath(new URL('./tsrx.tmLanguage.json', import.meta.url)), 'utf8'),
 		) as Record<string, unknown>;
 		return createHighlighter({
-			themes: [
-				createCssVariablesTheme({ name: THEME_NAME, variablePrefix: '--code-', fontStyle: true }),
-			],
+			themes: [THEME_NAME],
 			langs: [
 				'javascript',
 				'typescript',
@@ -140,6 +139,19 @@ export function addTsrxHovers(html: string): string {
 }
 
 /**
+ * Drops the theme's own surface colours so the block sits on the site's paper
+ * rather than on the theme's white slab: the `<pre>` loses its inline style, and
+ * every span painted the theme's default foreground is repainted with the page's
+ * ink. Token colours are left exactly as the theme chose them.
+ */
+export function useSiteSurface(html: string, defaultForeground: string): string {
+	return html
+		.replace(/(<pre class="shiki[^"]*")\s+style="[^"]*"/, '$1')
+		.replaceAll(`color:${defaultForeground}`, 'color:var(--ink)')
+		.replaceAll(`color:${defaultForeground.toLowerCase()}`, 'color:var(--ink)');
+}
+
+/**
  * Replaces every fenced block in one static-HTML chunk. Fences whose language
  * shiki does not know are left exactly as the MDX plugin wrote them.
  */
@@ -148,11 +160,15 @@ export async function highlightFences(html: string): Promise<string> {
 	FENCE.lastIndex = 0;
 	const highlighter = await getHighlighter();
 	const loaded = new Set(highlighter.getLoadedLanguages());
+	const defaultForeground = highlighter.getTheme(THEME_NAME).fg;
 	return html.replace(FENCE, (match, fenceLanguage: string, encoded: string) => {
 		const language = FENCE_ALIASES[fenceLanguage] ?? fenceLanguage;
 		if (!loaded.has(language)) return match;
-		const code = decodeEntities(encoded).replace(/\n$/, '');
+		const code = decodeEntities(encoded).replace(/\n+$/, '');
 		const rendered = highlighter.codeToHtml(code, { lang: language, theme: THEME_NAME });
-		return addTsrxHovers(rendered).replace('<pre class="shiki', `<pre data-lang="${fenceLanguage}" class="shiki`);
+		return addTsrxHovers(useSiteSurface(rendered, defaultForeground)).replace(
+			'<pre class="shiki',
+			`<pre data-lang="${fenceLanguage}" class="shiki`,
+		);
 	});
 }

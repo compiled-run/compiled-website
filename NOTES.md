@@ -177,12 +177,224 @@ on nodes it does not own, or wakes behaviours without an event.
 
 ## 10. Smaller things learned
 
-- Code blocks keep the site's Joy Elia face rather than switching to a monospace stack. Nothing
-  forced that; it is just the look the rest of the site already had, and it is a one-line change in
-  `styles/global.css` if it should be monospace instead.
-- The tooltip is pinned to the bottom of its code block, and the block reserves a strip of padding
-  under the code for it. A box that scrolls clips its children at the padding edge, so a tooltip
-  positioned any other way is cut off by the block's own `overflow-x: auto`.
+- Fenced blocks are monospace (`ui-monospace, 'SF Mono', Menlo, Consolas, monospace`); inline code
+  inside a sentence stays on Joy Elia so it still reads as part of the sentence.
+- The tooltip is pinned to the bottom of its code block. A box that scrolls clips its children at
+  the padding edge, so a tooltip positioned any other way is cut off by the block's own
+  `overflow-x: auto`. The strip of padding it needs is only added while a token is hovered or
+  focused (`pre.shiki:has(.tsrx-hover:hover)`), so a block at rest ends at its last line.
 - The site-wide prose glossary from the reference site is not built. Highlighting and the construct
   tooltips were the must; the glossary needs a pass over the prose that this unit was told not to
   touch.
+
+## 11. T005: an MDX island whose update has to evaluate app code never resumes
+
+This is the finding that decides which widgets the docs can ship on 0.2.2, and it is not caused by
+the highlighter: it reproduces with `tooling/highlight-mdx.ts` short-circuited to a no-op.
+
+Two widgets on this site work. Two do not:
+
+| widget | page | what it does | result |
+| --- | --- | --- | --- |
+| `counter.tsrx` | landing, state | one state, one text binding, one button | resumes, count moves |
+| `two-variables.tsrx` | state | one state, two text bindings, one button | resumes, number moves |
+| `cart-total.tsrx` | computed | two states, a `computed()`, three text bindings | never updates |
+| `three-differences.tsrx` | reading a `.tsrx` file | one state, `class={ternary}` bindings, three buttons | never updates |
+
+On the two that fail, every click throws in the page, twice:
+
+```
+Unknown Markless MDX symbol c0:symbol:5     (cart total)
+Unknown Markless MDX symbol c0:symbol:4     (three differences)
+```
+
+The message is thrown by `loadMdxSymbol` in
+`node_modules/@markless/router/dist/vite/runtime/mdx-route.js`: no child in the composed MDX view
+had a `symbolPrefix` matching the id with an `output.loadSymbol` on it. The client chunk for the
+widget does exist and does carry those symbols (`.output/public/build/chunk-Q3a3i8Ao.js` holds
+`symbol:0` through `symbol:3` and a `loadSymbol`), so the code shipped; the MDX child registry is
+what does not resolve it.
+
+What was ruled out, each by a build and a browser run:
+
+- **the highlighter**: same failure with the transform disabled.
+- **the number of symbols on the page**: trimming the cart to one button and two bindings moved the
+  failing id from `symbol:5` to `symbol:3` and changed nothing else.
+- **the two-file wrapper**: `counter-demo.tsrx` wraps `counter.tsrx` exactly the same way and works.
+- **having more than one button**: the one-button cart still fails.
+
+What the two failing widgets have in common is that their update is not a value the resume payload
+can write straight into the DOM. A `computed()` has to be re-derived, and a `class={a ? b : c}` has
+to be evaluated, and both of those are app code. The two that work only ever write a number the
+payload already holds, and their resume log agrees: `0.0 KB app executed`.
+
+So on 0.2.2, an interactive doc widget inside `.mdx` is limited to updates the payload can perform
+without executing app code. That rules out the two demos this batch needs most, since deriving a
+value is the whole subject of the computed page. It wants an owner decision (ship them as static
+illustrations, replace them with widgets that only move a stored number, or fix the router's MDX
+symbol registration) before those two pages can be called done.
+
+## 12. T005: smaller things
+
+- The code theme is shiki's built-in `github-light`. `tooling/highlight-code.ts` strips the theme's
+  own `<pre>` style so the block keeps the site's paper surface, and repaints the theme's default
+  foreground with `var(--ink)`, so only the token colours come from the theme.
+- Because token colours are now inline `style="color:#…"` rather than `--code-token-*` variables,
+  anything matching on those variable names (the witness did) has to match on `color` instead.
+
+## 13. T015: the site now builds against 0.3.0 tarballs, and finding 11 survives the move
+
+The site no longer resolves `@markless/*` from the registry. It installs nine tarballs packed from
+the framework repo's `main` at release commit `b12b7806` (every manifest at `0.3.0`), committed
+under `vendor/` at 596 KB total:
+
+```
+markless-analyzer  markless-bundler  markless-compiler  markless-core  markless-router
+markless-runtime   markless-serializer  markless-typescript-plugin  markless-web
+```
+
+`pnpm pack` rewrites the `workspace:`/`catalog:` ranges, so every packed manifest asks for
+`@markless/<name>@0.3.0` exactly. npm would fetch those from the registry, where 0.3.0 does not
+exist yet, so the five transitive ones are pinned to their tarballs through `overrides`. npm refuses
+an `overrides` entry that contradicts a direct dependency (`EOVERRIDE`), so the four direct ones
+carry the `file:` specifier in `dependencies`/`devDependencies` instead.
+
+**This is interim.** When 0.3.0 is published, delete `vendor/`, delete the `@markless/*` entries
+from `overrides`, and put `^0.3.0` back in `dependencies`/`devDependencies`.
+
+Two things that did not change on the move:
+
+- **Finding 1 still holds.** The `@tsrx/core` catalog range in the framework repo is still
+  `^0.1.58`, so the packed 0.3.0 manifests still ask for `^0.1.58`, which still resolves to
+  `0.1.60`, which still depends on the unpublished `@tsrx/runtime@0.1.1`. Proven by installing the
+  same package.json with only the override removed: `npm error 404 ... @tsrx/runtime@0.1.1`. The
+  `"overrides": { "@tsrx/core": "0.1.58" }` pin stays.
+- **Finding 11 still holds.** `cart-total` and `three-differences` still never update. Same message,
+  same two symbols, thrown twice per click.
+
+`scripts/markless-doctor.mjs` compares the *installed* version of each `@markless/*` package now
+rather than the declared specifier. Four `file:` tarball paths are four different strings for one
+version, and two `^` ranges can resolve to two different versions, so reading the installed manifest
+is both what makes the check pass here and a stricter test than the one it replaces.
+
+## 14. T015: why an MDX island that derives a value never resumes — the prefix is dropped
+
+Finding 11 said the two widgets fail and named what they have in common. On 0.3.0 the stack names
+the mechanism, and the served payload proves it. This is a framework defect, not an app mistake, and
+no app-side shape avoids it.
+
+### What happens
+
+Clicking either widget throws in the page, twice:
+
+```
+Unknown Markless MDX symbol c0:symbol:5      (cart total, /markless/concepts/computed)
+Unknown Markless MDX symbol c0:symbol:4      (three differences, /markless/start/reading-tsrx)
+
+Error: Unknown Markless MDX symbol c0:symbol:5
+    at u (…/build/chunk-CGo67nRf.js)                       <- loadMdxSymbol
+    at Object.v [as loadSymbol] (…/build/chunk-HUsBH6rf2.js)  <- marklessMdxLoadSymbol
+    at Object.t [as refreshSyncComputed] (…/build/chunk-C-_1mj0H.js)
+    at Object.run (…/build/chunk-ClbziJ0e.js)
+```
+
+`refreshSyncComputed` is the tell. Both failing widgets have a derived value — a `computed()` in the
+cart, a `class={ternary}` in the explorer — and re-deriving it is the only path on this site that
+calls `loadSymbol` at all. The two widgets that work resume with `0.0 KB app executed`: they never
+ask for a symbol, so they never hit this.
+
+### Two namespaces, one of them not applied
+
+An MDX page gives each imported component a prefix `m0:`, `m1:`, `m2:` (`renderSymbolLoaders` in
+`@markless/router` `src/vite/mdx.ts`). Inside a `.tsrx` component, the compiler gives each imported
+child edge a prefix `c0:`, `c1:` (`symbolPrefix: edge.importSource ? \`c${index}:\` : ''` in
+`@markless/compiler` `src/passes/public-render/`). `cart-total-demo.tsrx` is MDX component 1 and
+composes `cart-total.tsrx` as its child 0, so the fully qualified id is `m1:c0:symbol:5`.
+
+The served payload for `/markless/concepts/computed` carries both spellings:
+
+```json
+"hostNodeId":"m1:c0:h1"                                    (view payload — both prefixes)
+"computed":[{"graphNodeId":"computed:total","name":"total",
+             "deriveSymbolId":"c0:symbol:5", …}]           (state payload — m1: missing)
+```
+
+The view payload is right and the state payload is wrong, and the two are built by different
+functions in `@markless/router` `src/vite/runtime/mdx-route.ts`:
+
+- `composeMdxView` walks each child through `appendMdxChildView`, which applies
+  `child.hostPrefix` to every `hostNodeId` and `child.symbolPrefix` to every `symbolIds` entry, and
+  `prefixMdxSymbolRecord` does the same for `domUpdates` and `behaviors`. Hence `m1:c0:h1`.
+- `composeMdxState` flattens `state.cells` and `state.computed` verbatim:
+
+  ```ts
+  cells: childStates.flatMap((state) => state.cells ?? []),
+  computed: childStates.flatMap((state) => state.computed ?? []),
+  ```
+
+  It never sees `child.symbolPrefix`. The `deriveSymbolId` inside a computed record therefore ships
+  in the child's own namespace, `c0:symbol:5`.
+
+At resume, `refreshSyncComputed` reads `deriveSymbolId` and calls `marklessMdxLoadSymbol`. Its
+`children` argument defaults to `[]` in the browser — the array `renderMdxChild` fills is a
+server-side local — so the only table left is `marklessMdxSymbolLoaders`, keyed `m0:`/`m1:`/`m2:`.
+Nothing starts with those, and `loadMdxSymbol` returns
+`Promise.reject(new Error('Unknown Markless MDX symbol …'))`.
+
+Emitted loader table, read out of the built page chunk:
+
+```js
+b = [{ prefix: `m0:`, loadSymbol(e) { return import(`./chunk-CLkHSEId.js`).then(t => t.loadSymbol(e.slice(3))) } },
+     { prefix: `m1:`, … }, { prefix: `m2:`, … }]
+```
+
+### Minimal reproduction
+
+Three files and a click. Nothing here is exotic; it is the shortest MDX island that derives a value.
+
+```tsx
+// components/demos/total.tsrx
+export default component Total() {
+  let count = state(0);
+  const total = computed(() => count * 20);
+  <p>{'Total: ' + total}</p>
+  <button onClick={() => { count = count + 1; }}>{'Add one'}</button>
+}
+```
+
+```tsx
+// components/demos/total-demo.tsrx  (the wrapper MDX needs, because MDX cannot nest components)
+import Total from './total.tsrx';
+export default component TotalDemo() {
+  <div class="playground"><Total /></div>
+}
+```
+
+```mdx
+{/* pages/…/anything.mdx */}
+import TotalDemo from '../../components/demos/total-demo.tsrx';
+
+<TotalDemo />
+```
+
+`npm run build`, serve `.output`, click **Add one**. The text stays at `Total: 0` and the page
+throws `Unknown Markless MDX symbol c0:symbol:<n>`. Grep the served HTML for `deriveSymbolId` and
+it reads `c0:symbol:<n>` while the neighbouring `hostNodeId` reads `m0:c0:h<n>`.
+
+### The fix is in the framework, and the shape of it
+
+`composeMdxState` has to prefix the symbol ids it copies the way `composeMdxView` already does —
+`deriveSymbolId` on each computed record, and whatever equivalent a cell record carries — using the
+same `child.symbolPrefix`. Once the id reads `m1:c0:symbol:5`, the `m1:` loader matches and hands
+`c0:symbol:5` to the demo module's own `loadSymbol`, which is the namespace that module expects.
+That last hop is the reading of the code, not something this run proved end to end; it needs a
+framework test, not an app workaround.
+
+### What this rules out for the docs
+
+Any MDX island whose update derives a value is broken, wrapper or no wrapper. Removing the wrapper
+does not help: with no child edge the id would be `symbol:5`, which still matches no `m<n>:` loader.
+(That variant was reasoned from the emit, not built.) So on 0.3.0 an interactive doc widget in
+`.mdx` is still limited to updates that write a stored number straight into the DOM, which is
+exactly what the computed page cannot be taught with. The two pages that need these widgets stay
+blocked on the framework fix.

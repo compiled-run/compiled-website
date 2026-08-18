@@ -1,4 +1,4 @@
-import Counter from './Counter.tsrx';
+import Counter from './counter.tsrx';
 
 export default function CounterDemo() @{
 	<div class="playground">
