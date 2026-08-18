@@ -40,6 +40,66 @@ npm run preview    # serve the production build
 Pages live under `pages/markless/`, which is what puts them at `/markless/…`; `vite.config.ts` sets
 the matching `base` and `nitro.baseURL`.
 
+## Deploy
+
+The site is its own Vercel project, and `compiled.run` proxies it. Nothing about the deploy is
+special: the whole point of the base path is that this project genuinely serves `/markless/…`, so
+the proxy in front of it is a path-preserving rewrite and not a rewrite that has to strip anything.
+
+| | |
+| --- | --- |
+| Repo | `https://github.com/compiled-run/compiled-website` |
+| Vercel project | `markless-docs`, team `jack-shelton` (`team_4TrBQsvIkFM0lYTqh08Fqxgd`), project `prj_rv06xPVYEu7z8GdStWatxRbjV8tm` |
+| Production alias | `https://markless-docs.vercel.app/markless` |
+| Public path | `https://compiled.run/markless` once the rewrite below is merged |
+
+### How a deploy happens
+
+`.github/workflows/deploy.yml` runs on every push to `main`: `npm ci`, then a build with nitro's
+Vercel preset, then `vercel deploy --prebuilt --prod`, then it curls three routes on the production
+alias and fails the run if any of them is not 200. The org and project ids are plain values in the
+workflow; the one secret it needs is `VERCEL_TOKEN`, which only the account owner can create:
+
+```sh
+# owner-only: create a token at https://vercel.com/account/settings/tokens, then
+gh secret set VERCEL_TOKEN --repo compiled-run/compiled-website
+```
+
+Until that secret exists the workflow builds and then stops at the deploy step with an explicit
+error, rather than deploying nothing quietly.
+
+To deploy by hand from a clean checkout:
+
+```sh
+npm ci
+NITRO_PRESET=vercel npm run build          # writes .vercel/output (Build Output API v3)
+npx --yes vercel@57.0.0 deploy --prebuilt --prod --yes --scope jack-shelton
+```
+
+The preset is what turns `.output/` into `.vercel/output/`: `static/markless/**` for the files the
+CDN serves and one `__server` function for everything else. `vercel.json` records the same build for
+a Vercel-side build, should the project ever be connected to the repo. It is not connected today:
+`vercel link` reported `You need to add a Login Connection to your GitHub account first`, which is a
+click in the owner's Vercel account, so CI is the only path to production.
+
+Per-deployment URLs (`markless-docs-<hash>-jack-shelton.vercel.app`) answer 302 to Vercel's SSO gate
+because deployment protection is on for the team. The production alias is not protected and answers
+200, which is why every check — the workflow's and your own — runs against the alias.
+
+### What `compiled-run/website` needs
+
+Two entries in that repo's `vercel.json` `rewrites` array, after the `yuku-tsrx` pair. `:path*` does
+not match the bare path, so both are needed:
+
+```json
+{ "source": "/markless", "destination": "https://markless-docs.vercel.app/markless" },
+{ "source": "/markless/:path*", "destination": "https://markless-docs.vercel.app/markless/:path*" }
+```
+
+No `headers` entry: that repo's COOP/COEP block is only for projects that need cross-origin
+isolation, and this site self-hosts its fonts. The same PR adds a `<a href="/markless">Markless
+&rarr;</a>` link to that repo's `index.html` and a row to its Projects table.
+
 ## The document head, and what a crawler is given
 
 `nav.ts` is the only place a page's title and its one-sentence description are written. Every entry
