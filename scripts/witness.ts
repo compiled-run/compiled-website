@@ -807,6 +807,79 @@ try {
 		}
 		await page.mouse.move(0, 0);
 
+		// --- batch 2: events, conditionals, lists ------------------------------
+		// Three pages, each with a widget whose whole teaching moment is a thing
+		// the reader does. The checks below do exactly what the page asks the
+		// reader to do, and assert what the page then claims they will see.
+		for (const href of [
+			'/markless/concepts/events',
+			'/markless/concepts/conditionals',
+			'/markless/concepts/lists',
+		]) {
+			const response = await fetch(`${origin}${href}`);
+			check(response.status === 200, `GET ${href}`, String(response.status));
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const heading = ((await page.locator('h1').first().textContent()) ?? '').trim();
+			check(heading.length > 0, `${href} renders its h1 in the browser`, heading);
+			await page.screenshot({
+				path: `${shotsDir}/T013-${slugFor(href)}.png`,
+				fullPage: true,
+			});
+		}
+
+		// --- widget: the name echo on the events page --------------------------
+		await page.goto(`${origin}/markless/concepts/events`, { waitUntil: 'load' });
+		const echoField = page.locator('.playground input').first();
+		const echoLine = page.locator('.playground .playground-output').first();
+		await echoField.waitFor();
+		check(
+			((await echoLine.textContent()) ?? '').trim() === 'Hello,',
+			'name echo renders its empty greeting from the server',
+			((await echoLine.textContent()) ?? '').trim(),
+		);
+		await echoField.click();
+		await echoField.pressSequentially('Ada', { delay: 40 });
+		await settleText(echoLine, (text) => text === 'Hello, Ada', 'name echo follows the keystrokes');
+		check(
+			((await echoLine.textContent()) ?? '').trim() === 'Hello, Ada',
+			'typing into the field moves the echo under it',
+		);
+		const urlBeforeSubmit = page.url();
+		await echoField.press('Enter');
+		await page.waitForTimeout(400);
+		check(
+			page.url() === urlBeforeSubmit,
+			'pressing Enter does not navigate, because the handler calls preventDefault',
+			`${urlBeforeSubmit} then ${page.url()}`,
+		);
+		check(
+			(await echoField.inputValue()) === 'Ada',
+			'the field still holds what was typed after the submit',
+			await echoField.inputValue(),
+		);
+		await page.screenshot({ path: `${shotsDir}/T013-name-echo-after.png`, fullPage: true });
+
+		// The conditionals and lists pages carry no live widget on this build: a
+		// component that uses `@if` or `@for` hangs the compiler, so the pages ship
+		// their files in fences with a callout saying so (NOTES.md section 21). What
+		// is checked here is that the callout is really on the page, so the day the
+		// widget returns this check fails and the note has to go with it.
+		for (const href of ['/markless/concepts/conditionals', '/markless/concepts/lists']) {
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const told = await page
+				.locator('.callout-title')
+				.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+			check(
+				told.some((title) => title.includes('no demo box on this page yet')),
+				`${href} says out loud why it has no demo box`,
+				told.join(' | '),
+			);
+			check(
+				(await page.locator('.playground').count()) === 0,
+				`${href} really has no playground frame to mislead the reader`,
+			);
+		}
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,

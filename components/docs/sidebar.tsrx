@@ -69,6 +69,44 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 						<span class="sidebar-text">Computed</span>
 					</a>
 				</li>
+				<li>
+					<a
+						class={
+							pathname === '/markless/concepts/events' ? 'sidebar-link is-active' : 'sidebar-link'
+						}
+						href="/markless/concepts/events"
+					>
+						<Sprite name="bolt" size="1.1em" />
+						<span class="sidebar-num">3</span>
+						<span class="sidebar-text">Events</span>
+					</a>
+				</li>
+				<li>
+					<a
+						class={
+							pathname === '/markless/concepts/conditionals'
+								? 'sidebar-link is-active'
+								: 'sidebar-link'
+						}
+						href="/markless/concepts/conditionals"
+					>
+						<Sprite name="corner-bracket" size="1.1em" />
+						<span class="sidebar-num">4</span>
+						<span class="sidebar-text">Conditionals</span>
+					</a>
+				</li>
+				<li>
+					<a
+						class={
+							pathname === '/markless/concepts/lists' ? 'sidebar-link is-active' : 'sidebar-link'
+						}
+						href="/markless/concepts/lists"
+					>
+						<Sprite name="dashes" size="1.1em" />
+						<span class="sidebar-num">5</span>
+						<span class="sidebar-text">Lists</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 	</nav>

@@ -643,3 +643,63 @@ produces nothing. `@if` behaves the same way in that position.
 This is under investigation in the framework. Until it is fixed, every list on this site is written
 out as fixed slots (the sidebar in finding 3, the assumes line here) with plain TypeScript deciding
 what goes in them, which is why `nav.ts` exists.
+
+## 21. T013: a component that uses `@if` or `@for` hangs the build
+
+Finding 20 said neither construct renders anything inside a page component. On the tarballs this
+site is pinned to the failure is worse than that and it is not silent: **a component that uses
+`@if` or `@for` makes the production build stop making progress.** `vite … building client
+environment for production` prints `transforming...` and nothing else ever appears. It is not a
+runaway loop. `sample` on the build process shows every thread parked in `uv__io_poll` and the
+rolldown workers idle, which is a promise in the plugin pipeline that never settles rather than
+work being done.
+
+The bisect, one build per step, from a clean `.output`:
+
+| tree | result |
+| --- | --- |
+| `main` with no batch-2 content | builds, ~90 s |
+| plus `concepts/events.mdx` and its `name-echo` island (state, `onInput`, `onSubmit`) | builds |
+| plus `concepts/conditionals.mdx` with an island whose body has `@if (open) { … }` | hangs, killed at 5 min |
+| the same page with the `@if` island that declares no state inside the branch | hangs, killed at 5 min |
+
+So the trigger is `@if` in a compiled component, not the state-inside-a-branch shape the page was
+written to teach. `@for` was not reached in the bisect and is treated as the same defect until
+someone proves otherwise; the loop island was withdrawn with the conditional ones.
+
+The reproduction is two files. `components/demos/draft-kept.tsrx`, deleted in this change, was:
+
+```tsx
+import { state } from '@markless/core';
+
+export default function DraftKept() @{
+	let open = state(false);
+	let draft = state('');
+
+	<section>
+		<button onClick={() => (open = !open)}>Toggle the panel</button>
+
+		@if (open) {
+			<label class="echo-field">
+				Your message
+				<input value={draft} onInput={(event) => (draft = event.currentTarget.value)} />
+			</label>
+			<p class="playground-output">Draft: {draft}</p>
+		}
+	</section>
+}
+```
+
+Import that from an `.mdx` page as a top-level block and run `npm run build`.
+
+**What it costs the docs.** `concepts/conditionals.mdx` and `concepts/lists.mdx` ship with their
+files in fences and a callout that says plainly why there is no box to click, in the shape the T011
+outline reserved for exactly this case. The witness asserts that callout is present and that neither
+page carries a `.playground` frame, so the day the compiler accepts these components the witness
+goes red and the note has to be removed with the same change that brings the widgets back. The two
+teaching components and their wrappers were deleted rather than left unimported, because a dead
+`.tsrx` in `components/demos/` reads as a shipped demo.
+
+**What still works.** State, computed, events, `storage()` and class-free text bindings are all
+unaffected: `concepts/events.mdx` builds, resumes and is witnessed clicking. Nothing here changes
+findings 18, 19 or 20; this is the same family as 20, found from the build side.

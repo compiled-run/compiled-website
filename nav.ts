@@ -16,6 +16,9 @@ export const nav: readonly NavSection[] = [
 		entries: [
 			{ title: 'State', href: '/markless/concepts/state' },
 			{ title: 'Computed', href: '/markless/concepts/computed' },
+			{ title: 'Events', href: '/markless/concepts/events' },
+			{ title: 'Conditionals', href: '/markless/concepts/conditionals' },
+			{ title: 'Lists', href: '/markless/concepts/lists' },
 		],
 	},
 ];
@@ -65,6 +68,9 @@ export function pagerFor(pathname: string): Pager {
 export const concepts: Readonly<Record<string, NavEntry>> = {
 	'reading-tsrx': { title: 'reading a .tsrx file', href: '/markless/start/reading-tsrx' },
 	computed: { title: 'computed', href: '/markless/concepts/computed' },
+	conditionals: { title: 'conditionals', href: '/markless/concepts/conditionals' },
+	events: { title: 'events', href: '/markless/concepts/events' },
+	lists: { title: 'lists', href: '/markless/concepts/lists' },
 	state: { title: 'state', href: '/markless/concepts/state' },
 };
 
