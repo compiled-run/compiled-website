@@ -1433,6 +1433,7 @@ html[data-theme='dark'] .prose h3 {
 
 html[data-theme='dark'] h1 {
 	--shadow-accent: var(--purple);
+	--shadow-color: color-mix(in oklch, var(--pink) 70%, oklch(30% 0.06 350));
 }
 
 html[data-theme='dark'] .prose h2 {
@@ -1453,6 +1454,7 @@ html[data-theme='dark'] .prose h3 {
 
 	html:not([data-theme='light']) h1 {
 		--shadow-accent: var(--purple);
+		--shadow-color: color-mix(in oklch, var(--pink) 70%, oklch(30% 0.06 350));
 	}
 
 	html:not([data-theme='light']) .prose h2 {
