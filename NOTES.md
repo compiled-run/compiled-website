@@ -532,3 +532,114 @@ things worth knowing about the assets:
 `components/docs/more-from-compiled.tsrx` links the four projects. **versionless has no public
 repository** (checked 2026-08-17), so it points at `https://github.com/compiled-run` as a
 placeholder for the owner to replace.
+
+## 18. T019: the two router fixes land, and what is left is a class binding
+
+The site is now on tarballs that carry two framework fixes (see the README for which commit).
+`markless-router-0.3.0.tgz` and `markless-serializer-0.3.0.tgz` were repacked from the fix branch;
+the other seven are unchanged from the release commit, because a rebuild of them produced only new
+content-hash chunk names and a different key order in `package.json`.
+
+**Finding 14 is fixed.** `composeMdxState` now prefixes `deriveSymbolId` with the child's
+`symbolPrefix`, so `cart-total` resumes: the total moves 20 -> 40 -> 48 on the computed page and the
+witness asserts it for real again, no allowlist.
+
+**Finding 15 is fixed.** Storage records compose through MDX state and the version is recomputed from
+what the payload carries, so `storage()` resumes. The theme toggle is on the site (finding 19).
+
+**What is still broken is narrower and is not the same defect: a `class={ternary}` binding produces
+no dom update at all.** `three-differences` half works now — the sentence under the file swaps,
+because that is a text binding — but the highlighted line never moves.
+
+The evidence is the compiled component's own artifact, before any MDX composition. In
+`.output/server/_ssr/chunk-*.mjs` for `components/demos/three-differences.tsrx`:
+
+```json
+"domUpdates": [{
+  "hostNodeId": "h14",
+  "graphNodeId": "computed:templateExpression:0",
+  "target": { "kind": "text" },
+  "symbolId": "symbol:3"
+}]
+```
+
+One record, for the sentence. The eight `class={picked === '…' ? 'file-line is-lit' : 'file-line'}`
+bindings and the three `class={…}` bindings on the buttons leave nothing behind. The served view
+payload for the page agrees: five `domUpdates`, every one of them `"target":{"kind":"text"}`, and no
+record whose target kind is `class`.
+
+So this is not the MDX path and not the symbol namespace. The compiler has the machinery — its
+`bindingTargetForAttribute` returns `{ kind: 'class' }` for a `class` attribute, and
+`conditionalClassTarget` recognises exactly the `cond ? 'a' : 'b'` shape these bindings use — but no
+record for it reaches the payload. Reproduce it with any island that has one state and one
+`class={state === x ? 'a' : 'b'}`: click, and nothing throws, nothing loads, and the class does not
+change. The browser console prints `0.0 KB app executed`, because the resume was never asked to do
+anything.
+
+The witness keeps checking it under `knownFailingReason = 'NOTES.md finding 18'`, scoped to the one
+check it breaks, so the run goes green on its own the day the compiler emits the record.
+
+## 19. T019: the theme toggle is an island each page renders, not part of the header
+
+The toggle works: click it and `data-theme` moves on `<html>`, the palette repaints, the choice is
+in `localStorage`, and it survives a reload. The seed script the router now emits reaches the head,
+so there is no flash. The witness asserts all of that.
+
+**It is not a child of the header, and it cannot be.** `components/docs/site-header.tsrx` is composed
+from `document.tsrx`, and the router serves only the document's HTML — it drops the document's state
+payload — so a `storage()` cell anywhere on the document path can never resume. The router now says
+so outright instead of serving a dead control:
+
+```
+MARKLESS_ROUTER_DOCUMENT_STORAGE_UNSUPPORTED: the document declares storage cells (theme), but the
+router serves only the document's HTML, so their state payload never reaches the browser
+```
+
+So `components/docs/theme-toggle.tsrx` is an island each `.mdx` page renders as a top-level block,
+placed just under `<PageMeta />`. The header keeps a `.theme-toggle-slot` — an empty span at the end
+of the tools row — and `.theme-toggle-island` is `position: fixed` against the header's own inline
+padding, which is the one number both rules can name. The witness compares the two boxes rather than
+trusting the arithmetic. The two `.tsrx` error pages have no toggle, because they are not MDX.
+
+Two shapes in that component are forced rather than chosen:
+
+- **Two buttons, not one.** A single button would derive its label from the current value, and a
+  derived class binding does not resume (finding 18). Each button assigns one constant instead, and
+  CSS shows whichever matches the painted theme, using the palette's own selectors.
+- **The fallback is `system`, not `light`.** The seed script stamps the fallback when nothing is
+  stored, so a `light` fallback would override `@media (prefers-color-scheme: dark)` for every reader
+  who never chose. `html:not([data-theme='light'])` already reads `system` as "ask the operating
+  system", so the existing dark rules needed no change.
+
+One thing worth reporting upstream: the seed script ships the slot key verbatim, and the slot key is
+the component's **absolute path on the build machine**:
+
+```
+["/Users/…/compiled-website/components/docs/theme-toggle.tsrx#theme","theme","data-theme","system"]
+```
+
+That is a build-machine path in the served HTML of every page.
+
+## 20. T019: `@if` and `@for` render nothing inside a page component either
+
+Finding 3 said `@for` renders nothing on the document path. It is not the document path. Neither
+construct renders anything **inside a page component either**, which is why `components/page-meta.tsrx`
+writes its three "Assumes:" slots out by hand and hides the unused ones instead of looping.
+
+Reproduction, from the T017 attempt at that line: the loop that should have produced one link per
+concept key
+
+```tsx
+@for (const item of assumed.items; key item.href) {
+	<a class="page-meta-assume-link" href={item.href}>{item.title}</a>
+}
+```
+
+emitted `<span></span>` — an empty element where the links should be — with `assumed.items` a plain
+array of two objects built in ordinary TypeScript directly above. Static markup in the same position
+renders, and the same array printed as text renders, so the data is there and the construct is what
+produces nothing. `@if` behaves the same way in that position.
+
+This is under investigation in the framework. Until it is fixed, every list on this site is written
+out as fixed slots (the sidebar in finding 3, the assumes line here) with plain TypeScript deciding
+what goes in them, which is why `nav.ts` exists.

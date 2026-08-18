@@ -6,10 +6,17 @@ on released `@markless/*` packages, so everything on it is doing what a reader's
 ## Where the framework comes from right now
 
 **Interim.** The site is on `@markless/*` 0.3.0, which is not on npm yet, so it installs nine
-tarballs committed under `vendor/` (596 KB total) and packed from the framework repo's `main` at
-release commit `b12b7806`. The four packages the app names directly carry a `file:vendor/…tgz`
-specifier; the five they pull in transitively are pinned to their tarballs through `overrides`,
-because otherwise npm would go looking for 0.3.0 on the registry and not find it.
+tarballs committed under `vendor/`. The four packages the app names directly carry a
+`file:vendor/…tgz` specifier; the five they pull in transitively are pinned to their tarballs through
+`overrides`, because otherwise npm would go looking for 0.3.0 on the registry and not find it.
+
+Seven of the nine are packed from the framework repo's `main` at release commit `b12b7806`.
+`markless-router-0.3.0.tgz` and `markless-serializer-0.3.0.tgz` are packed from the fix branch
+`worktree-agent-a69a84d1a53118f1d` at `a87f9f74`, which is `b12b7806` plus the two fixes the site
+needed: MDX state composition now prefixes `deriveSymbolId`, so an island that derives a value
+resumes, and it carries `storage()` records, so the theme toggle works. Rebuilding the other seven
+from that commit changed nothing but content-hash chunk names, so they were left alone. When that
+branch merges, repack all nine from one commit.
 
 When 0.3.0 is published: delete `vendor/`, drop the `@markless/*` entries from `overrides`, and put
 `^0.3.0` back in `dependencies` and `devDependencies`.
@@ -81,9 +88,18 @@ the token, shown by CSS on hover and on focus. `NOTES.md` section 9 says why it 
 
 The dark theme is the paper design with the ground and the ink swapped and the same four pastel
 accents. It is keyed off `html[data-theme='dark']`, with `@media (prefers-color-scheme: dark)` as
-the default for a reader who has not chosen. There is no toggle on the page: `storage()`, which is
-the API that would write that attribute, breaks resume on 0.3.0. `NOTES.md` finding 15 has the
-payload evidence and the component that goes back in the moment it is fixed.
+the default for a reader who has not chosen.
+
+`components/docs/theme-toggle.tsrx` is the control, and `storage('theme', 'system')` is the whole of
+it: assigning to that binding writes `localStorage.theme` and stamps `data-theme` on `<html>`, and
+the seed script the router puts in the head applies the stored value before the first paint, so the
+theme never flashes.
+
+The toggle is an island each `.mdx` page renders rather than part of `site-header.tsrx`, because the
+router serves only the document's HTML and drops its state payload, so nothing on the document path
+can resume. The header reserves `.theme-toggle-slot` at the end of its tools row and the island is
+pinned to it. `NOTES.md` finding 19 has the reasoning, including why the component has two buttons
+instead of one.
 
 `NOTES.md` records what 0.2.2 and then 0.3.0 could and could not do while this was built. Read it before
 changing the shell or the build config.

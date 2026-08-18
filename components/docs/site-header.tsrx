@@ -1,13 +1,20 @@
-// The bar across the top of every page: where you are, a search slot, a theme
-// slot, and the repo. The trail and the titles come from `nav.ts` through
-// `breadcrumbFor`, which is plain TypeScript, so the component itself carries no
-// loop — `@for` still renders nothing on the document path (NOTES.md finding 3).
+// The bar across the top of every page: where you are, a search slot, the repo,
+// and the space the theme toggle lands in. The trail and the titles come from
+// `nav.ts` through `breadcrumbFor`, which is plain TypeScript, so the component
+// itself carries no loop — `@for` still renders nothing on the document path
+// (NOTES.md finding 3).
 //
-// Search and the theme toggle are deliberately inert: there is no index to
-// search yet, and a theme toggle needs a store the framework cannot resume on
-// 0.3.0 (NOTES.md finding 15). Both carry the markup a working control needs.
+// Search is deliberately inert: there is no index to search yet.
+//
+// The theme toggle is not here. This component is composed from `document.tsrx`,
+// and the router serves only the document's HTML and drops its state payload, so
+// a `storage()` cell declared anywhere on the document path can never resume —
+// the router now says so outright with
+// MARKLESS_ROUTER_DOCUMENT_STORAGE_UNSUPPORTED. The toggle is therefore an island
+// each page renders (`components/docs/theme-toggle.tsrx`), and `.theme-toggle-slot`
+// is the width it is reserved here, at the end of the row, so the fixed control
+// lands on it. NOTES.md finding 19 has the detail.
 import Mascot from '../mascot.tsrx';
-import Sprite from '../sprite.tsrx';
 import { breadcrumbFor } from '../../nav.ts';
 
 export default function SiteHeader({ pathname }: { readonly pathname: string }) @{
@@ -31,16 +38,8 @@ export default function SiteHeader({ pathname }: { readonly pathname: string }) 
 				title="Search is coming"
 				disabled="disabled"
 			/>
-			<button
-				class="theme-toggle"
-				type="button"
-				data-theme-toggle="true"
-				aria-label="Switch theme"
-				title="The theme toggle is coming"
-			>
-				<Sprite name="sun" size="1.15em" />
-			</button>
 			<a class="header-link" href="https://github.com/compiled-run/markless">GitHub</a>
+			<span class="theme-toggle-slot" aria-hidden="true"></span>
 		</div>
 	</header>
 }

@@ -21,10 +21,13 @@ const knownFailing: string[] = [];
 const themeShots: Record<string, unknown>[] = [];
 /**
  * While this is set, a failed check is reported as `known-failing` against the
- * NOTES.md finding it belongs to instead of failing the run. It exists for the
- * two widgets the framework cannot resume yet: the site keeps them, because they
- * are what the pages teach with, and the witness keeps checking them so the day
- * the framework fix lands the run goes green on its own.
+ * NOTES.md finding it belongs to instead of failing the run. The site keeps the
+ * widget, because it is what the page teaches with, and the witness keeps
+ * checking it so the day the framework fix lands the run goes green on its own.
+ *
+ * One thing is under it now: a `class={ternary}` binding, which the compiler
+ * writes no dom update for (finding 18). The two widgets that were under
+ * finding 14 are real assertions again.
  */
 let knownFailingReason: string | undefined;
 const check = (ok: boolean, label: string, detail = '') => {
@@ -366,9 +369,9 @@ try {
 		await page.screenshot({ path: `${shotsDir}/T005-two-variables-after.png`, fullPage: true });
 
 		// --- widget: the cart total on the computed page -----------------------
-		// NOTES.md finding 14: an MDX island whose update derives a value never
-		// resumes on 0.3.0, because composeMdxState drops the symbol-id prefix.
-		knownFailingReason = 'NOTES.md finding 14';
+		// This was NOTES.md finding 14 and is a real assertion again: the router
+		// fix that prefixes deriveSymbolId through composeMdxState landed, so an
+		// island whose update derives a value resumes.
 		await page.goto(`${origin}/markless/concepts/computed`, { waitUntil: 'load' });
 		const totalLine = page.locator('.playground p').nth(2);
 		const addShirt = page.getByRole('button', { name: 'Add a shirt' });
@@ -409,16 +412,22 @@ try {
 			'three-differences lights the two body lines to start with',
 			String(await litLines.count()),
 		);
+		// The sentence under the file is a text binding and moves. The highlight is
+		// `class={ternary}`, and the compiler writes no dom update for a class
+		// binding at all, so it cannot move (NOTES.md finding 18).
+		knownFailingReason = 'NOTES.md finding 18';
 		await page.getByRole('button', { name: 'The markup' }).click();
 		await settleText(
 			explorerNote,
 			(text) => text.includes('The markup is a statement'),
 			'three-differences explains the markup after a click',
 		);
+		knownFailingReason = undefined;
 		check(
 			((await explorerNote.textContent()) ?? '').includes('The markup is a statement'),
 			'clicking a label swaps the sentence under the file',
 		);
+		knownFailingReason = 'NOTES.md finding 18';
 		check(
 			(await litLines.count()) === 1,
 			'clicking a label moves the highlight to one line',
@@ -440,6 +449,83 @@ try {
 			fullPage: true,
 		});
 		knownFailingReason = undefined;
+
+		// --- the theme toggle --------------------------------------------------
+		// The toggle is a `storage()` island each page renders, not part of the
+		// document (NOTES.md finding 19). What has to be true: the seed script
+		// reaches the head so there is no flash, the control lands on the hole the
+		// header reserves for it, a click actually repaints the page, and the
+		// choice survives a reload.
+		await page.goto(`${origin}/markless/concepts/state`, { waitUntil: 'load' });
+		const headSeed = await page.evaluate(() =>
+			[...document.head.querySelectorAll('script:not([src])')].some((node) =>
+				node.textContent?.includes('tsrx.storage/1'),
+			),
+		);
+		check(headSeed, 'the storage seed script is in the head, so the theme cannot flash');
+
+		const themeState = () =>
+			page.evaluate(() => {
+				const slot = document.querySelector('.theme-toggle-slot')?.getBoundingClientRect();
+				const island = document.querySelector('.theme-toggle-island')?.getBoundingClientRect();
+				return {
+					attr: document.documentElement.getAttribute('data-theme'),
+					stored: localStorage.getItem('theme'),
+					paper: getComputedStyle(document.body).backgroundColor,
+					offered: [...document.querySelectorAll('.theme-toggle')]
+						.filter((node) => getComputedStyle(node as Element).display !== 'none')
+						.map((node) => (node as HTMLElement).dataset.themeToggle)
+						.join(),
+					onSlot:
+						Boolean(slot && island) &&
+						Math.abs(slot!.left - island!.left) < 2 &&
+						Math.abs(slot!.right - island!.right) < 2,
+				};
+			});
+
+		const atRest = await themeState();
+		check(atRest.attr === 'system', 'an untouched reader is on the system theme', String(atRest.attr));
+		check(atRest.onSlot, 'the toggle lands on the hole the header reserves for it');
+		check(
+			atRest.offered === 'dark',
+			'exactly one button is offered, and on a light page it is the dark one',
+			atRest.offered,
+		);
+
+		await page.locator('.theme-toggle-to-dark').click();
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			if ((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark') break;
+			await new Promise((done) => setTimeout(done, 100));
+		}
+		const dark = await themeState();
+		check(dark.attr === 'dark', 'clicking the toggle puts data-theme="dark" on <html>', String(dark.attr));
+		check(dark.stored === 'dark', 'the choice is written to localStorage', String(dark.stored));
+		check(
+			dark.paper !== atRest.paper,
+			'the page is actually repainted, not just re-labelled',
+			`${atRest.paper} then ${dark.paper}`,
+		);
+		check(dark.offered === 'light', 'the dark page offers the light button', dark.offered);
+
+		await page.reload({ waitUntil: 'load' });
+		const reloaded = await themeState();
+		check(reloaded.attr === 'dark', 'the choice survives a reload', String(reloaded.attr));
+		check(
+			reloaded.paper === dark.paper,
+			'the reloaded page paints dark from the first frame',
+			reloaded.paper,
+		);
+		await page.screenshot({ path: `${shotsDir}/T019-theme-toggle-dark.png`, fullPage: false });
+
+		await page.locator('.theme-toggle-to-light').click();
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			if ((await page.evaluate(() => document.documentElement.dataset.theme)) === 'light') break;
+			await new Promise((done) => setTimeout(done, 100));
+		}
+		const back = await themeState();
+		check(back.attr === 'light', 'the toggle goes back to light', String(back.attr));
+		check(back.paper === atRest.paper, 'light is the light it started on', back.paper);
+		await page.evaluate(() => localStorage.removeItem('theme'));
 
 		// --- sprites and mascots ------------------------------------------------
 		await page.goto(`${origin}/markless`, { waitUntil: 'load' });

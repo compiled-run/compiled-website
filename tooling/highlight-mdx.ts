@@ -106,7 +106,11 @@ async function highlightParts(code: string, id: string): Promise<string> {
 				`highlight-mdx: element counter disagrees with @markless/router for ${id} ` +
 					`(counted ${counted}, part says ${part.elementCount}). Island offsets would move; refusing to rewrite.`,
 			);
-		if (firstHtml < 0) firstHtml = index;
+		// The rail is spliced into the first html part that actually has markup in
+		// it. Two components written back to back leave an empty html part between
+		// them, and every empty part is the same string — which the literal rewrite
+		// below cannot tell apart, so it would put a rail in each of them.
+		if (firstHtml < 0 && part.html.trim() !== '') firstHtml = index;
 		rewritten.push(collectHeadings(await highlightFences(part.html), seen, headings));
 	}
 	const outline = outlineMarkup(headings);
@@ -114,6 +118,14 @@ async function highlightParts(code: string, id: string): Promise<string> {
 	const nextParts: MdxRoutePart[] = parts.map((part, index) => {
 		const html = rewritten[index];
 		if (part.kind !== 'html' || html === undefined || html === part.html) return part;
+		// One html value, one rewrite. Two parts holding the same string would each
+		// take the other's replacement, because what is rewritten in the emitted
+		// module is the literal and not the slot.
+		if (rewrites.has(part.html))
+			throw new Error(
+				`highlight-mdx: two parts of ${id} carry the same HTML, so a rewrite of one ` +
+					`would land on both. Refusing to rewrite.`,
+			);
 		rewrites.set(part.html, html);
 		return { kind: 'html', html, elementCount: countElements(html) };
 	});

@@ -45,6 +45,7 @@
 	/* The sticky header's own height, so the sidebar and the right rail can sit
 	   below it without either one guessing. */
 	--header-height: 3.1rem;
+	--theme-toggle-size: 1.9rem;
 
 	/* typography */
 	/* @link https://utopia.fyi/type/calculator?c=360,18,1.2,1240,20,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
@@ -225,9 +226,8 @@ body::after {
 	margin-left: auto;
 }
 
-/* The search field and the theme toggle are slots: the markup is here and the
-   behaviour is not. Search has no index yet, and a theme toggle needs a store
-   the framework cannot resume on 0.3.0 (NOTES.md finding 15). */
+/* Search is a slot: the markup is here and the behaviour is not, because there
+   is no index yet. */
 .site-search {
 	box-sizing: border-box;
 	width: 11rem;
@@ -240,16 +240,73 @@ body::after {
 	border-radius: 999px;
 }
 
+/* The theme toggle is an island a page renders, not part of the document, so it
+   cannot be a child of this header (NOTES.md finding 19). `.theme-toggle-slot`
+   is the hole it is reserved at the end of the row, and `.theme-toggle-island`
+   is pinned to exactly that hole: last in the row means its right edge is the
+   header's own inline padding, which is a number both rules can name. The
+   witness compares the two boxes rather than trusting that. */
+.theme-toggle-slot {
+	display: inline-block;
+	inline-size: var(--theme-toggle-size);
+	block-size: var(--theme-toggle-size);
+	flex: none;
+}
+
+.theme-toggle-island {
+	position: fixed;
+	top: 0;
+	right: var(--space-s-l);
+	z-index: 40;
+	block-size: var(--header-height);
+	display: flex;
+	align-items: center;
+	font-size: var(--step--1);
+}
+
 .theme-toggle {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.25em 0.5em;
+	inline-size: var(--theme-toggle-size);
+	block-size: var(--theme-toggle-size);
+	padding: 0;
+	font-size: 1em;
+	line-height: 1;
 	color: var(--ink);
 	background: var(--tinted-quiet);
 	border: 2px solid var(--code-edge);
 	border-radius: 999px;
 	cursor: pointer;
+}
+
+/* Which of the two buttons is the one to offer is the same question as which
+   palette is painted, so these rules are the palette's rules again, in step with
+   the pair further down. `system` and "no attribute" both mean "ask the
+   operating system", which is why neither is named. */
+.theme-toggle-to-dark {
+	display: inline-flex;
+}
+
+.theme-toggle-to-light {
+	display: none;
+}
+
+html[data-theme='dark'] .theme-toggle-to-dark {
+	display: none;
+}
+
+html[data-theme='dark'] .theme-toggle-to-light {
+	display: inline-flex;
+}
+
+@media (prefers-color-scheme: dark) {
+	html:not([data-theme='light']) .theme-toggle-to-dark {
+		display: none;
+	}
+	html:not([data-theme='light']) .theme-toggle-to-light {
+		display: inline-flex;
+	}
 }
 
 .header-link {
@@ -1035,9 +1092,11 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	text-underline-offset: 0.16em;
 }
 
+/* No gap here: it lives on each doodle as padding instead, so pointing near one
+   counts as pointing at it. See the hitbox note below. */
 .pager-doodles {
 	display: flex;
-	gap: 0.45em;
+	gap: 0;
 	align-items: center;
 	flex: none;
 	opacity: 0.9;
@@ -1055,6 +1114,24 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
    hover and a keyframe on the drawing the sprite already ships. Every reaction
    is under 400ms and stops for a reader who asked for less motion.
    --------------------------------------------------------------------------- */
+
+/* Each doodle answers to a pointer well before it touches the drawing. The row's
+   gap moves onto the doodles as padding — half of it on each side — so the
+   drawings sit exactly where they did and the spacing looks unchanged, while the
+   box that hears the pointer is a whole gap wider. Vertically there is nothing
+   to collide with, so the ::before reaches half a line above and below. Sized in
+   em rather than px so a doodle's target grows with it. */
+.pager-doodles .sprite {
+	position: relative;
+	padding-inline: 0.225em;
+}
+
+.pager-doodles .sprite::before {
+	content: '';
+	position: absolute;
+	inset-block: -0.5em;
+	inset-inline: 0;
+}
 
 .pager-doodles .sprite img {
 	transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
