@@ -1,6 +1,10 @@
 // nav.ts is the intended single source for these links, but @for renders nothing
-// in the document shell on published 0.2.2 (see NOTES.md), so they are written out.
-// Keep this list and nav.ts in step: the witness visits every entry in nav.ts.
+// in the document shell on published 0.3.0 (see NOTES.md finding 3), so they are
+// written out. Keep this list and nav.ts in step: the witness visits every entry
+// in nav.ts, and the header's breadcrumb and the pager read nav.ts directly.
+//
+// Each entry carries three columns — a sprite, its number inside the section,
+// and the title — so the icons and numbers line up down the column.
 import Mascot from '../mascot.tsrx';
 import Sprite from '../sprite.tsrx';
 
@@ -18,7 +22,9 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 			<ul class="sidebar-list">
 				<li>
 					<a class={pathname === '/markless' ? 'sidebar-link is-active' : 'sidebar-link'} href="/markless">
-						What is Markless
+						<Sprite name="crown" size="1.1em" />
+						<span class="sidebar-num">1</span>
+						<span class="sidebar-text">What is Markless</span>
 					</a>
 				</li>
 				<li>
@@ -28,7 +34,9 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 						}
 						href="/markless/start/reading-tsrx"
 					>
-						Reading a .tsrx file
+						<Sprite name="bookmark" size="1.1em" />
+						<span class="sidebar-num">2</span>
+						<span class="sidebar-text">Reading a .tsrx file</span>
 					</a>
 				</li>
 			</ul>
@@ -44,7 +52,9 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 						class={pathname === '/markless/concepts/state' ? 'sidebar-link is-active' : 'sidebar-link'}
 						href="/markless/concepts/state"
 					>
-						State
+						<Sprite name="sparkle" size="1.1em" />
+						<span class="sidebar-num">1</span>
+						<span class="sidebar-text">State</span>
 					</a>
 				</li>
 				<li>
@@ -54,7 +64,9 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 						}
 						href="/markless/concepts/computed"
 					>
-						Computed
+						<Sprite name="spiral" size="1.1em" />
+						<span class="sidebar-num">2</span>
+						<span class="sidebar-text">Computed</span>
 					</a>
 				</li>
 			</ul>

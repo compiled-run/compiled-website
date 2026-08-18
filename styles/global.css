@@ -39,8 +39,12 @@
 	   --shadow-color (see the heading rule below). */
 	--shadow-x: -0.09em;
 	--shadow-y: -0.01em;
-	--shadow-grow: 0.03em;
+	--shadow-grow: 0.02em;
 	--shadow-color: transparent;
+
+	/* The sticky header's own height, so the sidebar and the right rail can sit
+	   below it without either one guessing. */
+	--header-height: 3.1rem;
 
 	/* typography */
 	/* @link https://utopia.fyi/type/calculator?c=360,18,1.2,1240,20,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
@@ -101,12 +105,14 @@
 	font-family: 'Joy Elia';
 }
 
+/* Body copy lands at about 20-21px on a desktop viewport: a step above the
+   default text step, well under the 25px --step-1 the page used to carry. */
 body {
 	background: var(--paper);
 	color: var(--ink);
-	font-size: var(--step-1);
+	font-size: calc(var(--step-0) * 1.08);
 	margin: 0;
-	line-height: 150%;
+	line-height: 160%;
 }
 
 /* The base offset plus its four corners at --shadow-grow: a solid silhouette
@@ -130,7 +136,7 @@ h6 {
 }
 
 h1 {
-	font-size: calc(var(--step-5) * 1.35);
+	font-size: var(--step-5);
 	--shadow-color: var(--pink);
 	line-height: 115%;
 }
@@ -164,7 +170,94 @@ body::after {
    --------------------------------------------------------------------------- */
 
 .site-header {
-	display: none;
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	box-sizing: border-box;
+	min-height: var(--header-height);
+	display: flex;
+	align-items: center;
+	gap: 0.45em;
+	padding-inline: var(--space-s-l);
+	background: var(--paper);
+	border-bottom: 1px solid var(--code-edge);
+	font-size: var(--step--1);
+	overflow: hidden;
+}
+
+/* A phone has room for the mug, the page's own name and the two controls that
+   are not text; the section step of the trail and the search field are what get
+   dropped, in that order, before anything can push the document sideways. */
+@media (max-width: 46rem) {
+	.crumb-section,
+	.crumb-sep-section,
+	.site-search {
+		display: none;
+	}
+	.crumb-page {
+		min-width: 0;
+	}
+}
+
+.crumb {
+	display: inline-flex;
+	gap: 0.35em;
+	align-items: center;
+	color: var(--ink);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.crumb-page {
+	font-weight: 700;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.crumb-sep {
+	opacity: 0.45;
+}
+
+.header-tools {
+	display: flex;
+	gap: 0.45em;
+	align-items: center;
+	margin-left: auto;
+}
+
+/* The search field and the theme toggle are slots: the markup is here and the
+   behaviour is not. Search has no index yet, and a theme toggle needs a store
+   the framework cannot resume on 0.3.0 (NOTES.md finding 15). */
+.site-search {
+	box-sizing: border-box;
+	width: 11rem;
+	max-width: 32vw;
+	padding: 0.2em 0.7em;
+	font-size: inherit;
+	color: var(--ink);
+	background: var(--code-surface);
+	border: 2px solid var(--code-edge);
+	border-radius: 999px;
+}
+
+.theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.25em 0.5em;
+	color: var(--ink);
+	background: var(--tinted-quiet);
+	border: 2px solid var(--code-edge);
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.header-link {
+	color: var(--ink);
+	text-decoration-color: var(--pink);
+	text-decoration-thickness: 0.12em;
+	text-underline-offset: 0.16em;
+	white-space: nowrap;
 }
 
 .site-name {
@@ -177,19 +270,85 @@ body::after {
 	--shadow-color: var(--yellow);
 }
 
+/* Ordering rule for this section: every unconditional block comes first and the
+   narrow-viewport media queries come last. A media query adds no specificity, so
+   a later unconditional rule beats it at every width — which is exactly how the
+   mobile sidebar used to end up `position: fixed` on top of the prose. */
+
 .site-shell {
 	padding-inline: var(--space-s-l);
+}
+
+.sidebar {
+	position: fixed;
+	left: var(--space-s-l);
+	top: calc(var(--header-height) + var(--space-s));
+	width: 16rem;
+	max-height: calc(100vh - var(--header-height) - var(--space-s));
+	overflow-y: auto;
+	padding-block: var(--space-s);
+	font-size: var(--step--1);
+}
+
+/* On this page: the outline of the page's own h2/h3, written into the page HTML
+   by tooling/highlight-mdx.ts. Fixed rather than a grid column, because the
+   prose column is a page module and the shell cannot reach inside it; the shell
+   reserves the strip it sits in below. */
+.on-this-page {
+	position: fixed;
+	right: var(--space-s-l);
+	top: calc(var(--header-height) + var(--space-s));
+	width: 11rem;
+	max-height: calc(100vh - var(--header-height) - 2 * var(--space-s));
+	overflow-y: auto;
+	font-size: var(--step--1);
+}
+
+.on-this-page-title {
+	margin: 0 0 0.5em;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.7;
+}
+
+.on-this-page-list {
+	display: grid;
+	gap: 0.15em;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.on-this-page-link {
+	display: block;
+	padding: 0.1em 0.5em;
+	color: var(--ink);
+	text-decoration: none;
+	border-left: 2px solid var(--code-edge);
+	line-height: 135%;
+}
+
+.on-this-page-link:hover {
+	background: var(--yellow);
+	color: var(--on-accent);
+	border-left-color: var(--pink);
+}
+
+.on-this-page-item-h3 .on-this-page-link {
+	padding-left: 1.2em;
+	opacity: 0.85;
 }
 
 @media (max-width: 96rem) {
 	.site-shell {
 		padding-left: calc(16rem + 2 * var(--space-s-l));
+		padding-right: calc(11rem + 2 * var(--space-s-l));
 	}
 }
 
 @media (max-width: 70rem) {
 	.site-shell {
-		padding-left: var(--space-s-l);
+		padding-inline: var(--space-s-l);
 	}
 	.sidebar {
 		position: static;
@@ -197,17 +356,11 @@ body::after {
 		max-height: none;
 		max-width: 68ch;
 		margin-inline: auto;
+		padding-block: var(--space-s) 0;
 	}
-}
-
-.sidebar {
-	position: fixed;
-	left: var(--space-s-l);
-	top: var(--space-s);
-	width: 16rem;
-	max-height: calc(100vh - var(--space-s));
-	overflow-y: auto;
-	padding-block: var(--space-m);
+	.on-this-page {
+		display: none;
+	}
 }
 
 .sidebar-section + .sidebar-section {
@@ -223,17 +376,32 @@ body::after {
 }
 
 .sidebar-list {
+	display: grid;
+	gap: 0.15em;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
+/* Three columns, so the sprite, the number and the title line up down the
+   column. The resting border is transparent and the same width as the active
+   one, so nothing shifts when an entry becomes the current page. */
 .sidebar-link {
-	display: block;
-	padding: 0.2em 0.5em;
+	display: grid;
+	grid-template-columns: 1.4em 1.2em 1fr;
+	gap: 0.3em;
+	align-items: center;
+	padding: 0.22em 0.5em;
 	color: var(--ink);
 	text-decoration: none;
-	border-left: 3px solid transparent;
+	border: 2px solid transparent;
+	border-radius: 6px;
+	line-height: 130%;
+}
+
+.sidebar-num {
+	font-weight: 700;
+	opacity: 0.55;
 }
 
 .sidebar-link:hover {
@@ -242,27 +410,43 @@ body::after {
 }
 
 .sidebar-link.is-active {
-	border-left-color: var(--pink);
-	background: var(--yellow);
-	color: var(--on-accent);
+	border-color: var(--pink);
+	background: var(--tinted);
+	color: var(--ink);
 	font-weight: 700;
+}
+
+.sidebar-link.is-active .sidebar-num {
+	opacity: 0.8;
 }
 
 .prose {
 	max-width: 68ch;
 	margin-inline: auto;
 	padding-block: var(--space-m) var(--space-2xl);
+	/* An inline `code` token longer than a phone's column is the one thing in the
+	   prose that can push the document sideways; a fenced block scrolls instead. */
+	overflow-wrap: break-word;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+	margin-block: var(--space-s);
 }
 
 .prose h2 {
 	font-size: var(--step-3);
 	--shadow-color: var(--purple);
 	margin-top: var(--space-l);
+	margin-bottom: var(--space-s);
 }
 
 .prose h3 {
 	font-size: var(--step-2);
 	--shadow-color: var(--green-soft);
+	margin-top: var(--space-m);
+	margin-bottom: var(--space-xs);
 }
 
 .prose a {
@@ -285,6 +469,7 @@ body::after {
    newline so there is no empty last line. */
 .prose pre {
 	background: var(--code-surface);
+	margin-block: var(--space-m);
 	color: var(--ink);
 	padding: var(--space-s);
 	border: 1px solid var(--code-edge);
@@ -328,7 +513,7 @@ body::after {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-xs);
-	margin-block: var(--space-m);
+	margin-block: var(--space-l);
 	padding: var(--space-s);
 	border: 2px solid var(--ink);
 	border-radius: 2px;
@@ -742,12 +927,13 @@ html {
 
 html[data-theme='dark'] {
 	--ink: oklch(93% 0.012 85);
-	--paper: oklch(19.5% 0.012 70);
-	--code-surface: oklch(25% 0.014 70);
-	--raised: oklch(24% 0.013 70);
+	--paper: oklch(18% 0.007 70);
+	--code-surface: oklch(32% 0.011 70);
+	--code-edge: color-mix(in oklch, var(--ink) 30%, transparent);
+	--raised: oklch(26% 0.01 70);
 	--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
 	--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
-	--slab: oklch(14% 0.01 70);
+	--slab: oklch(11% 0.008 70);
 	--slab-ink: oklch(92% 0.012 85);
 	--grain-fiber-blend: soft-light;
 	--grain-fiber-opacity: 0.3;
@@ -760,12 +946,13 @@ html[data-theme='dark'] {
 @media (prefers-color-scheme: dark) {
 	html:not([data-theme='light']) {
 		--ink: oklch(93% 0.012 85);
-		--paper: oklch(19.5% 0.012 70);
-		--code-surface: oklch(25% 0.014 70);
-		--raised: oklch(24% 0.013 70);
+		--paper: oklch(18% 0.007 70);
+		--code-surface: oklch(32% 0.011 70);
+		--code-edge: color-mix(in oklch, var(--ink) 30%, transparent);
+		--raised: oklch(26% 0.01 70);
 		--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
 		--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
-		--slab: oklch(14% 0.01 70);
+		--slab: oklch(11% 0.008 70);
 		--slab-ink: oklch(92% 0.012 85);
 		--grain-fiber-blend: soft-light;
 		--grain-fiber-opacity: 0.3;
@@ -792,4 +979,212 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 		span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
 		color: var(--shiki-dark) !important;
 	}
+}
+
+/* ---------------------------------------------------------------------------
+   Prev/next pager: the same two links on the foot of every page, driven by the
+   flat entry order in nav.ts, with a strip of doodles between them. The dashed
+   rule is the one already proven on .more-from.
+   --------------------------------------------------------------------------- */
+
+.pager {
+	display: flex;
+	gap: var(--space-s);
+	justify-content: space-between;
+	align-items: center;
+	margin-top: var(--space-xl);
+	padding-top: var(--space-m);
+	border-top: 2px dashed var(--code-edge);
+}
+
+.pager-link {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1em;
+	max-width: 38%;
+	color: var(--ink);
+	text-decoration: none;
+}
+
+/* An end of the run keeps its box so the doodle strip stays put. */
+.pager-link.is-empty {
+	visibility: hidden;
+}
+
+.pager-next {
+	text-align: right;
+	align-items: flex-end;
+}
+
+.pager-dir {
+	font-size: var(--step--1);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.6;
+}
+
+.pager-title {
+	font-weight: 700;
+	line-height: 125%;
+}
+
+.pager-link:hover .pager-title {
+	text-decoration: underline;
+	text-decoration-color: var(--pink);
+	text-decoration-thickness: 0.12em;
+	text-underline-offset: 0.16em;
+}
+
+.pager-doodles {
+	display: flex;
+	gap: 0.45em;
+	align-items: center;
+	flex: none;
+	opacity: 0.9;
+}
+
+@media (max-width: 40rem) {
+	.pager-doodles {
+		display: none;
+	}
+}
+
+/* ---------------------------------------------------------------------------
+   The doodles in the pager react when they are pointed at, each one its own
+   way: a lift, a spin, a heartbeat, a wiggle, a dart and a roll. No script — a
+   hover and a keyframe on the drawing the sprite already ships. Every reaction
+   is under 400ms and stops for a reader who asked for less motion.
+   --------------------------------------------------------------------------- */
+
+.pager-doodles .sprite img {
+	transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 1 crown: tilts and lifts, landing with a small bounce. */
+.pager-doodles .sprite:nth-child(1):hover img {
+	transform: rotate(-12deg) translateY(-5px);
+}
+
+/* 2 sparkle: turns over and grows. */
+.pager-doodles .sprite:nth-child(2):hover img {
+	transform: rotate(180deg) scale(1.25);
+}
+
+/* 3 heart: one beat. */
+@keyframes doodle-heartbeat {
+	0% {
+		transform: scale(1);
+	}
+	25% {
+		transform: scale(1.3);
+	}
+	45% {
+		transform: scale(1);
+	}
+	65% {
+		transform: scale(1.18);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+.pager-doodles .sprite:nth-child(3):hover img {
+	animation: doodle-heartbeat 380ms ease-in-out;
+}
+
+/* 4 squiggle: wiggles. */
+@keyframes doodle-wiggle {
+	0%,
+	100% {
+		transform: skewX(0deg);
+	}
+	25% {
+		transform: skewX(-12deg) rotate(-3deg);
+	}
+	75% {
+		transform: skewX(12deg) rotate(3deg);
+	}
+}
+
+.pager-doodles .sprite:nth-child(4):hover img {
+	animation: doodle-wiggle 360ms ease-in-out;
+}
+
+/* 5 star face: darts up and to the right like a shooting star and springs back,
+   dragging a short trail behind it. The trail is a drop-shadow cast the way it
+   came from, so it needs no second copy of the drawing. */
+@keyframes doodle-dart {
+	0% {
+		transform: translate(0, 0) rotate(0deg);
+		filter: none;
+	}
+	40% {
+		transform: translate(10px, -10px) rotate(16deg);
+		filter: drop-shadow(-7px 7px 2px color-mix(in oklch, var(--yellow) 65%, transparent));
+	}
+	70% {
+		transform: translate(-3px, 3px) rotate(-7deg);
+		filter: drop-shadow(-2px 2px 1px color-mix(in oklch, var(--yellow) 35%, transparent));
+	}
+	100% {
+		transform: translate(0, 0) rotate(0deg);
+		filter: none;
+	}
+}
+
+.pager-doodles .sprite:nth-child(5):hover img {
+	animation: doodle-dart 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 6 smiley: rolls a full turn with a hop in the middle of it. */
+@keyframes doodle-roll {
+	0% {
+		transform: rotate(0deg) translateY(0);
+	}
+	50% {
+		transform: rotate(180deg) translateY(-7px);
+	}
+	100% {
+		transform: rotate(360deg) translateY(0);
+	}
+}
+
+.pager-doodles .sprite:nth-child(6):hover img {
+	animation: doodle-roll 360ms ease-in-out;
+}
+
+/* The sidebar's section marks get the same lift, since it is one more rule. */
+.sidebar-title .sprite img {
+	transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sidebar-title:hover .sprite img {
+	transform: rotate(-10deg) scale(1.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pager-doodles .sprite img,
+	.sidebar-title .sprite img {
+		transition: none;
+	}
+	.pager-doodles .sprite:hover img,
+	.sidebar-title:hover .sprite img {
+		animation: none;
+		transform: none;
+		filter: none;
+	}
+}
+
+/* The assumes line: one link per concept, and the slots a page does not use. */
+.page-meta-assume-link {
+	color: inherit;
+	text-decoration-color: var(--pink);
+	text-decoration-thickness: 0.1em;
+	text-underline-offset: 0.16em;
+}
+
+.page-meta a.is-hidden,
+.page-meta span.is-hidden {
+	display: none;
 }

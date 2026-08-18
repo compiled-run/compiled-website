@@ -1,4 +1,6 @@
+import Pager from './components/docs/pager.tsrx';
 import Sidebar from './components/docs/sidebar.tsrx';
+import SiteHeader from './components/docs/site-header.tsrx';
 import stylesheet from './styles/global.css?url';
 
 export default function Document({
@@ -18,9 +20,13 @@ export default function Document({
 			<link rel="stylesheet" href={stylesheet} />
 		</head>
 		<body>
+			<SiteHeader pathname={pathname} />
 			<div class="site-shell">
 				<Sidebar pathname={pathname} />
-				<main class="prose">{children}</main>
+				<main class="prose">
+					{children}
+					<Pager pathname={pathname} />
+				</main>
 			</div>
 		</body>
 	</html>

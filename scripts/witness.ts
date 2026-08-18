@@ -529,6 +529,198 @@ try {
 		);
 		await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
 
+		// --- T017: header, outline rail, and the page at 390 --------------------
+		// Two pages, both themes, both widths. The desktop pass checks the chrome
+		// the reader sees beside the prose; the 390 pass checks that nothing of it
+		// lands on top of the prose or pushes the document wider than the phone.
+		for (const [label, href] of [
+			['index', '/markless'],
+			['state', '/markless/concepts/state'],
+		] as const) {
+			const entry = nav.flatMap((section) => section.entries).find((one) => one.href === href);
+			const section = nav.find((one) => one.entries.some((one) => one.href === href));
+			for (const theme of ['light', 'dark'] as const) {
+				for (const width of [1440, 390] as const) {
+					await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
+					await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+					await page.evaluate((wanted) => {
+						document.documentElement.setAttribute('data-theme', wanted);
+					}, theme);
+					await page.waitForTimeout(150);
+
+					const chrome = await page.evaluate(() => {
+						const header = document.querySelector('.site-header');
+						const rail = document.querySelector('.on-this-page');
+						const railVisible = rail ? getComputedStyle(rail).display !== 'none' : false;
+						const nav = document.querySelector('.sidebar');
+						const h1 = document.querySelector('.prose h1');
+						const navBox = nav?.getBoundingClientRect();
+						const h1Box = h1?.getBoundingClientRect();
+						return {
+							header: Boolean(header),
+							headerSticky: header ? getComputedStyle(header).position : '',
+							crumbSection: document.querySelector('.crumb-section')?.textContent?.trim() ?? '',
+							crumbPage: document.querySelector('.crumb-page')?.textContent?.trim() ?? '',
+							search: Boolean(document.querySelector('.site-search')),
+							themeToggle: Boolean(document.querySelector('[data-theme-toggle]')),
+							github: Boolean(
+								document.querySelector('a.header-link[href*="github.com/compiled-run/markless"]'),
+							),
+							railVisible,
+							railItems: [...document.querySelectorAll('.on-this-page-item-h2 .on-this-page-link')].map(
+								(node) => (node.textContent ?? '').trim(),
+							),
+							railTargets: [...document.querySelectorAll('.on-this-page-link')].every((node) => {
+								const id = (node.getAttribute('href') ?? '').slice(1);
+								return id !== '' && document.getElementById(id) !== null;
+							}),
+							pageH2s: [...document.querySelectorAll('.prose h2')].map((node) =>
+								(node.textContent ?? '').trim(),
+							),
+							navPosition: nav ? getComputedStyle(nav).position : '',
+							overlap: Boolean(
+								navBox &&
+									h1Box &&
+									navBox.right > h1Box.left &&
+									navBox.left < h1Box.right &&
+									navBox.bottom > h1Box.top &&
+									navBox.top < h1Box.bottom,
+							),
+							scrollX: document.documentElement.scrollWidth > window.innerWidth + 1,
+							bodyFont: Number.parseFloat(getComputedStyle(document.body).fontSize),
+							prosePosition: document.querySelector('.prose')?.getBoundingClientRect().width ?? 0,
+							pager: Boolean(document.querySelector('.pager .pager-title')),
+						};
+					});
+
+					const at = `${label} ${theme} ${width}`;
+					check(chrome.header, `${at}: the header is on the page`);
+					check(chrome.headerSticky === 'sticky', `${at}: the header is sticky`, chrome.headerSticky);
+					check(
+						chrome.crumbPage === (entry?.title ?? ''),
+						`${at}: the breadcrumb names this page`,
+						`${chrome.crumbSection} > ${chrome.crumbPage}`,
+					);
+					check(
+						chrome.crumbSection === (section?.title ?? ''),
+						`${at}: the breadcrumb names this section`,
+						chrome.crumbSection,
+					);
+					check(chrome.search, `${at}: the header carries a search slot`);
+					check(chrome.themeToggle, `${at}: the header carries a theme-toggle slot`);
+					check(chrome.github, `${at}: the header links the repo`);
+					check(chrome.pager, `${at}: the page ends with a prev/next pager`);
+					check(!chrome.scrollX, `${at}: the document is no wider than the viewport`);
+					check(
+						!chrome.overlap,
+						`${at}: the nav does not sit on top of the h1`,
+						`nav is ${chrome.navPosition}`,
+					);
+					if (width === 1440) {
+						check(chrome.railVisible, `${at}: the On this page rail is shown`);
+						check(
+							chrome.railItems.length === chrome.pageH2s.length && chrome.railItems.length > 1,
+							`${at}: the rail lists every h2 on the page`,
+							`${chrome.railItems.length} rail items, ${chrome.pageH2s.length} h2s`,
+						);
+						check(
+							chrome.railItems.every((title, index) => title === chrome.pageH2s[index]),
+							`${at}: the rail's titles are this page's h2 titles`,
+							chrome.railItems.join(' | '),
+						);
+						check(chrome.railTargets, `${at}: every rail link lands on a heading id`);
+						check(
+							chrome.bodyFont >= 19 && chrome.bodyFont <= 22,
+							`${at}: body copy is set around 20px`,
+							`${chrome.bodyFont}px`,
+						);
+					} else {
+						check(!chrome.railVisible, `${at}: the rail is hidden on a phone`);
+						check(
+							chrome.navPosition === 'static',
+							`${at}: the sidebar stacks instead of being pinned`,
+							chrome.navPosition,
+						);
+					}
+
+					await page.screenshot({
+						path: `${shotsDir}/T017-${label}-${theme}-${width}.png`,
+						fullPage: true,
+					});
+				}
+			}
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+
+		// --- the assumes line links the pages it names -------------------------
+		for (const href of ['/markless', '/markless/concepts/state', '/markless/concepts/computed']) {
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const assumed = await page
+				.locator('.page-meta a.page-meta-assume-link:not(.is-hidden)')
+				.evaluateAll((nodes) =>
+					nodes.map((node) => ({
+						href: node.getAttribute('href') ?? '',
+						title: (node.textContent ?? '').trim(),
+					})),
+				);
+			for (const link of assumed) {
+				const target = await fetch(`${origin}${link.href}`);
+				check(
+					target.status === 200,
+					`${href}: "Assumes: ${link.title}" links a page that answers`,
+					`${link.href} -> ${target.status}`,
+				);
+			}
+			check(
+				href === '/markless' ? assumed.length === 0 : assumed.length > 0,
+				`${href}: the assumes line has the links it should`,
+				`${assumed.length} links`,
+			);
+		}
+
+		// --- the footer doodles react to the pointer ----------------------------
+		await page.goto(`${origin}/markless/concepts/state`, { waitUntil: 'load' });
+		const doodles = page.locator('.pager-doodles .sprite');
+		await doodles.first().waitFor();
+		check((await doodles.count()) === 6, 'the pager carries its six doodles', String(await doodles.count()));
+		const doodleImage = (index: number) => doodles.nth(index).locator('img.sprite-ink-light');
+		const doodleMotion = (index: number) =>
+			doodleImage(index).evaluate((node) => {
+				const style = getComputedStyle(node as Element);
+				return { transform: style.transform, animation: style.animationName };
+			});
+		const restingCrown = await doodleMotion(0);
+		await doodles.first().hover();
+		await page.waitForTimeout(450);
+		const hoveredCrown = await doodleMotion(0);
+		check(
+			hoveredCrown.transform !== restingCrown.transform && hoveredCrown.transform !== 'none',
+			'the first pager doodle moves when it is pointed at',
+			`${restingCrown.transform} then ${hoveredCrown.transform}`,
+		);
+		// The star and the smiley are keyframed rather than swapped for another
+		// drawing: what proves the reaction is that an animation is running on the
+		// image the reader is looking at, not that its src changed.
+		for (const [index, name] of [
+			[4, 'doodle-dart'],
+			[5, 'doodle-roll'],
+		] as const) {
+			await page.mouse.move(0, 0);
+			await page.waitForTimeout(80);
+			const resting = await doodleMotion(index);
+			check(resting.animation === 'none', `doodle ${index + 1} is still at rest`, resting.animation);
+			await doodles.nth(index).hover();
+			await page.waitForTimeout(60);
+			const hovered = await doodleMotion(index);
+			check(
+				hovered.animation === name,
+				`doodle ${index + 1} runs its ${name} reaction on hover`,
+				hovered.animation,
+			);
+		}
+		await page.mouse.move(0, 0);
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,
