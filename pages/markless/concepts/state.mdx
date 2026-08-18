@@ -1,0 +1,37 @@
+import CounterDemo from '../../../components/demos/CounterDemo.tsrx';
+import Collapsible from '../../../components/demos/Collapsible.tsrx';
+
+# State: a variable the UI watches
+
+Here is the whole idea on one line:
+
+```tsx
+let count = state(0);
+```
+
+That is a `let`. It starts at zero. You read it by writing `count` and you change it by writing
+`count++` or `count = 10`, exactly as you would with any other variable.
+
+The one extra thing `state()` buys you is that the page follows it. Any part of your markup that
+used `count` updates when `count` changes.
+
+Here it is running:
+
+<CounterDemo />
+
+And here is the entire file behind that button:
+
+```tsx
+import { state } from '@markless/core';
+
+export default function Counter() @{
+	let count = state(0);
+
+	<button onClick={() => count++}>Clicked {count} times</button>
+}
+```
+
+`count++` is the only thing the click does, and the number inside the button is the only thing
+that changes on the page.
+
+<Collapsible summary="Which files can do this" text="Components live in files ending in .tsrx, and state() only works inside them. A plain .ts file throws an error if you call it there, so you find out immediately rather than wondering why nothing updates." />
