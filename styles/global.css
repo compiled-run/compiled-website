@@ -11,6 +11,26 @@
 	--code-surface: oklch(96% 0.02 79);
 	--code-edge: color-mix(in oklch, var(--ink) 22%, transparent);
 
+	/* Every pastel accent is light in both themes, so anything printed on one is
+	   always the dark ink, never the page's foreground. */
+	--on-accent: oklch(28% 0.015 90);
+	/* Raised surfaces: the playground frame, the callout, the collapsible. */
+	--raised: color-mix(in oklch, var(--paper) 80%, white);
+	--tinted: color-mix(in oklch, var(--yellow) 45%, var(--paper));
+	--tinted-quiet: color-mix(in oklch, var(--yellow) 35%, var(--paper));
+	/* The explorer's listing slab, which is a dark block on the light theme. */
+	--slab: var(--ink);
+	--slab-ink: var(--paper);
+	/* Paper grain, tuned per theme: dark ground shows far less tooth. */
+	--grain-fiber-blend: overlay;
+	--grain-fiber-opacity: 0.55;
+	--grain-speck-blend: hard-light;
+	--grain-speck-opacity: 0.22;
+	/* Which cut of a sprite is painted. CSS cannot swap an image `src`, so both
+	   are in the markup and the theme picks one. */
+	--sprite-light: inline-block;
+	--sprite-dark: none;
+
 	--font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
 	/* text shadow: an offset silhouette peeking out left of the glyphs, dilated
@@ -128,16 +148,16 @@ body::after {
 /* Fiber layer: continuous tooth pressed into everything via overlay. */
 body::before {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23grain)'/%3E%3C/svg%3E");
-	mix-blend-mode: overlay;
-	opacity: 0.55;
+	mix-blend-mode: var(--grain-fiber-blend);
+	opacity: var(--grain-fiber-opacity);
 }
 
 /* Speck layer: hard-light keys off the noise itself, so its bright flecks
    punch through dark ink the way paper tooth shows through print. */
 body::after {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.6' intercept='-0.8'/%3E%3CfeFuncG type='linear' slope='2.6' intercept='-0.8'/%3E%3CfeFuncB type='linear' slope='2.6' intercept='-0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23grain)'/%3E%3C/svg%3E");
-	mix-blend-mode: hard-light;
-	opacity: 0.22;
+	mix-blend-mode: var(--grain-speck-blend);
+	opacity: var(--grain-speck-opacity);
 }
 /* ---------------------------------------------------------------------------
    Docs chrome: header, sidebar, prose column. Tokens only, no new palette.
@@ -218,11 +238,13 @@ body::after {
 
 .sidebar-link:hover {
 	background: var(--yellow);
+	color: var(--on-accent);
 }
 
 .sidebar-link.is-active {
 	border-left-color: var(--pink);
 	background: var(--yellow);
+	color: var(--on-accent);
 	font-weight: 700;
 }
 
@@ -252,6 +274,7 @@ body::after {
 
 .prose code {
 	background: var(--yellow);
+	color: var(--on-accent);
 	padding: 0.1em 0.3em;
 	font-size: 0.9em;
 }
@@ -278,8 +301,21 @@ body::after {
 	background: none;
 	padding: 0;
 	color: inherit;
-	font-family: inherit;
 	font-size: inherit;
+}
+
+/* `* { font-family }` above matches every token span the highlighter emits, and
+   a direct match beats a family inherited from `pre`, so the spans have to be
+   named. The hover doc is prose, not code, and keeps Joy Elia. */
+.prose pre,
+.prose pre code,
+.prose pre code span {
+	font-family: var(--font-mono);
+}
+
+.prose pre .tsrx-tip,
+.prose pre .tsrx-tip span {
+	font-family: 'Joy Elia', system-ui, sans-serif;
 }
 
 /* ---------------------------------------------------------------------------
@@ -296,7 +332,7 @@ body::after {
 	padding: var(--space-s);
 	border: 2px solid var(--ink);
 	border-radius: 2px;
-	background: color-mix(in oklch, var(--paper) 80%, white);
+	background: var(--raised);
 	box-shadow: 4px 4px 0 var(--purple);
 }
 
@@ -318,7 +354,7 @@ body::after {
 	align-self: flex-start;
 	font-size: var(--step-0);
 	padding: 0.3em 0.9em;
-	color: var(--ink);
+	color: var(--on-accent);
 	background: var(--green-soft);
 	border: 2px solid var(--ink);
 	border-radius: 2px;
@@ -336,10 +372,13 @@ body::after {
 	margin-block: var(--space-m);
 	padding: var(--space-s);
 	border-left: 4px solid var(--pink);
-	background: color-mix(in oklch, var(--yellow) 45%, var(--paper));
+	background: var(--tinted);
 }
 
 .callout-title {
+	display: flex;
+	gap: 0.45em;
+	align-items: center;
 	margin: 0 0 0.3em;
 	font-weight: 700;
 }
@@ -352,12 +391,25 @@ body::after {
 	margin-block: var(--space-m);
 	padding: var(--space-xs);
 	border-left: 4px solid var(--purple);
-	background: color-mix(in oklch, var(--yellow) 35%, var(--paper));
+	background: var(--tinted-quiet);
 }
 
 .collapsible summary {
+	display: flex;
+	gap: 0.45em;
+	align-items: center;
 	cursor: pointer;
 	font-weight: 700;
+}
+
+/* A flex summary loses the default disclosure triangle, so it is drawn back. */
+.collapsible summary::before {
+	content: '▸';
+	font-size: 0.8em;
+}
+
+.collapsible[open] summary::before {
+	content: '▾';
 }
 
 .collapsible p {
@@ -376,17 +428,7 @@ html {
    --------------------------------------------------------------------------- */
 
 .prose pre.shiki {
-	/* The hover doc is positioned against this box. */
 	position: relative;
-}
-
-/* A box that scrolls clips its children, so the hover doc needs a strip of room
-   inside the block. The strip only exists while a token is actually hovered or
-   focused, so a block at rest still ends at its last line. */
-.prose pre.shiki:has(.tsrx-hover:hover),
-.prose pre.shiki:has(.tsrx-hover:focus),
-.prose pre.shiki:has(.tsrx-hover:focus-visible) {
-	padding-bottom: calc(var(--space-s) + 3.6em);
 }
 
 /* ---------------------------------------------------------------------------
@@ -396,6 +438,7 @@ html {
    --------------------------------------------------------------------------- */
 
 .tsrx-hover {
+	position: relative;
 	border-bottom: 1px dashed color-mix(in oklch, currentColor 32%, transparent);
 	cursor: help;
 	outline-offset: 2px;
@@ -405,12 +448,19 @@ html {
 	outline: 2px solid var(--yellow);
 }
 
+/* The doc sits directly above the token it explains, and the block reserves no
+   room for it: a block at rest ends at its last line and does not move when one
+   is pointed at. A `<pre>` that scrolls clips its children, so where the browser
+   supports anchor positioning the box is taken out to the viewport and pinned to
+   the token; without it the box is placed against the token and a token on the
+   first line has its doc clipped by the block's top edge. */
 .tsrx-tip {
 	position: absolute;
-	left: var(--space-s);
-	right: var(--space-s);
-	bottom: var(--space-xs);
-	z-index: 2;
+	left: 0;
+	bottom: calc(100% + 0.35em);
+	width: max-content;
+	max-width: 36ch;
+	z-index: 40;
 	background: var(--paper);
 	color: var(--ink);
 	border: 2px solid var(--ink);
@@ -432,10 +482,29 @@ html {
 	opacity: 1;
 }
 
+@supports (anchor-scope: --tsrx-token) {
+	.tsrx-hover {
+		anchor-name: --tsrx-token;
+		/* Scoped to this token's own subtree, so every doc finds its own token
+		   rather than the last one on the page. */
+		anchor-scope: --tsrx-token;
+	}
+
+	.tsrx-tip {
+		position: fixed;
+		position-anchor: --tsrx-token;
+		left: anchor(left);
+		bottom: calc(anchor(top) + 0.35em);
+		top: auto;
+		right: auto;
+	}
+}
+
 .tsrx-tip-title {
 	display: block;
 	padding: 0.15em 0.6em;
 	background: var(--yellow);
+	color: var(--on-accent);
 	border-bottom: 2px solid var(--ink);
 	font-weight: 700;
 }
@@ -465,7 +534,7 @@ html {
 	background: var(--yellow);
 	border: 2px solid var(--ink);
 	border-radius: 999px;
-	color: var(--ink);
+	color: var(--on-accent);
 	font-weight: 700;
 }
 
@@ -490,15 +559,16 @@ html {
 
 .playground .pick.is-picked {
 	background: var(--green-star);
+	color: var(--on-accent);
 }
 
 .file-lines {
 	display: block;
 	margin: 0;
 	padding: var(--space-xs);
-	background: var(--ink);
-	color: var(--paper);
-	border: 2px solid var(--ink);
+	background: var(--slab);
+	color: var(--slab-ink);
+	border: 2px solid var(--slab);
 	overflow-x: auto;
 	font-size: var(--step--1);
 	line-height: 150%;
@@ -521,4 +591,205 @@ html {
 	margin: 0;
 	font-size: var(--step--1);
 	min-height: 3em;
+}
+
+/* ---------------------------------------------------------------------------
+   Sprites and mascots. The sprites are the owner's crayon doodles, cut out of
+   `sprites-sheet.png`; each ships twice, once as drawn and once with its dark
+   outline lifted to chalk, and the theme decides which one is painted. The
+   mascots carry their own white outline and read on either ground.
+   --------------------------------------------------------------------------- */
+
+.sprite {
+	display: inline-block;
+	width: var(--sprite-size);
+	height: var(--sprite-size);
+	vertical-align: -0.18em;
+	flex: none;
+	line-height: 1;
+}
+
+.sprite-ink {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.sprite-ink-light {
+	display: var(--sprite-light);
+}
+
+.sprite-ink-dark {
+	display: var(--sprite-dark);
+}
+
+.mascot {
+	display: block;
+	width: var(--mascot-size);
+	height: auto;
+	flex: none;
+}
+
+.mascot.is-hero {
+	float: right;
+	width: var(--mascot-size);
+	margin: 0 0 var(--space-s) var(--space-s);
+	shape-outside: margin-box;
+}
+
+.mascot.is-mark {
+	width: var(--mascot-size);
+}
+
+/* The site mark: the markless mug beside the word. */
+.site-mark {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	margin-bottom: var(--space-m);
+	text-decoration: none;
+}
+
+.site-mark .site-name {
+	margin-bottom: 0;
+}
+
+.sidebar-title {
+	display: flex;
+	gap: 0.4em;
+	align-items: center;
+}
+
+/* ---------------------------------------------------------------------------
+   The sibling projects, on the foot of the landing page.
+   --------------------------------------------------------------------------- */
+
+.more-from {
+	margin-top: var(--space-xl);
+	padding-top: var(--space-m);
+	border-top: 2px dashed var(--code-edge);
+}
+
+.more-from-title {
+	margin: 0 0 var(--space-s);
+	font-size: var(--step-0);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.75;
+}
+
+.more-from-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	gap: var(--space-s);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.more-from-link {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2em;
+	align-items: center;
+	padding: var(--space-xs) 0.4em;
+	color: var(--ink);
+	text-align: center;
+	text-decoration: none;
+	border: 2px solid transparent;
+	border-radius: 2px;
+}
+
+.more-from-link:hover {
+	border-color: var(--ink);
+	background: var(--raised);
+}
+
+/* One height for every sticker, so four different silhouettes still line up. */
+.more-from-link .mascot {
+	height: var(--mascot-size);
+	width: auto;
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.more-from-name {
+	font-weight: 700;
+}
+
+.more-from-note {
+	font-size: var(--step--2);
+	opacity: 0.7;
+}
+
+/* The page sprite rides in .page-meta, because MDX cannot nest a component
+   inside a markdown heading; it is lifted back up beside the H1 here. */
+.page-meta-sprite {
+	display: inline-flex;
+	margin-top: -0.9em;
+}
+
+/* ---------------------------------------------------------------------------
+   Dark theme. The same paper design with the ground and the ink swapped: a warm
+   near-black chalkboard, off-white chalk, the same four pastel accents. Only
+   tokens move; every rule above is written against them.
+
+   Two selectors carry the same block. `data-theme` is the explicit choice, and
+   the media query is the default for a reader who has not made one. They are
+   duplicated rather than shared because a media query and an attribute cannot
+   be joined into one selector; keep them in step.
+   --------------------------------------------------------------------------- */
+
+html[data-theme='dark'] {
+	--ink: oklch(93% 0.012 85);
+	--paper: oklch(19.5% 0.012 70);
+	--code-surface: oklch(25% 0.014 70);
+	--raised: oklch(24% 0.013 70);
+	--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
+	--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
+	--slab: oklch(14% 0.01 70);
+	--slab-ink: oklch(92% 0.012 85);
+	--grain-fiber-blend: soft-light;
+	--grain-fiber-opacity: 0.3;
+	--grain-speck-blend: screen;
+	--grain-speck-opacity: 0.06;
+	--sprite-light: none;
+	--sprite-dark: inline-block;
+}
+
+@media (prefers-color-scheme: dark) {
+	html:not([data-theme='light']) {
+		--ink: oklch(93% 0.012 85);
+		--paper: oklch(19.5% 0.012 70);
+		--code-surface: oklch(25% 0.014 70);
+		--raised: oklch(24% 0.013 70);
+		--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
+		--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
+		--slab: oklch(14% 0.01 70);
+		--slab-ink: oklch(92% 0.012 85);
+		--grain-fiber-blend: soft-light;
+		--grain-fiber-opacity: 0.3;
+		--grain-speck-blend: screen;
+		--grain-speck-opacity: 0.06;
+		--sprite-light: none;
+		--sprite-dark: inline-block;
+	}
+}
+
+/* Token colours are inline on each span: the light one as `color`, the dark one
+   as `--shiki-dark` beside it. Swapping themes means reading the other channel.
+   The hover doc is a span inside the block but is not code, so it is excluded. */
+/* The colour is inline on the span, and only `!important` outranks that. It is
+   here rather than in the emitted markup so the light output stays exactly what
+   the single-theme highlighter produced. */
+html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
+	color: var(--shiki-dark) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+	html:not([data-theme='light'])
+		.shiki
+		span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
+		color: var(--shiki-dark) !important;
+	}
 }

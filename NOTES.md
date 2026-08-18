@@ -398,3 +398,137 @@ does not help: with no child edge the id would be `symbol:5`, which still matche
 `.mdx` is still limited to updates that write a stored number straight into the DOM, which is
 exactly what the computed page cannot be taught with. The two pages that need these widgets stay
 blocked on the framework fix.
+
+## 15. T016: `storage()` cannot resume on 0.3.0, so the site has no theme toggle
+
+The dark theme is finished and a reader on a dark operating system gets it. What is missing is the
+control that lets anyone else choose it, and the reason is a framework defect, not a design choice.
+
+The toggle was written the intended way: `let theme = storage('theme', 'light')` and a button whose
+click assigns to it. `@markless/core`'s own playbook says that assignment persists to `localStorage`
+and puts `data-theme` on `<html>`, which is exactly the hook every dark rule in `styles/global.css`
+hangs off. Three placements were built and served against the production build. None of them work,
+and two of them are worse than not working.
+
+**Declared inside the component body: compile error.** `storage()` is collected only as a
+module-scope graph binding (`collect-module-scope.ts` in `@markless/compiler`), so a body-scope
+declaration fails the build:
+
+```
+MARKLESS_STATE_UNRESOLVED_WRITE: Cannot write to "theme" because the compiler cannot
+resolve that target.
+```
+
+Declaring it at module scope compiles. That much is just an undocumented rule.
+
+**Declared at module scope in a component the page reaches (the sidebar, or an island dropped
+straight into an `.mdx` page): every island on that page dies.** The click throws twice:
+
+```
+RuntimePayloadError: Invalid markless/state storage: expected array.
+```
+
+The served `<script type="markless/state">` is the proof. A storage cell is present, the payload is
+stamped `"version":2` because of it, and the `storage` array the version-2 client validator
+requires is not there at all:
+
+```json
+{"version":2,"cells":[{"graphNodeId":"storage:…/theme-toggle.tsrx#theme","name":"theme",…}], …}
+```
+
+`createProtocolStatePayload` in `@markless/serializer` gets this right — it writes
+`version: storage.length > 0 ? 2 : 1` and spreads `{ storage }` under the same condition — so the
+records are being dropped after that, most likely by the record-delta merge the MDX child
+composition runs (`optionalRecordDelta(…, 'storage', …)` in the same file). Whatever drops them
+leaves the version behind, and `validateStorageRecords` on the client refuses the payload. Refusing
+it takes the whole page down with it: on the landing page the counter stopped moving as well.
+
+**Declared at module scope in `document.tsrx` itself: silently dropped.** The payload stays at
+`"version":1` and carries no storage cell at all, so nothing throws and the button does nothing.
+
+So `storage()` is unusable on 0.3.0 in every position an app can put it, and there is no app-side
+shape that avoids it. The fix is in the framework: whatever composes the child state payload has to
+carry the `storage` records the way it carries `cells`, or leave the version at 1 when it does not.
+
+What the site does instead: `styles/global.css` keys the dark theme off `html[data-theme='dark']`,
+which is precisely the attribute `storage('theme', …)` writes, with
+`@media (prefers-color-scheme: dark)` as the default for a reader who has not chosen. The day the
+payload defect is fixed, the toggle is this file plus one `<ThemeToggle />` in the sidebar:
+
+```tsx
+// components/docs/theme-toggle.tsrx
+import { storage } from '@markless/core';
+
+let theme = storage('theme', 'light');
+
+export default function ThemeToggle() @{
+	<button
+		class="theme-toggle"
+		type="button"
+		aria-label="Switch between the light and dark theme"
+		onClick={() => {
+			theme = theme === 'dark' ? 'light' : 'dark';
+		}}
+	>
+		<span class="theme-toggle-face is-light" aria-hidden="true">☀</span>
+		<span class="theme-toggle-face is-dark" aria-hidden="true">☾</span>
+		<span class="theme-toggle-word is-light">Dark</span>
+		<span class="theme-toggle-word is-dark">Light</span>
+	</button>
+}
+```
+
+The witness proves both themes by setting `data-theme` itself, which is the same switch the button
+would throw, and writes `T016-index-light.png`, `T016-index-dark.png`, `T016-state-light.png` and
+`T016-state-dark.png` into the goal notes.
+
+## 16. T016: the hover doc is a popover now, and what had to change to allow it
+
+Finding 10 said the doc was pinned to the foot of its code block because a box that scrolls clips
+its children. That was true and it looked wrong: the explanation of a token on line two appeared
+five lines below it, and the block grew by three lines while a token was pointed at.
+
+It is now a popover directly above the token (`.tsrx-hover { position: relative }`, the doc at
+`bottom: calc(100% + 0.35em); left: 0`, `max-width: 36ch`), and the `pre.shiki:has(.tsrx-hover:hover)`
+padding trick is gone, so the block is exactly the same height at rest and while hovered. The
+witness measures that: `91.6px then 91.6px`.
+
+The clipping problem is real and CSS alone cannot solve it in general — `overflow-x: auto` forces
+`overflow-y` to `auto` too, and the doc is a child of the token, which is inside the scroller. So
+the block is taken out of the scroller where the browser can do it: under
+`@supports (anchor-scope: --tsrx-token)` the doc becomes `position: fixed` and pins itself to the
+token with `position-anchor`, which is not clipped by any ancestor. `anchor-scope` is what makes
+that safe with one shared anchor name — it limits the name to the token's own subtree, so every doc
+finds its own token instead of the last one on the page. Chrome 131 and later take that path.
+Without it the doc is placed against the token and a token on the *first* line of a block has its
+doc clipped by the block's top edge. That is the whole of the degradation.
+
+**Fenced code was not actually monospace.** `* { font-family: 'Joy Elia' }` matches the token spans
+shiki emits *directly*, and a direct match beats a family inherited from `pre`, so every block was
+being painted in the display face while `getComputedStyle(pre).fontFamily` reported the monospace
+stack. The rule now names `.prose pre`, `.prose pre code` and `.prose pre code span`, and the
+witness reads the computed family off all three: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`.
+
+## 17. T016: two code themes from one highlighter, and the sprite cut-outs
+
+`tooling/highlight-code.ts` asks shiki for `{ light: 'github-light', dark: 'github-dark' }` with
+`defaultColor: 'light'`. That leaves the light output byte-for-byte what the single-theme mode
+produced and adds one `--shiki-dark: #…` declaration to each span. The dark theme reads the other
+channel. It has to do it with `!important`, because the colour is an inline style and nothing else
+outranks that; the alternative was to stop emitting `color` at all, which would have changed the
+light output.
+
+The sprites and the mascots are cut by `tooling/cut-sprites.ts` (ImageMagick 7, run by hand). Two
+things worth knowing about the assets:
+
+- Every sprite ships twice: `public/sprites/<name>.png` as drawn, and `<name>.dark.png` with the
+  dark crayon outline lifted to chalk so it still reads on the dark ground. CSS cannot swap an
+  image `src`, so `components/sprite.tsrx` puts both in the markup and the `--sprite-light` /
+  `--sprite-dark` tokens decide which one is painted.
+- The mascots carry their own white sticker outline and read on either ground, so there is one file
+  each. The one imperfect crop is **frameless**: the red loop arrow to the right of the stamp is
+  clipped at the edge of the cut. It is not worth another pass; recut it if the owner disagrees.
+
+`components/docs/more-from-compiled.tsrx` links the four projects. **versionless has no public
+repository** (checked 2026-08-17), so it points at `https://github.com/compiled-run` as a
+placeholder for the owner to replace.

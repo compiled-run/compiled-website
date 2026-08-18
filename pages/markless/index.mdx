@@ -1,10 +1,14 @@
 import PageMeta from '../../components/page-meta.tsrx';
 import CounterDemo from '../../components/demos/counter-demo.tsrx';
 import Collapsible from '../../components/demos/collapsible.tsrx';
+import Mascot from '../../components/mascot.tsrx';
+import MoreFromCompiled from '../../components/docs/more-from-compiled.tsrx';
+
+<Mascot name="markless" size="10rem" variant="hero" />
 
 # The update is what ships, not the machinery for finding it
 
-<PageMeta level="Start here" time="5 min" assumes="nothing" />
+<PageMeta level="Start here" time="5 min" assumes="nothing" sprite="crown" />
 
 You click a button and a number next to it goes up by one. Between those two moments, most
 frameworks stop and rebuild a description of the whole screen, compare it against the previous
@@ -58,7 +62,7 @@ There is no separate template language, no configuration file that decides which
 and no build step you have to learn to describe. A file under `pages/` is a URL, and a component is
 a function.
 
-<Collapsible summary="Coming from another framework?" text="Three things you may be looking for are absent on purpose. There is no virtual DOM: the specification's third goal is 'No VDOM, no re-renders', and templates compile to real DOM operations. There is no hydration pass: component bodies execute during initial render and never during browser resume. And there is no second syntax to hold in your head, because the framework supports exactly one authoring language. What you give up is JSX and TSX, which the overview says are explicitly not supported, now or later." />
+<Collapsible sprite="star-badge" summary="Coming from another framework?" text="Three things you may be looking for are absent on purpose. There is no virtual DOM: the specification's third goal is 'No VDOM, no re-renders', and templates compile to real DOM operations. There is no hydration pass: component bodies execute during initial render and never during browser resume. And there is no second syntax to hold in your head, because the framework supports exactly one authoring language. What you give up is JSX and TSX, which the overview says are explicitly not supported, now or later." />
 
 ## Where to go next
 
@@ -69,3 +73,5 @@ Start with [Reading a .tsrx file](/markless/start/reading-tsrx), which spends fi
 three unfamiliar bits so that every later code sample reads as ordinary TypeScript. If you have
 already written a component and want the reactivity model instead, go straight to
 [State](/markless/concepts/state).
+
+<MoreFromCompiled />

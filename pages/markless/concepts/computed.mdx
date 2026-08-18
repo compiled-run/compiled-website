@@ -4,7 +4,7 @@ import Collapsible from '../../../components/demos/collapsible.tsrx';
 
 # A value you work out is never out of date
 
-<PageMeta level="Start here" time="6 min" assumes="state" />
+<PageMeta level="Start here" time="6 min" assumes="state" sprite="spiral" />
 
 Everybody has shipped this bug. Two numbers on a screen disagree with each other, because one of
 them was updated and the other one was supposed to be updated at the same time and was not. The
@@ -74,7 +74,7 @@ answers at once. Change the values it is made from instead.
 writing a line whose only job is keeping one variable agreeing with another, the second one wanted
 to be a `computed()`.
 
-<Collapsible summary="Where is the dependency list, and where is the effect hook?" text="There is no dependency list because there is nothing for you to keep accurate: the compiler reads the body of the computed and works out what it read. There is no effect primitive either, and the specification is direct that there never will be. Its reasoning is that a computed and an effect are the same node, and the only difference is that a computed runs when it is read while an effect runs because its inputs changed, with nobody asking. That second property is the one that breaks resumability, because it is code that wakes itself up. The classic uses each have a home: deriving a value from other values is computed, fetching data is an async computed, and one-off side work belongs in the event handler where the change actually originated." />
+<Collapsible sprite="star-badge" summary="Where is the dependency list, and where is the effect hook?" text="There is no dependency list because there is nothing for you to keep accurate: the compiler reads the body of the computed and works out what it read. There is no effect primitive either, and the specification is direct that there never will be. Its reasoning is that a computed and an effect are the same node, and the only difference is that a computed runs when it is read while an effect runs because its inputs changed, with nobody asking. That second property is the one that breaks resumability, because it is code that wakes itself up. The classic uses each have a home: deriving a value from other values is computed, fetching data is an async computed, and one-off side work belongs in the event handler where the change actually originated." />
 
 ## Where to go next
 

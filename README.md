@@ -49,7 +49,10 @@ block sits above it. It writes screenshots into the markless repo's goal notes.
   page; `CounterDemo.tsrx` wraps it in the playground frame, because MDX cannot nest components.
 - `components/docs/Sidebar.tsrx`, `document.tsrx`, `nav.ts` — the chrome.
 - `styles/global.css` — the look, copied from the markless repo's `docs/` app, plus the code-block
-  palette and the hover-doc box.
+  palette, the hover-doc box and the dark theme.
+- `components/sprite.tsrx`, `components/mascot.tsrx` — the hand-drawn accents. `public/sprites/`
+  and `public/mascots/` hold the cut assets; `tooling/cut-sprites.ts` is what cut them and is not
+  part of the build.
 - `tooling/` — build-time code. `highlight-mdx.ts` is a Vite plugin registered after `router()`;
   `highlight-code.ts` runs shiki; `tsrx-docs.ts` holds the one-sentence explanation of each TSRX
   token; `tsrx.tmLanguage.json` is the TSRX TextMate grammar. It is not called `plugins/` because
@@ -73,6 +76,14 @@ In a `tsrx` fence, the TSRX constructs and the framework calls carry a hover doc
 `state`, `attach` or an `onClick`-style prop, or tab to it, and one sentence explains it. The
 sentences live in `tooling/tsrx-docs.ts`. There is no JavaScript behind them; the box is a child of
 the token, shown by CSS on hover and on focus. `NOTES.md` section 9 says why it is not an island.
+
+## Themes
+
+The dark theme is the paper design with the ground and the ink swapped and the same four pastel
+accents. It is keyed off `html[data-theme='dark']`, with `@media (prefers-color-scheme: dark)` as
+the default for a reader who has not chosen. There is no toggle on the page: `storage()`, which is
+the API that would write that attribute, breaks resume on 0.3.0. `NOTES.md` finding 15 has the
+payload evidence and the component that goes back in the moment it is fixed.
 
 `NOTES.md` records what 0.2.2 and then 0.3.0 could and could not do while this was built. Read it before
 changing the shell or the build config.
