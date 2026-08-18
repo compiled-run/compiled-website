@@ -40,6 +40,20 @@ npm run preview    # serve the production build
 Pages live under `pages/markless/`, which is what puts them at `/markless/…`; `vite.config.ts` sets
 the matching `base` and `nitro.baseURL`.
 
+## The document head, and what a crawler is given
+
+`nav.ts` is the only place a page's title and its one-sentence description are written. Every entry
+carries a `description`; `headFor(pathname)` turns an entry into the `<title>` and the
+`<meta name="description">` that `document.tsrx` renders, along with `lang="en"`, a canonical link,
+the Open Graph tags and the favicon. An unknown path falls back to the site's own name and sentence.
+
+`scripts/generate-seo.ts` writes `public/robots.txt`, `public/sitemap.xml` and `public/llms.txt`
+from the same array, and `npm run build` runs it before `vp build` so the files are copied into the
+output. `npm run seo` runs it on its own. The site is one section of `compiled.run`, served under
+`/markless/`, so `public/` lands at `/markless/` and all three are served from there; a host-level
+`/robots.txt` belongs to the origin, and the copy here states this section's rules and names its
+sitemap. Adding a page still means adding one entry to `nav.ts` and nothing else.
+
 ## Checks
 
 ```sh
@@ -48,9 +62,13 @@ npm run witness    # builds must exist: serves .output, curls the routes, clicks
 ```
 
 `npm run witness` needs a production build first (`npm run build`) and uses system Chrome through
-`playwright-core`. It checks the routes answer, that the code blocks are really highlighted, that a
-TSRX token shows its hover doc, and that the Counter island still resumes on a page whose first code
-block sits above it. It writes screenshots into the markless repo's goal notes.
+`playwright-core`. It checks the routes answer, that every page serves a title and a description no
+other page serves, that `robots.txt`, `sitemap.xml` and `llms.txt` answer with what they exist for,
+that no rendered code block prints the `computed(async ({ signal }) => …)` form that does not
+typecheck on 0.3.1, that the code blocks are really highlighted, that a TSRX token shows its hover
+doc, that a phone gets the article's `h1` inside the first screenful with the nav collapsed, and
+that the Counter island still resumes on a page whose first code block sits above it. It writes
+screenshots into the markless repo's goal notes.
 
 ## Layout
 
@@ -64,7 +82,11 @@ block sits above it. It writes screenshots into the markless repo's goal notes.
   `<html>` root rather than `<Html>` from `@markless/router`, which still fails the build on 0.3.1
   (`NOTES.md` findings 2 and 24).
 - `styles/global.css` — the look, copied from the markless repo's `docs/` app, plus the code-block
-  palette, the hover-doc box and the dark theme.
+  palette, the hover-doc box and the dark theme. Below `70rem` the sidebar's list is collapsed
+  behind a `<details>` and the "On this page" outline is laid on its side as a strip of chips, so
+  the first phone screenful is the article rather than the navigation (`NOTES.md` finding 36).
+- `public/favicon.svg`, `public/robots.txt`, `public/sitemap.xml`, `public/llms.txt` — the head and
+  crawler files. The last three are generated; `scripts/generate-seo.ts` is what writes them.
 - `components/sprite.tsrx`, `components/mascot.tsrx`, `components/sticker.tsrx` — the hand-drawn
   accents. `public/sprites/`, `public/mascots/` and `public/stickers/` hold the cut assets;
   `tooling/cut-sprites.ts` is what cut them and is not part of the build. Sprites are the flat

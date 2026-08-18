@@ -36,7 +36,7 @@ changes. Give it an `async` body and it becomes an async value, which needs a
 
 ```tsrx
 const total = computed(() => shirts * 20 + mugs * 8);
-const feed = computed(async ({ signal }) => fetchFeed(url.href, signal));
+const feed = computed(async () => fetchFeed(url.href));
 ```
 
 `storage(key, fallback)` works like `state`, and also saves the value in the browser so it survives
@@ -68,9 +68,14 @@ build, and passing the value through props is the working advice today.
 onClick={}   and every other on<Event> name: runs when this node fires that DOM event
 el={}        binds one element() handle to this node
 attach={}    installs longer-lived behaviour on this node, and may return a cleanup function
-class={}     a string, including a state variable holding a string
+class={}     a string, including a state variable holding a string (see the caveat below)
 style={}     a style string
 ```
+
+One caveat on `class={}`, and it is the site's own. On published 0.3.1 the compiler writes no DOM
+update for a `class` binding, so a class that is an expression renders correctly from the server and
+then never changes again. [Styling](/markless/concepts/styling) has the measurement and what to
+write instead.
 
 `attach` belongs on a host element and never on a component. It may return a cleanup function, which
 runs when the element goes away, and an array of behaviours installs in order and cleans up in

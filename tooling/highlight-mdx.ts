@@ -82,6 +82,18 @@ function outlineMarkup(headings: readonly Heading[]): string {
 	);
 }
 
+/**
+ * Puts the rail just after the page's h1 rather than in front of it. On a wide
+ * screen CSS takes the rail out of the flow either way; on a phone it is in the
+ * flow, and a reader should meet the page's title before its outline.
+ */
+function spliceOutline(html: string, outline: string): string {
+	const afterHeading = html.indexOf('</h1>');
+	if (afterHeading < 0) return outline + html;
+	const at = afterHeading + '</h1>'.length;
+	return html.slice(0, at) + outline + html.slice(at);
+}
+
 function isMdxRoute(id: string): boolean {
 	return id.split('?', 1)[0].endsWith('.mdx');
 }
@@ -114,7 +126,7 @@ async function highlightParts(code: string, id: string): Promise<string> {
 		rewritten.push(collectHeadings(await highlightFences(part.html), seen, headings));
 	}
 	const outline = outlineMarkup(headings);
-	if (outline && firstHtml >= 0) rewritten[firstHtml] = outline + (rewritten[firstHtml] ?? '');
+	if (outline && firstHtml >= 0) rewritten[firstHtml] = spliceOutline(rewritten[firstHtml] ?? '', outline);
 	const nextParts: MdxRoutePart[] = parts.map((part, index) => {
 		const html = rewritten[index];
 		if (part.kind !== 'html' || html === undefined || html === part.html) return part;
@@ -150,7 +162,7 @@ async function highlightSoloHtml(code: string): Promise<string> {
 		new Set<string>(),
 		headings,
 	);
-	const html = outlineMarkup(headings) + body;
+	const html = spliceOutline(body, outlineMarkup(headings));
 	return code.replace(solo[0], () => `return { html: ${JSON.stringify(html)} };`);
 }
 

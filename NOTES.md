@@ -1249,3 +1249,65 @@ Where they are used, kept to accents: the landing hero, one callout corner on fo
 two in the footer doodle strip, and the like heart. A callout's corner sticker is a
 `data-sticker` attribute the stylesheet paints, not an `<img>`: an element cannot be left out
 without `@if`, and a hidden `<img>` would still fetch its src.
+
+
+## 35. T008: the document head is per page, and a second `assumes` key still breaks the next island
+
+The review's blocking finding B5 was that all nineteen pages served the same
+`<title>Markless docs</title>`, no description, no `lang`, no canonical, no favicon and no
+`robots.txt`, `sitemap.xml` or `llms.txt`. All of that is now driven from `nav.ts`: each entry
+carries a `description`, `headFor(pathname)` builds the title and the sentence, and
+`document.tsrx` renders them. `scripts/generate-seo.ts` writes the three crawler files from the
+same array before `vp build` runs, so adding a page to the sidebar is still the only thing an
+author does. The witness asserts a distinct title and a distinct description on every page, and
+that all three files answer 200 with the content they exist for.
+
+**One thing that had to move: the "On this page" rail is spliced after the page's `</h1>` now**,
+not in front of it. On a wide screen CSS lifts it out of the flow either way, but on a phone it is
+in the flow, and the article's own title has to arrive before its outline.
+
+**Finding 29 is still live, and T008 re-measured it.** The review asked for
+`assumes="state, events"` on `/markless/build/components` and `/markless/build/elements`. Setting
+it and rebuilding put the elements page's focus-field widget back in the state finding 29 describes:
+
+```
+FAIL  clicking the button puts the caret in the field
+FAIL  the focus field reports the cursor moved — never settled, last read "The cursor is somewhere else"
+```
+
+So the locator indices for a second island on the page are still computed as if the first island's
+`@for` emitted a fixed number of nodes, and one `assumes` key per page remains the rule for this
+site on 0.3.1. Both pages were put back to `assumes="events"`. The day finding 29 is fixed, the
+second key can go on and the prerequisite line will be the truer one.
+
+## 36. T008: the phone gets one line of navigation instead of nineteen
+
+Below `70rem` the whole 19-entry sidebar used to render inline above every article, measured at 390
+as `position=static w=353 h=1068 top=50`, with `.on-this-page` hidden in the same media query. The
+nav list is now inside a `<details class="sidebar-disclosure">` in `components/docs/sidebar.tsrx`
+with **no `open` attribute**, so it is shut wherever CSS does not open it, and the stylesheet opens
+it again above 70rem with:
+
+```css
+.sidebar-disclosure::details-content {
+	content-visibility: visible;
+	block-size: auto;
+	overflow: visible;
+}
+```
+
+That is the whole trick, and it is why the disclosure defaults to closed rather than open: a
+`<details open>` cannot be closed again by CSS, but a closed one can be opened by it. Chrome 151 is
+what the witness measured on; `::details-content` is in Chrome, Firefox and Safari releases from
+2025, and a browser without it shows the docs nav behind a disclosure on desktop too, which is a
+degradation rather than a break.
+
+Measured at 390 after the change: the nav box is 150px tall instead of 1,068, the article's `h1`
+starts at 257px instead of below the fold, and the outline is laid on its side as a strip of chips
+that scrolls sideways rather than being hidden. The witness asserts all four at both 390 breakpoints
+in both themes, and asserts the opposite at 1440: the list visible, the summary not painted.
+
+**Reading whether a disclosure closed by CSS is visible needs the browser's own answer.** A
+`.sidebar-list` inside a `content-visibility: hidden` subtree still reports a non-zero
+`getBoundingClientRect()`. `element.checkVisibility({ contentVisibilityAuto: true })` returns
+`false`, which is what the witness uses.

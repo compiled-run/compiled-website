@@ -1,6 +1,7 @@
 import PageMeta from '../../../components/page-meta.tsrx';
 import ThreeDifferencesDemo from '../../../components/demos/three-differences-demo.tsrx';
 import Collapsible from '../../../components/demos/collapsible.tsrx';
+import Callout from '../../../components/demos/callout.tsrx';
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
 import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
@@ -16,10 +17,12 @@ way it always did.
 
 **Three things look unfamiliar, and that is the whole list. It is not going to grow.**
 
-Here is the counter file with those three things marked. Click each of the three labels, and watch
-the file rather than the label:
+Here is the counter file with those three things marked. Click each label and read the sentence
+under the file:
 
 <ThreeDifferencesDemo />
+
+<Callout sticker="tape" sprite="cross" title="Half of this box is dead, and here is which half" text="The sentence under the file really does change when you click a label. The highlight on the file does not, and neither does the picked button: both of those are class={ternary} bindings, and the compiler this site is pinned to writes no dom update for a class binding at all, so the click has nothing to run. NOTES.md finding 18 in the site repository has the compiled artifact that shows the missing record. The highlight comes back the day the compiler emits it, and the witness keeps checking it so that day is not something anyone has to remember." />
 
 ## The body is written with an at sign
 

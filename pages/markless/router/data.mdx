@@ -35,12 +35,13 @@ the parts you normally want.
 Then the load is the thing you would have written anyway:
 
 ```tsrx
-const feed = computed(async ({ signal }) => fetchLocalUpdates(url.href, signal));
+const feed = computed(async () => fetchLocalUpdates(url.href));
 ```
 
 That is a `computed` whose body is `async`. It depends on `url` because it read `url`, so a
-different URL is a different value, worked out again, without you wiring anything up. The `signal`
-is an `AbortSignal`, so a request that is no longer wanted can be cancelled.
+different URL is a different value, worked out again, without you wiring anything up. The derive
+function takes no arguments: on 0.3.1 the published type is `computed<T>(derive: () => T)`, so
+there is nothing handed in for you to cancel with.
 
 The waiting and the failure are the arms you already know:
 

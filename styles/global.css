@@ -343,6 +343,7 @@ html[data-theme='dark'] .theme-toggle-to-light {
 	width: 16rem;
 	max-height: calc(100vh - var(--header-height) - var(--space-s));
 	overflow-y: auto;
+	scrollbar-width: thin;
 	padding-block: var(--space-s);
 	font-size: var(--step--1);
 }
@@ -403,6 +404,30 @@ html[data-theme='dark'] .theme-toggle-to-light {
 	}
 }
 
+/* The nav list is inside a <details> with no `open` attribute, so a phone gets
+   one line of navigation instead of nineteen and the article's h1 is in the
+   first screenful. Above 70rem the column sits beside the prose, so the
+   disclosure is opened here and its summary is not painted. */
+.sidebar-summary {
+	display: none;
+}
+
+.sidebar-disclosure::details-content {
+	content-visibility: visible;
+	block-size: auto;
+	overflow: visible;
+}
+
+/* The pinned column is about 900px of list. On anything shorter than that it
+   scrolls inside itself, and without a fade the list ends mid-Router on a hard
+   edge: How it works and Reference are invisible to a reader who never finds
+   the inner scroll. Above that height nothing is cut off, so nothing is faded. */
+@media (min-width: 70.01rem) and (max-height: 62rem) {
+	.sidebar {
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent 100%);
+	}
+}
+
 @media (max-width: 70rem) {
 	.site-shell {
 		padding-inline: var(--space-s-l);
@@ -415,8 +440,66 @@ html[data-theme='dark'] .theme-toggle-to-light {
 		margin-inline: auto;
 		padding-block: var(--space-s) 0;
 	}
+	.sidebar-summary {
+		display: block;
+		padding: 0.35em 0.7em;
+		border: 2px solid var(--ink);
+		border-radius: 8px;
+		background: var(--raised);
+		font-size: var(--step--1);
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.sidebar-disclosure[open] .sidebar-summary {
+		margin-bottom: var(--space-xs);
+	}
+	.sidebar-disclosure::details-content {
+		content-visibility: hidden;
+		block-size: 0;
+		overflow: hidden;
+	}
+	.sidebar-disclosure[open]::details-content {
+		content-visibility: visible;
+		block-size: auto;
+		overflow: visible;
+	}
+	/* The outline is not hidden on a phone, it is laid on its side: one strip of
+	   chips that scrolls sideways, so the reader keeps the page's shape without
+	   paying a column of it before the h1. */
 	.on-this-page {
-		display: none;
+		position: static;
+		width: auto;
+		max-width: 68ch;
+		max-height: none;
+		margin: 0 auto var(--space-xs);
+		display: flex;
+		align-items: baseline;
+		gap: 0.6em;
+		overflow: hidden;
+	}
+	.on-this-page-title {
+		margin: 0;
+		flex: 0 0 auto;
+	}
+	.on-this-page-list {
+		display: flex;
+		gap: 0.4em;
+		overflow-x: auto;
+		scrollbar-width: thin;
+		padding-bottom: 0.2em;
+	}
+	.on-this-page-item {
+		flex: 0 0 auto;
+	}
+	.on-this-page-link {
+		white-space: nowrap;
+		border-left: none;
+		border: 2px solid var(--code-edge);
+		border-radius: 999px;
+		padding: 0.1em 0.7em;
+	}
+	.on-this-page-item-h3 .on-this-page-link {
+		padding-left: 0.7em;
 	}
 }
 
@@ -701,7 +784,7 @@ html {
 	left: 0;
 	bottom: calc(100% + 0.35em);
 	width: max-content;
-	max-width: 36ch;
+	max-width: min(36ch, calc(100vw - 2 * var(--space-s-l)));
 	z-index: 40;
 	background: var(--paper);
 	color: var(--ink);
@@ -823,10 +906,12 @@ html {
 	border-left: 3px solid transparent;
 }
 
+/* The band is the yellow; the text on it has to be the ink that every other
+   pastel accent carries, not the yellow again. */
 .file-line.is-lit {
-	background: color-mix(in oklch, var(--yellow) 30%, transparent);
+	background: var(--yellow);
 	border-left-color: var(--yellow);
-	color: var(--yellow);
+	color: var(--on-accent);
 }
 
 .explorer-note {

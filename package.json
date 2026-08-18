@@ -4,12 +4,13 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vp dev",
-		"build": "vp build",
+		"build": "node --experimental-strip-types scripts/generate-seo.ts && vp build",
 		"preview": "vp preview",
 		"check": "vp check",
 		"doctor": "node scripts/markless-doctor.mjs",
 		"fmt": "vp fmt",
 		"test": "vp test",
+		"seo": "node --experimental-strip-types scripts/generate-seo.ts",
 		"witness": "node --experimental-strip-types scripts/witness.ts"
 	},
 	"dependencies": {

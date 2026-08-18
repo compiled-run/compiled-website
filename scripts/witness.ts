@@ -9,7 +9,7 @@ import { createServer } from 'node:net';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Locator, type Page } from 'playwright-core';
-import { nav } from '../nav.ts';
+import { flatNav, headFor, nav } from '../nav.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const shotsDir =
@@ -301,7 +301,11 @@ try {
 		);
 		await page.screenshot({ path: `${shotsDir}/T004-state-after.png`, fullPage: true });
 
-		// --- every page in the nav: 200, an h1, and a screenshot ---------------
+		// --- every page in the nav: 200, an h1, a head of its own, a screenshot -
+		// Nineteen identical titles are nineteen pages a reader, a bookmark and a
+		// search result cannot tell apart, so the title and the description are
+		// asserted per page and then asserted to be all different.
+		const heads: { href: string; title: string; description: string }[] = [];
 		for (const section of nav) {
 			for (const entry of section.entries) {
 				const response = await fetch(`${origin}${entry.href}`);
@@ -312,6 +316,35 @@ try {
 					html.includes('class="page-meta"'),
 					`${entry.href} carries its level, reading time and prerequisite line`,
 				);
+				const title = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
+				const description = html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+				const wanted = headFor(entry.href);
+				check(title === wanted.title, `${entry.href} serves its own <title>`, title);
+				check(
+					description === wanted.description && description.length > 40,
+					`${entry.href} serves a <meta name="description"> of its own`,
+					description.slice(0, 60),
+				);
+				check(
+					html.includes('<html lang="en"'),
+					`${entry.href} declares the language it is written in`,
+				);
+				check(
+					html.includes('rel="icon" href="/markless/favicon.svg"'),
+					`${entry.href} links a favicon`,
+				);
+				check(
+					html.includes(`<link rel="canonical" href="https://compiled.run${entry.href}"`),
+					`${entry.href} names itself canonical`,
+				);
+				// B1: the published `computed<T>(derive: () => T)` takes no argument,
+				// so a documented `{ signal }` parameter is a snippet that does not
+				// compile. Proven with tsc against @markless/core/dist/index.d.ts.
+				check(
+					!/computed\(async\s*\(\s*\{/.test(html.replace(/<[^>]+>/g, '')),
+					`${entry.href} prints no computed(async ({ … }) => …), which does not typecheck on 0.3.1`,
+				);
+				heads.push({ href: entry.href, title, description });
 				await page.goto(`${origin}${entry.href}`, { waitUntil: 'load' });
 				const heading = ((await page.locator('h1').first().textContent()) ?? '').trim();
 				check(heading.length > 0, `${entry.href} renders its h1 in the browser`, heading);
@@ -321,6 +354,42 @@ try {
 				});
 			}
 		}
+		check(
+			new Set(heads.map((one) => one.title)).size === heads.length,
+			'every page has a title no other page has',
+			`${new Set(heads.map((one) => one.title)).size} distinct of ${heads.length}`,
+		);
+		check(
+			new Set(heads.map((one) => one.description)).size === heads.length,
+			'every page has a description no other page has',
+			`${new Set(heads.map((one) => one.description)).size} distinct of ${heads.length}`,
+		);
+
+		// --- what a crawler and an agent look for before any page ---------------
+		// The site is one section of compiled.run, so `public/` is served under
+		// /markless/. scripts/generate-seo.ts writes all three from nav.ts.
+		for (const [path, wanted] of [
+			['/markless/robots.txt', 'Sitemap: https://compiled.run/markless/sitemap.xml'],
+			['/markless/sitemap.xml', '<loc>https://compiled.run/markless/concepts/state</loc>'],
+			['/markless/llms.txt', '](https://compiled.run/markless/reference)'],
+			['/markless/favicon.svg', '<svg'],
+		] as const) {
+			const response = await fetch(`${origin}${path}`);
+			check(response.status === 200, `GET ${path}`, String(response.status));
+			const body = await response.text();
+			check(body.includes(wanted), `${path} carries what it is for`, wanted);
+		}
+		const sitemapBody = await (await fetch(`${origin}/markless/sitemap.xml`)).text();
+		check(
+			flatNav.every((entry) => sitemapBody.includes(`<loc>https://compiled.run${entry.href}</loc>`)),
+			'the sitemap lists every page in the nav',
+			`${(sitemapBody.match(/<loc>/g) ?? []).length} urls for ${flatNav.length} pages`,
+		);
+		const llmsBody = await (await fetch(`${origin}/markless/llms.txt`)).text();
+		check(
+			flatNav.every((entry) => llmsBody.includes(`(https://compiled.run${entry.href}):`)),
+			'llms.txt lists every page with a sentence about it',
+		);
 
 		// --- widget: the counter on the landing page ---------------------------
 		await page.goto(`${origin}/markless`, { waitUntil: 'load' });
@@ -664,6 +733,29 @@ try {
 								(node.textContent ?? '').trim(),
 							),
 							navPosition: nav ? getComputedStyle(nav).position : '',
+							navHeight: navBox ? navBox.height : 0,
+							navOpen: (document.querySelector('.sidebar-disclosure') as HTMLDetailsElement | null)
+								?.open,
+							navSummaryShown:
+								getComputedStyle(
+									document.querySelector('.sidebar-summary') as Element,
+								).display !== 'none',
+							// `checkVisibility` is the browser's own answer, which is what a
+							// disclosure closed by CSS needs: the list keeps a box, and it
+							// is the content-visibility skip that decides whether a reader
+							// can see it.
+							navLinksShown: (() => {
+								const list = document.querySelector('.sidebar-list');
+								return Boolean(
+									list &&
+										list.checkVisibility({
+											contentVisibilityAuto: true,
+											opacityProperty: true,
+											visibilityProperty: true,
+										}),
+								);
+							})(),
+							h1Top: h1Box ? h1Box.top + window.scrollY : Number.NaN,
 							overlap: Boolean(
 								navBox &&
 									h1Box &&
@@ -705,6 +797,11 @@ try {
 					if (width === 1440) {
 						check(chrome.railVisible, `${at}: the On this page rail is shown`);
 						check(
+							chrome.navLinksShown && !chrome.navSummaryShown,
+							`${at}: the whole nav is open beside the prose, with no disclosure to press`,
+							`links shown: ${chrome.navLinksShown}, summary shown: ${chrome.navSummaryShown}`,
+						);
+						check(
 							chrome.railItems.length === chrome.pageH2s.length && chrome.railItems.length > 1,
 							`${at}: the rail lists every h2 on the page`,
 							`${chrome.railItems.length} rail items, ${chrome.pageH2s.length} h2s`,
@@ -721,11 +818,37 @@ try {
 							`${chrome.bodyFont}px`,
 						);
 					} else {
-						check(!chrome.railVisible, `${at}: the rail is hidden on a phone`);
+						// A docs site whose first phone screenful is entirely navigation
+						// is not shippable, so the nav is one line behind a <details>
+						// and the article's h1 is inside the first 844px.
 						check(
 							chrome.navPosition === 'static',
 							`${at}: the sidebar stacks instead of being pinned`,
 							chrome.navPosition,
+						);
+						check(
+							!chrome.navLinksShown,
+							`${at}: the nineteen nav links are collapsed, not stacked above the article`,
+						);
+						check(
+							chrome.navSummaryShown,
+							`${at}: the collapsed nav still offers the reader a way in`,
+						);
+						check(
+							chrome.navHeight < 200,
+							`${at}: the collapsed nav costs a line, not a screenful`,
+							`${chrome.navHeight.toFixed(0)}px tall`,
+						);
+						check(
+							chrome.h1Top < 844,
+							`${at}: the article's h1 is in the first phone screenful`,
+							`h1 top ${chrome.h1Top.toFixed(0)}px`,
+						);
+						// The outline is laid on its side rather than hidden: item 8 of
+						// the style guide wants the page's shape available on a phone too.
+						check(
+							chrome.railVisible,
+							`${at}: the in-page outline is still offered, inline`,
 						);
 					}
 

@@ -8,6 +8,13 @@ export type NavEntry = {
 	readonly href: string;
 	readonly sprite?: string;
 	readonly number?: string;
+	/**
+	 * One sentence about the page, for the document head, `sitemap.xml` and
+	 * `llms.txt`. Every sidebar page carries one; the `concepts` map below
+	 * reuses this type for links that are not pages of their own, and those
+	 * leave it out.
+	 */
+	readonly description?: string;
 };
 export type NavSection = {
 	readonly title: string;
@@ -22,13 +29,29 @@ export const nav: readonly NavSection[] = [
 		title: 'Start here',
 		sprite: 'star-face',
 		entries: [
-			{ title: 'What is Markless', href: '/markless', sprite: 'crown', number: '1' },
-			{ title: 'Your first app', href: '/markless/start/first-app', sprite: 'plus', number: '2' },
+			{
+				title: 'What is Markless',
+				href: '/markless',
+				sprite: 'crown',
+				number: '1',
+				description:
+					'What Markless is: a compiler that works out what changes while it builds your file, so the browser ships the update rather than the machinery for finding it.',
+			},
+			{
+				title: 'Your first app',
+				href: '/markless/start/first-app',
+				sprite: 'plus',
+				number: '2',
+				description:
+					'Scaffold a Markless app with one command, then live in the dev, build and preview scripts, with the npm override a clean install needs today.',
+			},
 			{
 				title: 'Reading a .tsrx file',
 				href: '/markless/start/reading-tsrx',
 				sprite: 'bookmark',
 				number: '3',
+				description:
+					'A .tsrx file is TypeScript with three unfamiliar things in it: the at-sign body, markup written as a statement, and the fragment. That is the whole list.',
 			},
 		],
 	},
@@ -36,48 +59,159 @@ export const nav: readonly NavSection[] = [
 		title: 'Core concepts',
 		sprite: 'bolt',
 		entries: [
-			{ title: 'State', href: '/markless/concepts/state', sprite: 'sparkle', number: '1' },
-			{ title: 'Computed', href: '/markless/concepts/computed', sprite: 'spiral', number: '2' },
-			{ title: 'Events', href: '/markless/concepts/events', sprite: 'bolt', number: '3' },
+			{
+				title: 'State',
+				href: '/markless/concepts/state',
+				sprite: 'sparkle',
+				number: '1',
+				description:
+					'state() is how you tell the page to watch a variable. No wrapper, no setter and no .value: you read it and assign to it like any other let.',
+			},
+			{
+				title: 'Computed',
+				href: '/markless/concepts/computed',
+				sprite: 'spiral',
+				number: '2',
+				description:
+					'A value you work out is never out of date. computed() derives one value from others and works it out again when one of them changes.',
+			},
+			{
+				title: 'Events',
+				href: '/markless/concepts/events',
+				sprite: 'bolt',
+				number: '3',
+				description:
+					'An event prop is on plus the DOM event name, and the browser hands your handler its own typed event object.',
+			},
 			{
 				title: 'Conditionals',
 				href: '/markless/concepts/conditionals',
 				sprite: 'corner-bracket',
 				number: '4',
+				description:
+					'@if puts real elements into the page and takes them out again, and anything declared inside the branch is disposed along with it.',
 			},
-			{ title: 'Lists', href: '/markless/concepts/lists', sprite: 'dashes', number: '5' },
-			{ title: 'Async', href: '/markless/concepts/async', sprite: 'arrow-loop', number: '6' },
-			{ title: 'Styling', href: '/markless/concepts/styling', sprite: 'flower', number: '7' },
+			{
+				title: 'Lists',
+				href: '/markless/concepts/lists',
+				sprite: 'dashes',
+				number: '5',
+				description:
+					'A key answers the question of which row is which. Once a row has one, its state, its DOM and its event wiring move with it through a sort.',
+			},
+			{
+				title: 'Async',
+				href: '/markless/concepts/async',
+				sprite: 'arrow-loop',
+				number: '6',
+				description:
+					'Waiting is a block, not a flag: @try, @pending and @catch are the whole status vocabulary, so there is no loading boolean to forget.',
+			},
+			{
+				title: 'Styling',
+				href: '/markless/concepts/styling',
+				sprite: 'flower',
+				number: '7',
+				description:
+					'A style block written inside a component styles that component and nothing else, so two components can both call something .card.',
+			},
 		],
 	},
 	{
 		title: 'Building an app',
 		sprite: 'crown',
 		entries: [
-			{ title: 'Components', href: '/markless/build/components', sprite: 'crown', number: '1' },
-			{ title: 'Elements', href: '/markless/build/elements', sprite: 'bolt', number: '2' },
-			{ title: 'Storage', href: '/markless/build/storage', sprite: 'bookmark', number: '3' },
-			{ title: 'Shared', href: '/markless/build/shared', sprite: 'spiral', number: '4' },
+			{
+				title: 'Components',
+				href: '/markless/build/components',
+				sprite: 'crown',
+				number: '1',
+				description:
+					'A component is a function and props are its parameters, callbacks and children included, with the parent value read through live.',
+			},
+			{
+				title: 'Elements',
+				href: '/markless/build/elements',
+				sprite: 'bolt',
+				number: '2',
+				description:
+					'A DOM node is not state. element() hands you a claim ticket for one node, bound with el, that you cash in inside a handler.',
+			},
+			{
+				title: 'Storage',
+				href: '/markless/build/storage',
+				sprite: 'bookmark',
+				number: '3',
+				description:
+					'storage() is a variable you read and write like any other, saved in the browser and applied before the first paint.',
+			},
+			{
+				title: 'Shared',
+				href: '/markless/build/shared',
+				sprite: 'spiral',
+				number: '4',
+				description:
+					'shared() gives a piece of data a name, so a component that wants it calls the name instead of having it threaded down through props.',
+			},
 		],
 	},
 	{
 		title: 'Router',
 		sprite: 'arrow-straight',
 		entries: [
-			{ title: 'Pages', href: '/markless/router/pages', sprite: 'square', number: '1' },
-			{ title: 'Links', href: '/markless/router/links', sprite: 'arrow-curve', number: '2' },
-			{ title: 'Page data', href: '/markless/router/data', sprite: 'drops', number: '3' },
+			{
+				title: 'Pages',
+				href: '/markless/router/pages',
+				sprite: 'square',
+				number: '1',
+				description:
+					'A file under pages/ is a URL, brackets in the file name are parameters, and the path on disk is the path in the address bar.',
+			},
+			{
+				title: 'Links',
+				href: '/markless/router/links',
+				sprite: 'arrow-curve',
+				number: '2',
+				description:
+					'A link is a route plus its parts rather than a string you build, so a renamed folder is a type error instead of a 404.',
+			},
+			{
+				title: 'Page data',
+				href: '/markless/router/data',
+				sprite: 'drops',
+				number: '3',
+				description:
+					'There is no loader: a page receives the request in its props, and an async computed that reads them is the load.',
+			},
 		],
 	},
 	{
 		title: 'How it works',
 		sprite: 'rays',
-		entries: [{ title: 'How it works', href: '/markless/how-it-works', sprite: 'rays', number: '1' }],
+		entries: [
+			{
+				title: 'How it works',
+				href: '/markless/how-it-works',
+				sprite: 'rays',
+				number: '1',
+				description:
+					'Follow one click from the compiled artifact down to the DOM update, through the five tiers of the arm rendering ladder.',
+			},
+		],
 	},
 	{
 		title: 'Reference',
 		sprite: 'hash',
-		entries: [{ title: 'Reference', href: '/markless/reference', sprite: 'hash', number: '1' }],
+		entries: [
+			{
+				title: 'Reference',
+				href: '/markless/reference',
+				sprite: 'hash',
+				number: '1',
+				description:
+					'Every authoring call, TSRX construct, router export and MARKLESS_ diagnostic on published 0.3.1, in the order you reach for them.',
+			},
+		],
 	},
 ];
 
@@ -96,6 +230,29 @@ export function breadcrumbFor(pathname: string): Crumb {
 		for (const entry of section.entries)
 			if (entry.href === pathname) return { section: section.title, page: entry.title };
 	return { section: '', page: '' };
+}
+
+export const siteDescription =
+	'The Markless documentation: a framework whose compiler works out what changes while it builds your file, so the browser ships the update rather than the machinery for finding it.';
+
+/** Where this site is served, which is what an absolute URL in `sitemap.xml` needs. */
+export const siteOrigin = 'https://compiled.run';
+
+export type Head = { readonly title: string; readonly description: string };
+
+/**
+ * The document head for one pathname. Every page's title is its own, because
+ * nineteen identical tabs and nineteen identical search results are nineteen
+ * pages a reader cannot tell apart. An unknown path (a 404, say) falls back to
+ * the site's own name and sentence rather than throwing.
+ */
+export function headFor(pathname: string): Head {
+	const entry = flatNav.find((one) => one.href === pathname);
+	if (!entry) return { title: `${siteName} docs`, description: siteDescription };
+	return {
+		title: `${entry.title} | ${siteName} docs`,
+		description: entry.description ?? siteDescription,
+	};
 }
 
 export type Pager = {
