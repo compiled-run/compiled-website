@@ -6,7 +6,9 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A component is a function, and props are its parameters
 
-<PageMeta level="Building" time="7 min" assumes="events" sprite="crown" />
+<PageMeta level="Building" time="6 min" assumes="events" sprite="crown" />
+
+_Already splitting components and passing props? Skip to [elements](/markless/build/elements)._
 
 <ThemeToggle />
 
@@ -79,7 +81,14 @@ There is no special event system between a parent and a child. `onBump` above is
 prop, and the child calls it. That is the whole mechanism, and it is the same one a real app uses:
 
 ```tsrx
-<Nav libraryOpen={libraryStatus} onToggleLibrary={() => (libraryStatus = !libraryStatus)} />
+import { state } from '@markless/core';
+import Nav from './nav.tsrx';
+
+export default function Shell() @{
+	let libraryStatus = state(false);
+
+	<Nav libraryOpen={libraryStatus} onToggleLibrary={() => (libraryStatus = !libraryStatus)} />
+}
 ```
 
 Name them however you like. `onBump`, `onToggleLibrary`, `commit`, `save`. The `on` prefix is a
@@ -108,10 +117,18 @@ export default function Panel({
 Used like this:
 
 ```tsrx
-<Panel title="Bikes in the shed">
-	<p class="playground-output">Total: {total}</p>
-	<BumpButton label="Wheel one in" onBump={() => total++} />
-</Panel>
+import { state } from '@markless/core';
+import BumpButton from './bump-button.tsrx';
+import Panel from './panel.tsrx';
+
+export default function Shed() @{
+	let total = state(0);
+
+	<Panel title="Bikes in the shed">
+		<p>Total: {total}</p>
+		<BumpButton label="Wheel one in" onBump={() => total++} />
+	</Panel>
+}
 ```
 
 Think of `children` as a sealed envelope with an address on it. You can put the envelope somewhere,

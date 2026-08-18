@@ -6,7 +6,7 @@ import LikeHeart from '../../components/docs/like-heart.tsrx';
 
 # Everything, in the order you reach for it
 
-<PageMeta level="Reference" time="look things up" assumes="nothing" sprite="hash" />
+<PageMeta level="Reference" time="10 min" assumes="nothing" sprite="hash" />
 
 <ThemeToggle />
 
@@ -15,7 +15,8 @@ what you want and cannot remember how it is spelled. Every entry links to the pa
 
 ## The five calls
 
-All five are imported from `@markless/core` and used inside a component body.
+All five are imported from `@markless/core` and used inside a component body. The lines under each
+one are the form, not a whole file: the page linked beside it has the file to copy.
 
 ```tsrx
 import { computed, element, shared, state, storage } from '@markless/core';
@@ -83,7 +84,8 @@ reverse.
 
 ## The constructs
 
-Control flow is part of the language, written with a leading `@` inside markup.
+Control flow is part of the language, written with a leading `@` inside markup. These too are forms
+rather than files, written inside a component body, and each one links to the page that runs it.
 
 ```tsrx
 @if (open) { <p>Shown</p> } @else { <p>Hidden</p> }

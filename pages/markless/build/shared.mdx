@@ -27,6 +27,9 @@ A module holds a definition, not an instance:
 
 ```tsrx
 // session.tsrx
+import { computed, shared, state } from '@markless/core';
+import { loginUser } from './login.ts';
+
 export const session = shared(() => {
 	const s = state({ user: null, status: 'anonymous' });
 
@@ -48,7 +51,10 @@ export const session = shared(() => {
 A component that needs it calls it:
 
 ```tsrx
-function Header() @{
+import Avatar from './avatar.tsrx';
+import { session } from './session.tsrx';
+
+export default function Header() @{
 	const s = session();
 
 	@if (s.signedIn) {
@@ -57,9 +63,9 @@ function Header() @{
 }
 ```
 
-`session()` is not "run a hook". The specification puts it this way: it means resolve this named
-dataflow instance for the current graph context, and that context is usually the request, the
-container or the page (`specs/framework/03-state-graph.md`, "Shared state").
+The specification says what that call means: resolve this named dataflow instance for the current
+graph context, and that context is usually the request, the container or the page
+(`specs/framework/03-state-graph.md`, "Shared state").
 
 A few consequences worth knowing before you reach for it. There is no provider component to place
 and no orphan-provider error to handle, because the boundary is the dataflow rather than a spot in
@@ -89,7 +95,7 @@ module-scope binding already, and any component in the module tree can import an
 
 <Collapsible sprite="thought-bubble" summary="What we can and cannot say about it today" text="What is certain: the API exists and is exported from @markless/core, the specification describes it in detail, and the compiler carries diagnostics for its failure modes, including cycle detection and an invalid-scope error. What is not established: that a definition in one module resolves from another module. The compiler pass that resolves a shared() call looks for a definition in the same module, and no .tsrx file anywhere in the framework's own repository uses shared() at all, so there is no worked example to copy from. Our two-module test is the one attempt on record, and it did not get past the build." />
 
-<Collapsible sprite="star-badge" summary="Coming from another framework?" text="This is the slot that context and the small global stores usually fill, and the design difference is worth one paragraph. Context makes you create a boundary in the component tree, a provider, and usually a wrapper function to read it: the specification's own rationale notes that about three quarters of context call sites in public code are already hidden behind a hand-written bare-call wrapper, which is the argument for making the bare call the primitive. A store gets closer to that shape but is a separate object graph the framework does not know about, so reading from it costs a selector and a subscription. Here it is meant to be the same reactive graph as everything else, which is what makes a write to it a targeted update rather than a notification." />
+<Collapsible sprite="star-badge" summary="Coming from another framework?" text="Whatever you have used before, session() is not run a hook: it is a resolution of a named dataflow instance for the graph context you are already in, and there is no call-order rule attached to it. This is the slot that context and the small global stores usually fill, and the design difference is worth one paragraph. Context makes you create a boundary in the component tree, a provider, and usually a wrapper function to read it: the specification's own rationale notes that about three quarters of context call sites in public code are already hidden behind a hand-written bare-call wrapper, which is the argument for making the bare call the primitive. A store gets closer to that shape but is a separate object graph the framework does not know about, so reading from it costs a selector and a subscription. Here it is meant to be the same reactive graph as everything else, which is what makes a write to it a targeted update rather than a notification." />
 
 ## Try it yourself
 

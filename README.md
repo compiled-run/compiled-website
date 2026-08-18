@@ -114,6 +114,33 @@ output. `npm run seo` runs it on its own. The site is one section of `compiled.r
 `/robots.txt` belongs to the origin, and the copy here states this section's rules and names its
 sitemap. Adding a page still means adding one entry to `nav.ts` and nothing else.
 
+## Page metadata
+
+Every page carries one `<PageMeta level time assumes sprite />` line under its `H1`. Three of those
+four are judgement calls; `time` is not, because a per-page guess is what made the old numbers
+wrong by up to four minutes.
+
+**The formula.** `words` is the whitespace-separated token count of the page's `.mdx` source with
+the `import` lines removed, so the code fences and the callout text count, which is fair because a
+reader spends time on both. The claim is `max(2, round(words / 200))` minutes: 200 words a minute
+is a slower rate than plain prose, and the floor keeps a short page from claiming a minute nobody
+believes. Every one of the 19 pages is set from it, the reference page included.
+
+```sh
+# words on one page
+sed '/^import /d' pages/markless/concepts/state.mdx | wc -w
+```
+
+Rewriting a page means recomputing its `time` in the same change set. The other three props:
+`level` is one of "Start here", "Building", "Under the hood" or "Reference"; `assumes` is a
+comma-separated list of keys from the `concepts` map in `nav.ts`, or the word `nothing`, and a key
+with no entry behind it prints as plain text and warns during the build; `sprite` names a file in
+`public/sprites/`.
+
+Under the meta line, a page whose reader may already know it carries one italic skip line, so a
+reader who has done this before has a way up and out rather than only the way down into the
+collapsibles. Five pages have an obvious skip target and carry one.
+
 ## Checks
 
 ```sh

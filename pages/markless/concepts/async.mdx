@@ -57,9 +57,9 @@ const report = computed(async () => {
 });
 ```
 
-Reading it gives you the settled value straight away. You write `report.title`, not
-`report.value.title` and not `report.data.title`. There is no wrapper to unpack, because the block
-you are reading inside is the thing that guarantees the value is there.
+Reading it gives you the settled value straight away. You write `report.title`, the way you would
+write it if the fetch had already finished, because the block you are reading inside is the thing
+that guarantees the value is there.
 
 That last part is the trade. A read of an async computed has to sit inside one of these blocks. If
 you read one in markup with no block around it, the compiler stops the build and tells you so,
@@ -108,18 +108,32 @@ framework uses to decide when this work has to run again. Reads after the `await
 error, not a subtle bug:
 
 ```tsrx
-const greeting = computed(async () => {
-	const name = user;
-	const response = await fetch(`/api/greeting/${name}`);
-	return await response.json();
-});
+import { computed, state } from '@markless/core';
+
+export default function Greeting() @{
+	let user = state('ada');
+
+	const greeting = computed(async () => {
+		const name = user;
+		const response = await fetch(`/api/greeting/${name}`);
+		return await response.json();
+	});
+
+	@try {
+		<p>{greeting.text}</p>
+	} @pending {
+		<p>Saying hello</p>
+	} @catch {
+		<p>That did not work</p>
+	}
+}
 ```
 
 Take the value you need into a local variable first, then await. If that feels awkward, it is
 usually a sign the work wants to be two computeds: an async one that fetches, and a plain one that
 formats what it returned.
 
-<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="There is no resource, no query hook, no suspense boundary component and no cache key to name. An async computed is the same declaration as a sync one, and the three blocks are part of the language rather than components you import. The practical difference is that nothing you write observes a status: if you find yourself wanting to read whether something is loading, the answer is to put the markup in the block that means loading." />
+<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="There is no resource, no query hook, no suspense boundary component and no cache key to name. An async computed is the same declaration as a sync one, and the three blocks are part of the language rather than components you import. There is also no wrapper property to reach through on the way to your data: you write report.title, not report.value.title and not report.data.title. The practical difference is that nothing you write observes a status: if you find yourself wanting to read whether something is loading, the answer is to put the markup in the block that means loading." />
 
 ## Try it yourself
 

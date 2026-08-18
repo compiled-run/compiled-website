@@ -669,6 +669,7 @@ html[data-theme='dark'] .theme-toggle-to-light {
 }
 
 .playground-output,
+.playground-echo p,
 .demo-readout {
 	margin: 0;
 	font-size: var(--step-1);
@@ -1357,7 +1358,9 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
    frame does not already cover: text fields, the row list and its marker.
    --------------------------------------------------------------------------- */
 
-.playground .echo-field,
+/* The two teaching demos hand the frame a plain <label> and a plain <p>: the
+   site's framing classes live on the .playground-echo wrapper, not in the file
+   the page prints. */
 .playground label {
 	display: flex;
 	gap: 0.5rem;

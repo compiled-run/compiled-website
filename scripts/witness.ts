@@ -4,7 +4,7 @@
 // first code block sits above it.
 // Run: node --experimental-strip-types scripts/witness.ts
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -502,16 +502,26 @@ try {
 			'clicking a label moves the highlight to one line',
 			String(await litLines.count()),
 		);
-		await page.getByRole('button', { name: 'The fragment' }).click();
-		await settleText(
-			explorerNote,
-			(text) => text.includes('A fragment is'),
-			'three-differences explains the fragment after a second click',
+		knownFailingReason = undefined;
+		// The widget shows `components/demos/counter.tsrx` line for line, so the
+		// page carries one counter file rather than two that differ. The counter
+		// renders a single element, so the fragment is taught from its own
+		// example further down the page and the widget has no third label.
+		const widgetFile = (await page.locator('.file-lines .file-line').allTextContents())
+			.map((line) => line.trim())
+			.filter((line) => line !== '');
+		const counterFile = (await readFile(`${root}/components/demos/counter.tsrx`, 'utf8'))
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((line) => line !== '');
+		check(
+			widgetFile.join('\n') === counterFile.join('\n'),
+			'the three-differences widget shows the counter file itself',
+			widgetFile.join(' | '),
 		);
 		check(
-			(await litLines.count()) === 2,
-			'the fragment highlight covers both fragment lines',
-			String(await litLines.count()),
+			(await page.getByRole('button', { name: 'The fragment' }).count()) === 0,
+			'the widget offers no fragment label, because the counter file has no fragment',
 		);
 		await page.screenshot({
 			path: `${shotsDir}/T005-three-differences-after.png`,
@@ -953,7 +963,7 @@ try {
 		// --- widget: the name echo on the events page --------------------------
 		await page.goto(`${origin}/markless/concepts/events`, { waitUntil: 'load' });
 		const echoField = page.locator('.playground input').first();
-		const echoLine = page.locator('.playground .playground-output').first();
+		const echoLine = page.locator('.playground-echo p').first();
 		await echoField.waitFor();
 		check(
 			((await echoLine.textContent()) ?? '').trim() === 'Hello,',
@@ -1143,7 +1153,7 @@ try {
 		}
 		check(await activeIsField(), 'clicking the button puts the caret in the field');
 		await settleText(
-			page.locator('.playground .playground-output').first(),
+			page.locator('.playground-echo p').first(),
 			(text) => text === 'The cursor is in the field',
 			'the focus field reports the cursor moved',
 		);

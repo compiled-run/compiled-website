@@ -6,7 +6,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # Two components can both call it .card
 
-<PageMeta level="Start here" time="5 min" assumes="state" sprite="flower" />
+<PageMeta level="Start here" time="6 min" assumes="state" sprite="flower" />
 
 <ThemeToggle />
 
@@ -120,7 +120,13 @@ The `style` attribute takes a string in the same way, and is the right choice fo
 comes from arithmetic rather than from a set of named looks:
 
 ```tsrx
-<div class="bar" style={`width: ${percent}%`}>{percent}</div>
+import { state } from '@markless/core';
+
+export function Bar() @{
+	let percent = state(40);
+
+	<div class="bar" style={`width: ${percent}%`}>{percent}</div>
+}
 ```
 
 Reach for it when the number is genuinely continuous. A dozen named states belong in classes, where

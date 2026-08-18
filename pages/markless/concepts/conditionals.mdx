@@ -6,7 +6,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A hidden branch is not hidden, it is gone
 
-<PageMeta level="Start here" time="5 min" assumes="state, events" sprite="corner-bracket" />
+<PageMeta level="Start here" time="6 min" assumes="state, events" sprite="corner-bracket" />
 
 <ThemeToggle />
 
@@ -45,11 +45,11 @@ export default function DraftLost() @{
 		@if (open) {
 			let draft = state('');
 
-			<label class="echo-field">
+			<label>
 				Your message
 				<input value={draft} onInput={(event) => (draft = event.currentTarget.value)} />
 			</label>
-			<p class="playground-output">Draft: {draft}</p>
+			<p>Draft: {draft}</p>
 		}
 	</section>
 }
@@ -76,11 +76,11 @@ export default function DraftKept() @{
 		<button onClick={() => (open = !open)}>Toggle the panel</button>
 
 		@if (open) {
-			<label class="echo-field">
+			<label>
 				Your message
 				<input value={draft} onInput={(event) => (draft = event.currentTarget.value)} />
 			</label>
-			<p class="playground-output">Draft: {draft}</p>
+			<p>Draft: {draft}</p>
 		}
 	</section>
 }
@@ -98,33 +98,46 @@ should open fresh every time is better off declaring its own state inside the br
 `@else` covers the other side of the same condition:
 
 ```tsrx
-<section>
-	<button onClick={() => (open = !open)}>Toggle</button>
-	@if (open) {
-		<p class="open">Shown</p>
-	} @else {
-		<p class="closed">Hidden</p>
-	}
-</section>
+import { state } from '@markless/core';
+
+export default function Either() @{
+	let open = state(false);
+
+	<section>
+		<button onClick={() => (open = !open)}>Toggle</button>
+		@if (open) {
+			<p class="open">Shown</p>
+		} @else {
+			<p class="closed">Hidden</p>
+		}
+	</section>
+}
 ```
 
 When you are choosing between more than two, `@switch` reads better than a chain. It renders the
 one `@case` whose value matches, and `@default` catches everything else:
 
 ```tsrx
-<section>
-	@switch (kind) {
-		@case 'alpha': {
-			<p>A</p>
+import { state } from '@markless/core';
+
+export default function Pick() @{
+	let kind = state('alpha');
+
+	<section>
+		<button onClick={() => (kind = 'beta')}>Choose beta</button>
+		@switch (kind) {
+			@case 'alpha': {
+				<p>A</p>
+			}
+			@case 'beta': {
+				<p>B</p>
+			}
+			@default: {
+				<p>Other</p>
+			}
 		}
-		@case 'beta': {
-			<p>B</p>
-		}
-		@default: {
-			<p>Other</p>
-		}
-	}
-</section>
+	</section>
+}
 ```
 
 These are part of the language, not a trick played with JavaScript expressions inside the markup.

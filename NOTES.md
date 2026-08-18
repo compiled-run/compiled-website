@@ -579,6 +579,13 @@ anything.
 The witness keeps checking it under `knownFailingReason = 'NOTES.md finding 18'`, scoped to the one
 check it breaks, so the run goes green on its own the day the compiler emits the record.
 
+**How far the defect reaches, measured.** It is the ternary form that is dead, not every class
+binding. Finding 30 clicked a swatch bound with `class={colour}`, a bare identifier, and measured
+the background go from `oklch(0.886 0.14 101)` to `oklch(0.8 0.155 148)`, so that form does produce
+a dom update on the same 0.3.1 build. T031 re-read that measurement rather than taking a new one,
+and narrowed the wording on `start/reading-tsrx` from "a class binding at all" to a class binding
+built from a ternary. Nothing on the site claims a repaint the identifier form does not do.
+
 ## 19. T019: the theme toggle is an island each page renders, not part of the header
 
 The toggle works: click it and `data-theme` moves on `<html>`, the palette repaints, the choice is

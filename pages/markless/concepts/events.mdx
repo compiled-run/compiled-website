@@ -7,7 +7,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # Events give you the browser's own event
 
-<PageMeta level="Start here" time="4 min" assumes="state" sprite="bolt" />
+<PageMeta level="Start here" time="5 min" assumes="state" sprite="bolt" />
 
 <ThemeToggle />
 
@@ -54,12 +54,12 @@ import { state } from '@markless/core';
 export default function NameEcho() @{
 	let name = state('');
 
-	<form class="echo" onSubmit={(event) => event.preventDefault()}>
-		<label class="echo-field">
+	<form onSubmit={(event) => event.preventDefault()}>
+		<label>
 			Your name
 			<input value={name} onInput={(event) => (name = event.currentTarget.value)} />
 		</label>
-		<p class="playground-output">Hello, {name}</p>
+		<p>Hello, {name}</p>
 		<button type="submit">Say hello</button>
 	</form>
 }
@@ -71,31 +71,55 @@ export default function NameEcho() @{
 the capture phase, add `Capture` to the end.
 
 ```tsrx
-<section>
-	<button onClick={() => count++}>Increment</button>
-	<button
-		onKeyDown={(event) => {
-			if (event.key === 'Escape') count = 0;
-		}}
-	>
-		Reset
-	</button>
-	<output>{count}</output>
-</section>
+import { state } from '@markless/core';
+
+export default function Keys() @{
+	let count = state(0);
+
+	<section>
+		<button onClick={() => count++}>Increment</button>
+		<button
+			onKeyDown={(event) => {
+				if (event.key === 'Escape') count = 0;
+			}}
+		>
+			Reset
+		</button>
+		<output>{count}</output>
+	</section>
+}
 ```
 
 ```tsrx
-<div onClickCapture={() => (phase = 'captured')}>
-	<button onClick={() => (phase = 'clicked')}>Dispatch</button>
-	<output>{phase}</output>
-</div>
+import { state } from '@markless/core';
+
+export default function Phases() @{
+	let phase = state('nothing yet');
+
+	<div onClickCapture={() => (phase = 'captured')}>
+		<button onClick={() => (phase = 'clicked')}>Dispatch</button>
+		<output>{phase}</output>
+	</div>
+}
 ```
 
 A prop can also take an array of handlers instead of one. They run in the order you wrote them, and
 the run stops at the first one that throws.
 
 ```tsrx
-<button onClick={[saveDraft, closeDialog]}>Save</button>
+import { state } from '@markless/core';
+
+export default function SaveButton() @{
+	let note = state('nothing saved yet');
+
+	const saveDraft = () => (note = 'saved');
+	const closeDialog = () => (note = 'saved, and the dialog is closed');
+
+	<section>
+		<button onClick={[saveDraft, closeDialog]}>Save</button>
+		<output>{note}</output>
+	</section>
+}
 ```
 
 ## Forms are forms
@@ -105,17 +129,24 @@ on a checkbox tells you it flipped, and the `submit` event is where you stop the
 navigating.
 
 ```tsrx
-<form onSubmit={(event) => event.preventDefault()}>
-	<label>
-		Name
-		<input value={name} onInput={(event) => (name = event.currentTarget.value)} />
-	</label>
-	<label>
-		<input type="checkbox" checked={subscribed} onChange={() => (subscribed = !subscribed)} />
-		Updates
-	</label>
-	<output>{name}</output>
-</form>
+import { state } from '@markless/core';
+
+export default function Signup() @{
+	let name = state('');
+	let subscribed = state(false);
+
+	<form onSubmit={(event) => event.preventDefault()}>
+		<label>
+			Name
+			<input value={name} onInput={(event) => (name = event.currentTarget.value)} />
+		</label>
+		<label>
+			<input type="checkbox" checked={subscribed} onChange={() => (subscribed = !subscribed)} />
+			Updates
+		</label>
+		<output>{name}</output>
+	</form>
+}
 ```
 
 <Callout sprite="cross" title="Wait, why does the compiler care about preventDefault?" text="Because handlers arrive late on purpose. Your handler code is loaded only when the event actually fires, which is what keeps the first load small, and the browser will not wait for a download before deciding whether to navigate. So when the compiler sees event.preventDefault() or event.stopPropagation() in a handler, it lifts the smallest equivalent decision out of the handler and ships it with the page, ready to run the instant the event fires. That lifted decision may read already-resumed state, constants, props and simple event fields, and nothing else. If your condition cannot be worked out from those, compilation fails with a diagnostic instead of shipping a preventDefault that would arrive too late to matter. Your state writes stay in the handler, where they belong." />

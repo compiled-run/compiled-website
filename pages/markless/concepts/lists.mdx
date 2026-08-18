@@ -6,7 +6,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A key tells the page which row is which
 
-<PageMeta level="Start here" time="5 min" assumes="state, conditionals" sprite="dashes" />
+<PageMeta level="Start here" time="6 min" assumes="state, conditionals" sprite="dashes" />
 
 <ThemeToggle />
 
@@ -96,8 +96,15 @@ because a row that gets renamed becomes, as far as the page is concerned, a diff
 Naming the position is sometimes genuinely what you want, and TSRX has a way to say so out loud:
 
 ```tsrx
-@for (const product of products; index i; key i) {
-	<ProductCard product={product} />
+import ProductCard from './product-card.tsrx';
+import type { Product } from './products.ts';
+
+export default function ProductGrid({ products }: { readonly products: readonly Product[] }) @{
+	<section>
+		@for (const product of products; index i; key i) {
+			<ProductCard product={product} />
+		}
+	</section>
 }
 ```
 
@@ -112,16 +119,22 @@ You do not need an `@if` around the loop to say "nothing here yet". `@empty` bel
 and renders when it has no items:
 
 ```tsrx
-<ul class="update-list">
-	@for (const update of feed.updates; key update.id) {
-		<li>
-			<strong>{update.project}</strong>
-			<span>{update.version}</span>
-		</li>
-	} @empty {
-		<li>No local updates</li>
-	}
-</ul>
+import { state } from '@markless/core';
+
+export default function Updates() @{
+	let updates = state([{ id: 'markless', project: 'Markless', version: '0.3.1' }]);
+
+	<ul class="update-list">
+		@for (const update of updates; key update.id) {
+			<li>
+				<strong>{update.project}</strong>
+				<span>{update.version}</span>
+			</li>
+		} @empty {
+			<li>No local updates</li>
+		}
+	</ul>
+}
 ```
 
 ## Why the sort was cheap

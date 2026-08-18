@@ -7,7 +7,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # Some things are not state, and `element()` is how you reach them
 
-<PageMeta level="Building" time="7 min" assumes="events" sprite="bolt" />
+<PageMeta level="Building" time="6 min" assumes="events" sprite="bolt" />
 
 <ThemeToggle />
 
@@ -45,7 +45,7 @@ export default function FocusField() @{
 	let status = state('The cursor is somewhere else');
 
 	<section>
-		<label class="echo-field">
+		<label>
 			Your favourite word
 			<input el={field} />
 		</label>
@@ -58,7 +58,7 @@ export default function FocusField() @{
 		>
 			Put the cursor in the field
 		</button>
-		<p class="playground-output">{status}</p>
+		<p>{status}</p>
 	</section>
 }
 ```
@@ -89,21 +89,31 @@ and they want to be told when it goes away.
 That is `attach`. It is a function that receives the element, and it may return a cleanup function:
 
 ```tsrx
-<p
-	data-host
-	attach={(element) => {
-		element.setAttribute('data-behavior', 'on');
-	}}
-	onClick={() => taps++}
->
-	Host
-</p>
+import { state } from '@markless/core';
+
+export default function Host() @{
+	let taps = state(0);
+
+	<p
+		data-host
+		attach={(element) => {
+			element.setAttribute('data-behavior', 'on');
+		}}
+		onClick={() => taps++}
+	>
+		Host, tapped {taps} times
+	</p>
+}
 ```
 
 In a real app the function usually comes from somewhere else, which keeps the markup readable:
 
 ```tsrx
-<div class="App" attach={installYouTubeController}>
+import { installYouTubeController } from './youtube-controller.ts';
+
+export default function Player() @{
+	<div class="player" attach={installYouTubeController} />
+}
 ```
 
 The rules are small enough to list. A behaviour may return a cleanup function, which runs when the

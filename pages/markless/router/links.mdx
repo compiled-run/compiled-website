@@ -7,7 +7,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A link is a route plus its parts, not a string you build
 
-<PageMeta level="Building" time="6 min" assumes="routes" sprite="arrow-curve" />
+<PageMeta level="Building" time="4 min" assumes="routes" sprite="arrow-curve" />
 
 <ThemeToggle />
 
@@ -21,16 +21,22 @@ call is checked.**
 ## The pattern is the file, brackets and all
 
 ```tsrx
-<Link href="/blog/[slug]" params={{ slug: post.slug }}>
-	{post.title}
-</Link>
+import { Link } from '@markless/router';
+
+export default function PostLink({ post }: { readonly post: { slug: string; title: string } }) @{
+	<Link href="/blog/[slug]" params={{ slug: post.slug }}>
+		{post.title}
+	</Link>
+}
 ```
 
 That `href` is not the URL. It is the file, `pages/blog/[slug].tsrx`, written the way it is spelled
 on disk, and `params` fills in the one hole in it. The router builds `/blog/whatever-the-slug-is`
 for you.
 
-A catch-all works the same way, and takes a string, a number, or a readonly array of segments:
+A catch-all works the same way, and takes a string, a number, or a readonly array of segments. The
+next two show the element on its own, to be written inside a component of your own with `Link`
+imported the same way:
 
 ```tsrx
 <Link href="/docs/[...slug]" params={{ slug: ['guides', 'intro'] }}>

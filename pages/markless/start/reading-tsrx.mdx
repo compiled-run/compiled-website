@@ -7,7 +7,10 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A component file is TypeScript with three differences
 
-<PageMeta level="Start here" time="5 min" assumes="nothing" sprite="bookmark" />
+<PageMeta level="Start here" time="4 min" assumes="nothing" sprite="bookmark" />
+
+_Already read a `.tsrx` file? Skip to [state](/markless/concepts/state), which is the one new
+word in it._
 
 <ThemeToggle />
 
@@ -17,12 +20,15 @@ way it always did.
 
 **Three things look unfamiliar, and that is the whole list. It is not going to grow.**
 
-Here is the counter file with those three things marked. Click each label and read the sentence
-under the file:
+Here is the counter file, all of it, with two of the three marked. Click each label and read the
+sentence under the file:
 
 <ThreeDifferencesDemo />
 
-<Callout sticker="tape" sprite="cross" title="Half of this box is dead, and here is which half" text="The sentence under the file really does change when you click a label. The highlight on the file does not, and neither does the picked button: both of those are class={ternary} bindings, and the compiler this site is pinned to writes no dom update for a class binding at all, so the click has nothing to run. NOTES.md finding 18 in the site repository has the compiled artifact that shows the missing record. The highlight comes back the day the compiler emits it, and the witness keeps checking it so that day is not something anyone has to remember." />
+The third one, the fragment, is not in that file at all, because the counter renders a single
+element. It gets its own section further down, with its own example.
+
+<Callout sticker="tape" sprite="cross" title="Half of this box is dead, and here is which half" text="The sentence under the file really does change when you click a label. The highlight on the file does not, and neither does the picked button: both of those are class={ternary} bindings, and the compiler this site is pinned to writes no dom update for a class binding built that way, so the click has nothing to run. NOTES.md finding 18 in the site repository has the compiled artifact that shows the missing record. The highlight comes back the day the compiler emits it, and the witness keeps checking it so that day is not something anyone has to remember." />
 
 ## The body is written with an at sign
 
@@ -48,20 +54,25 @@ export default function Counter() @{
 }
 ```
 
-That is the entire file behind the counter you have been clicking. The `<button>` line is a
-statement, like `let count = state(0)` above it. Nothing is returned, and nothing needs to be.
+That is the entire file behind the counter you have been clicking, and it is the same text the box
+above shows. The `<button>` line is a statement, like `let count = state(0)` above it. Nothing is
+returned, and nothing needs to be.
 
 ## Two things side by side go in a fragment
 
 When a component renders more than one thing at the top level, wrap them in an empty pair of
-angle brackets rather than inventing a `<div>` nobody asked for:
+angle brackets rather than inventing a `<div>` nobody asked for. Here is the same counter with a
+line of text beside the button, which is two things and so needs the fragment:
 
 ```tsrx
-export function Counter({ count }: { count: number }) @{
-	let current = state(count);
+import { state } from '@markless/core';
+
+export default function CounterWithLabel() @{
+	let count = state(0);
 
 	<>
-		<button onClick={() => current++}>{current}</button>
+		<p>Clicked {count} times</p>
+		<button onClick={() => count++}>Click me</button>
 	</>
 }
 ```
@@ -74,11 +85,15 @@ Attributes are attributes. An expression in curly braces is a hole you fill with
 attribute or in text. Spreading an object over an element works too:
 
 ```tsrx
-const meta = state({ id: 'hero', role: 'note', hidden: false });
+import { state } from '@markless/core';
 
-<section data-kind="card" {...meta} title="Stable">
-	<p>Spread attributes</p>
-</section>
+export default function Card() @{
+	let meta = state({ id: 'hero', role: 'note', hidden: false });
+
+	<section data-kind="card" {...meta} title="Stable">
+		<p>Spread attributes</p>
+	</section>
+}
 ```
 
 Markless supports exactly one authoring language, and this is it. There is no second template
