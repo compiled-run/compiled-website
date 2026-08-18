@@ -90,6 +90,10 @@ export const IDENTIFIER_DOCS: Readonly<Record<string, TokenDoc>> = {
 		kind: 'Element binding',
 		doc: 'Binds one element() handle to this element, which is how later code gets hold of the node.',
 	},
+	style: {
+		kind: 'Scoped styles',
+		doc: 'A style block written inside a component, whose rules the compiler scopes to that component with a build-hashed class.',
+	},
 	attach: {
 		kind: 'Element behaviour',
 		doc: 'Installs longer lived code on this element, and may return a cleanup function that runs when the element goes away.',

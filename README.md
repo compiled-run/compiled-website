@@ -109,11 +109,19 @@ can resume. The header reserves `.theme-toggle-slot` at the end of its tools row
 pinned to it. `NOTES.md` finding 19 has the reasoning, including why the component has two buttons
 instead of one.
 
-Two pages, `concepts/conditionals.mdx` and `concepts/lists.mdx`, ship without a live widget: a
-component whose body uses `@if` makes the production build stop making progress on 0.3.1, and the
-transform that never returns is named in `NOTES.md` finding 23. Both pages say so on the page, and
-the witness asserts both the callout and the absence of a demo frame, so the day the compiler
+Four pages ship without a live widget, each for a reason the page states out loud and the witness
+asserts. `concepts/conditionals.mdx` and `concepts/lists.mdx`: a component whose body uses `@if`
+makes the production build stop making progress on 0.3.1, and the transform that never returns is
+named in `NOTES.md` finding 23. `concepts/async.mdx`: `@try` blocks build fine, but an async
+boundary inside an MDX page serves no `asyncBoundaries` entry and no locator for the nodes in its
+arms, so nothing on the page can move (finding 25). `concepts/styling.mdx`: the scoped stylesheet a
+component compiles to is written into the build output and never linked from the page, and an
+element whose `class` is an expression is emitted without its scope class (finding 26). In every
+case the witness asserts both the callout and the absence of a demo frame, so the day the framework
 accepts those components the run goes red and the note has to come out with the fix.
+
+`start/first-app.mdx` has no widget by design: it is a terminal transcript, and a fake terminal
+would be a lie.
 
 `NOTES.md` records what 0.2.2, then 0.3.0, then 0.3.1 could and could not do while this was built.
 Read it before changing the shell or the build config.

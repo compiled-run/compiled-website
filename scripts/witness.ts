@@ -880,6 +880,79 @@ try {
 			);
 		}
 
+		// --- batch 3: first app, async, styling ---------------------------------
+		// Three pages, and two of them are the honest kind: the widget their
+		// outline asked for cannot run on this build, so what is checked is that
+		// the page says so and really has no demo frame to mislead anyone.
+		for (const href of [
+			'/markless/start/first-app',
+			'/markless/concepts/async',
+			'/markless/concepts/styling',
+		]) {
+			const response = await fetch(`${origin}${href}`);
+			check(response.status === 200, `GET ${href}`, String(response.status));
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const heading = ((await page.locator('h1').first().textContent()) ?? '').trim();
+			check(heading.length > 0, `${href} renders its h1 in the browser`, heading);
+			check(
+				(await page.locator('.playground').count()) === 0,
+				`${href} has no demo frame, because it has no live widget`,
+			);
+			await page.screenshot({
+				path: `${shotsDir}/T014-${slugFor(href)}.png`,
+				fullPage: true,
+			});
+		}
+
+		// The async and styling pages each carry the callout that says why the
+		// widget is missing. The day the framework fix lands and the widget goes
+		// back on the page, the `.playground` check above fails and the callout has
+		// to come out with the note it names.
+		for (const href of ['/markless/concepts/async', '/markless/concepts/styling']) {
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const told = await page
+				.locator('.callout-title')
+				.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+			check(
+				told.some((title) => title.includes('no demo box on this page yet')),
+				`${href} says out loud why it has no demo box`,
+				told.join(' | '),
+			);
+			const body = await page
+				.locator('.callout-body')
+				.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()).join(' '));
+			check(
+				body.includes('NOTES.md finding 25') || body.includes('NOTES.md finding 26'),
+				`${href} names the finding its missing widget is recorded under`,
+			);
+		}
+
+		// The async page's second callout is the measurement, not the plan: on this
+		// build a re-settle never commits the pending arm. It stays until that is
+		// no longer true.
+		await page.goto(`${origin}/markless/concepts/async`, { waitUntil: 'load' });
+		const asyncCallouts = await page
+			.locator('.callout-title')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+		check(
+			asyncCallouts.some((title) => title.includes('instead of the deadline')),
+			'the async page says which of its deadline claims are spec and not measured',
+			asyncCallouts.join(' | '),
+		);
+
+		// The first-app page must carry the override a reader needs today, exactly,
+		// and must not fake a terminal.
+		await page.goto(`${origin}/markless/start/first-app`, { waitUntil: 'load' });
+		const firstAppText = (await page.locator('.prose').first().innerText()).replace(/\s+/g, ' ');
+		check(
+			firstAppText.includes('"@tsrx/core": "0.1.58"'),
+			'the first-app page carries the @tsrx/core override a clean install needs',
+		);
+		check(
+			firstAppText.includes('npm create markless@latest'),
+			'the first-app page carries the scaffold command',
+		);
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,

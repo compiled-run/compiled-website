@@ -851,3 +851,123 @@ on 0.2.2:
 ```
 
 The document keeps its plain `<html>` root.
+
+## 25. T014: `@try` builds fine, but an async boundary inside an MDX page never resumes
+
+Good news first, because finding 23 predicted the opposite: **a component whose body uses
+`@try` / `@pending` / `@catch` does not hang the build.** The `@if` hang is specific to `@if`. The
+async widget below built in the ordinary 90 seconds, twice, on published 0.3.1.
+
+The widget (`slow-greeting.tsrx`, now deleted, kept here so the page can come back):
+
+```tsx
+import { computed, state } from '@markless/core';
+
+export default function SlowGreeting() @{
+	let wait = state(30);
+
+	const greeting = computed(async () => {
+		const ms = wait;
+		await new Promise<void>((settle) => {
+			setTimeout(settle, ms);
+		});
+		return `Ready after ${ms} milliseconds`;
+	});
+
+	<section class="waiting">
+		<div class="playground-controls">
+			<button onClick={() => (wait = 30)}>Fast</button>
+			<button onClick={() => (wait = 2500)}>Slow</button>
+		</div>
+		@try {
+			<p class="playground-output">{greeting}</p>
+		} @pending {
+			<p class="playground-output is-waiting">Still working on it</p>
+		} @catch {
+			<p class="playground-output is-failed">That did not work</p>
+		}
+	</section>
+}
+```
+
+**Defect A: inside an MDX page the boundary is not resumable.** Served through
+`pages/markless/concepts/probe.mdx` (a one-line page whose only content is the wrapper), the SSR
+HTML is right: the arm's `<p>` is there, wrapped in
+`<!--markless:async:c0:boundary:0-->` comments, holding `Ready after 30 milliseconds`. The state
+payload is right too: `state:wait` is 30 and `computed:greeting` carries a fulfilled snapshot with
+its dependency on `state:wait`. What is missing is in the view payload:
+
+```json
+"locators":[
+ {"hostNodeId":"m0:h0","index":2,"tagName":"div"},
+ {"hostNodeId":"m0:c0:h0","index":3,"tagName":"section"},
+ {"hostNodeId":"m0:c0:h1","index":4,"tagName":"div"},
+ {"hostNodeId":"m0:c0:h2","index":5,"tagName":"button"},
+ {"hostNodeId":"m0:c0:h3","index":6,"tagName":"button"}],
+"domUpdates":[{"hostNodeId":"m0:c0:h4","graphNodeId":"computed:greeting","path":["value"],
+ "target":{"kind":"text"}}],
+"asyncBoundaries":[]
+```
+
+`asyncBoundaries` is empty, and the one dom update names `m0:c0:h4`, a host node that has no
+locator. So the click lands, `wait` changes, and nothing on the page can move: the runtime has no
+way to find the node it is supposed to write. Chrome shows no error and no app chunk executed.
+
+Clicking on a page that also carries `<PageMeta>` and `<ThemeToggle>` additionally throws
+`RuntimeResumeError: Resume locator m1:h1 expected <button> at DOM order index 17 but found
+<span>`, which looks like the same missing-node accounting seen from the other side.
+
+**The same component on a plain `.tsrx` page works.** `pages/markless/probe2.tsrx` rendering the
+identical boundary re-settles for real: click Slow and the text goes from `Ready after 30
+milliseconds` to `Ready after 6000 milliseconds`. So this is the MDX composition path, not the
+async boundary itself, which is the same shape of defect as findings 11 and 14.
+
+**Defect B: a re-settle never shows `@pending`.** On that working `.tsrx` page, with the slow
+branch waiting six seconds, the arm text was polled every 60 ms for eight seconds and only ever
+held two values: the old settled text, then the new one. `Still working on it` was never on the
+page. `specs/framework/12-arm-rendering.md` D8 says a boundary holds its prior settled snapshot and
+that "past the client deadline the boundary's `@pending` arm commits"; on 0.3.1 the commit does not
+happen at six seconds, which is well past any plausible deadline. Not chased further here: it needs
+the framework's own timing tests, not an app-side probe.
+
+**What it costs the docs.** `concepts/async.mdx` ships prose-only, with the boundary in fences and
+two callouts: one saying why there is no demo box, one saying which of the deadline claims are
+quoted from the specification rather than measured on this site. The witness asserts both callouts
+and the absence of a `.playground` frame, so the day the payload carries the boundary the run goes
+red and the notes come out with the fix.
+
+## 26. T014: scoped `<style>` CSS is compiled and then never linked, and a class expression drops the scope class
+
+Two separate defects found while building the styling page's widget. Both were reproduced on a
+plain `.tsrx` page as well as through MDX, so neither one is the MDX path.
+
+**Defect A: the compiled stylesheet does not reach the page.** Two components, each with its own
+`<style>` block defining `.card` in a different colour, rendered side by side. The build does its
+half of the job:
+
+```
+.output/public/assets/two-cards-C5WZ5NFF.css
+.output/public/assets/_virtual_markless_style__…_second-card-Dnqo-zvt.css
+```
+
+The served page links exactly one stylesheet, `global-Dv_xs8Qd.css`, and neither of those two. Both
+cards paint `rgba(0, 0, 0, 0)`, before and after resume, on the MDX page and on the `.tsrx` page.
+The plausible mechanism is that the scoped CSS is imported by the component's client chunk, and a
+page whose islands execute no app code at load (`0.0 KB app executed`) never fetches that chunk, so
+the CSS never arrives; but that is a hypothesis, and the measured fact is only that the link is
+absent.
+
+**Defect B: `class={expression}` is emitted without the scope class.** In the same pair, the card
+whose class is a state read goes out as `class="card"` and the card with a literal class goes out as
+`class="card mk-1a6qykh"`. So even once defect A is fixed, a component that mixes a `<style>` block
+with a class expression will not match its own scoped rules. The scope class on the static path is
+real and correct, which is the half of the story the styling page is able to state as fact.
+
+Worth pairing with finding 18: a `class={ternary}` binding produces no dom update at all. A plain
+`class={stateVariable}` binding **does** update. On the toggle above the attribute really moved from
+`card` to `card is-lifted` on click, so the defect in 18 is the conditional shape, not class
+bindings as a category.
+
+**What it costs the docs.** `concepts/styling.mdx` ships prose-only: the two card files in fences,
+the scope-class mechanism quoted from `specs/framework/01-tsrx-host-contract.md`, and a callout
+naming both defects. The witness asserts the callout and the absence of a `.playground` frame.

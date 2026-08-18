@@ -23,11 +23,12 @@ export const nav: readonly NavSection[] = [
 		sprite: 'star-face',
 		entries: [
 			{ title: 'What is Markless', href: '/markless', sprite: 'crown', number: '1' },
+			{ title: 'Your first app', href: '/markless/start/first-app', sprite: 'plus', number: '2' },
 			{
 				title: 'Reading a .tsrx file',
 				href: '/markless/start/reading-tsrx',
 				sprite: 'bookmark',
-				number: '2',
+				number: '3',
 			},
 		],
 	},
@@ -45,6 +46,8 @@ export const nav: readonly NavSection[] = [
 				number: '4',
 			},
 			{ title: 'Lists', href: '/markless/concepts/lists', sprite: 'dashes', number: '5' },
+			{ title: 'Async', href: '/markless/concepts/async', sprite: 'arrow-loop', number: '6' },
+			{ title: 'Styling', href: '/markless/concepts/styling', sprite: 'flower', number: '7' },
 		],
 	},
 ];
@@ -92,12 +95,15 @@ export function pagerFor(pathname: string): Pager {
  * what the reader sees and follows, so a page never spells a URL itself.
  */
 export const concepts: Readonly<Record<string, NavEntry>> = {
+	'first-app': { title: 'your first app', href: '/markless/start/first-app' },
 	'reading-tsrx': { title: 'reading a .tsrx file', href: '/markless/start/reading-tsrx' },
+	async: { title: 'async', href: '/markless/concepts/async' },
 	computed: { title: 'computed', href: '/markless/concepts/computed' },
 	conditionals: { title: 'conditionals', href: '/markless/concepts/conditionals' },
 	events: { title: 'events', href: '/markless/concepts/events' },
 	lists: { title: 'lists', href: '/markless/concepts/lists' },
 	state: { title: 'state', href: '/markless/concepts/state' },
+	styling: { title: 'styling', href: '/markless/concepts/styling' },
 };
 
 export type AssumesItem = {
