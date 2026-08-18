@@ -971,3 +971,162 @@ bindings as a category.
 **What it costs the docs.** `concepts/styling.mdx` ships prose-only: the two card files in fences,
 the scope-class mechanism quoted from `specs/framework/01-tsrx-host-contract.md`, and a callout
 naming both defects. The witness asserts the callout and the absence of a `.playground` frame.
+
+## 27. T006: `shared()` across two modules stalls the production build on 0.3.1
+
+The "Building an app" section's fourth page was gated on a real test: does a `shared()` definition in
+one module resolve from another module on published `@markless/*@0.3.1`? T001 §1.3 flagged it
+`unsure` because the compiler pass that resolves a `shared()` call looks for a definition in the
+same module, and no `.tsrx` file in the framework's own repository uses it at all.
+
+**The test.** Four files, all deleted again afterwards, kept here so the page can come back:
+
+```tsx
+// components/demos/shared-basket.tsrx  (module A: the definition)
+import { shared, state } from '@markless/core';
+
+export const basket = shared(() => state({ count: 0 }));
+```
+
+```tsx
+// components/demos/basket-count.tsrx  (module B: the reader)
+import { basket } from './shared-basket.tsrx';
+
+export default function BasketCount() @{
+	const items = basket();
+
+	<p class="playground-output">Bikes in the shed: {items.count}</p>
+}
+```
+
+```tsx
+// components/demos/basket-add.tsrx  (module C: the writer)
+import { basket } from './shared-basket.tsrx';
+
+export default function BasketAdd() @{
+	const items = basket();
+
+	<button type="button" onClick={() => items.count++}>Wheel one in</button>
+}
+```
+
+Plus `shared-basket-demo.tsrx`, which puts B and C in one `.playground` frame, rendered from a
+one-line `.mdx` probe page.
+
+**The result: the build never finishes.** `npm run build` prints
+
+```
+vite v8.0.10 building client environment for production...
+transforming...
+```
+
+and then stops making progress. Measured twice. The first run carried the three other batch-4
+widgets as well: 5 minutes 30 seconds of wall clock for 2.0 seconds of process CPU. The second run
+carried the `shared()` probe alone: 3 minutes 5 seconds of wall clock for 1.7 seconds of CPU, still
+inside `transforming...`. No error, no diagnostic, no compiler stack. The process is idle, not
+spinning, which is the same signature as the `@if` hang in findings 21 and 23: a transform that
+never returns rather than one that loops.
+
+**It is `shared()` and not the page.** Deleting the four files above and rebuilding the same
+Building-an-app section with the other three widgets on it (`split-counter`, `focus-field`,
+`favourite-colour`) succeeds in the ordinary time, exit 0.
+
+So this never got as far as the question T001 actually asked. Whether cross-module resolution
+*works* is still unknown, because the build does not reach the point of telling us.
+
+**What it costs the docs.** `build/shared.mdx` ships prose-only: the design quoted from
+`specs/framework/03-state-graph.md`, a callout with the measurement above, "pass it through props
+until then" as the working advice, and a collapsible separating what is certain (the API is
+exported, the specification is detailed, the diagnostics exist) from what is not (that a definition
+in one module resolves from another). The witness asserts the callout and the absence of a
+`.playground` frame, so the day the build finishes the run goes red and this note comes out with the
+fix.
+
+## 28. T006: what the other three batch-4 widgets proved
+
+One of the three ships as a live widget on published 0.3.1. The other two are findings 29 and 30.
+
+- **`focus-field.tsrx`** uses `element<HTMLInputElement>()` with `el={field}` and calls
+  `field?.focus()` in a click handler. `document.activeElement` really becomes the input. Written
+  with optional chaining because a handle reads `undefined` before bind and after removal.
+- **`favourite-colour.tsrx`** is `storage('favourite-colour', 'yellow')` at module scope with three
+  buttons assigning constants. It repaints but does not persist: see finding 30. `class={colour}` on
+  the swatch does update, which agrees with finding 26's note that a plain `class={stateVariable}`
+  binding works and only the ternary shape (finding 18) does not.
+
+No `attach` widget shipped. Finding 9 already explains why: a behaviour installs during resume, and
+resume waits for a real event, so a widget whose only job is an `attach` would sit inert until the
+reader clicked something else. `build/elements.mdx` says that out loud in a callout instead.
+
+
+## 29. T006: a callback prop from a child component does not resume inside an MDX page
+
+The components page was supposed to carry a split counter: a parent holding `state(0)`, and a
+`BumpButton` child taking a `label` string and an `onBump` callback. It renders correctly from the
+server. It does not resume.
+
+Clicking the child's button in Chrome, on the production build of `/markless/build/components`:
+
+```
+GET <handler chunk> 404
+Error: Unknown async symbol symbol:0
+Error: Unknown async symbol symbol:0
+```
+
+The number stays at `Total: 0`. `markless: resumed - 0.0 KB app executed` is logged first, so the
+inline resumer did wake and did route the click; what fails is finding the handler behind the
+child's `onClick`.
+
+**What was ruled out.** The first shape of the widget also wrapped its contents in a `Panel`
+component rendering `{children}`. Removing the `children` wrapper entirely and rebuilding leaves the
+same 404 and the same `Unknown async symbol symbol:0`, so the projection is not the cause; the
+callback prop is. The child's own markup renders fine either way, projection included.
+
+**One thing found on the way, worth its own line.** Before this, both new widget pages threw
+`RuntimeResumeError: Resume locator m1:h1 expected <button> at DOM order index 35 but found <span>`,
+which is the same error finding 25 saw. The cause is the `<PageMeta>` island and the `<ThemeToggle>`
+island claiming overlapping DOM-order indices, and it depends on how many entries the page-meta
+`assumes` line loops over: pages with one assumed concept are fine, and the two pages with two and
+three were not. Cutting both pages back to a single `assumes` key cleared the resume error, and the
+focus-field widget then worked. So `concepts/conditionals`, `concepts/lists` and `concepts/async`,
+which all carry two assumes and no widget, are very likely serving a broken theme toggle today and
+nothing on the site notices. Worth a framework issue: the locator indices for a second island on the
+page are computed as if the first island's `@for` emitted a fixed number of nodes.
+
+**What it costs the docs.** `build/components.mdx` ships prose-only: both files in fences, the
+props, callback-props and `children` sections intact, and a callout naming this finding. The witness
+asserts the callout and the absence of a `.playground` frame, so the day the handler resolves the
+run goes red and this note comes out with the fix.
+
+
+## 30. T006: a second `storage()` binding on a page repaints but never persists
+
+The storage page's widget was `storage('favourite-colour', 'yellow')` at module scope with three
+buttons assigning a constant colour, and a swatch bound with `class={colour}`. The pinned key is
+deliberately not `theme`, so it cannot fight the site's own toggle.
+
+Half of it works. Clicking Green really repaints the swatch, measured as a background colour change
+from `oklch(0.886 0.14 101)` to `oklch(0.8 0.155 148)`, and the text under it reads `Saved: green`.
+So the island resumes and the DOM updates run.
+
+The other half does not. After that click:
+
+```
+localStorage.getItem('favourite-colour')                        -> null
+document.documentElement.getAttribute('data-favourite-colour')  -> null
+```
+
+and a reload comes back on the `yellow` fallback. Chrome logs `markless: resumed - 0.0 KB app
+executed` and one 404 for a chunk.
+
+**What is different about it.** Every `.mdx` page on this site renders `<ThemeToggle />`, which is
+itself a module-scope `storage('theme', 'system')`. That one persists correctly, and the witness has
+proven it on `concepts/state` since finding 19. So the page carries two `storage()` bindings from
+two modules, the first persists and the second does not. Not chased further than that: this is at
+the same seam as findings 11, 14 and 25, where MDX composition drops part of a second island's
+payload.
+
+**What it costs the docs.** `build/storage.mdx` ships prose-only, with the file in a fence and a
+callout naming this finding. It does have a live demo to point at, and it points at it: the theme
+toggle in this site's header is a `storage()` binding, and flipping it then reloading is exactly the
+lesson the page teaches. The witness asserts the callout and the absence of a `.playground` frame.

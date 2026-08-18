@@ -953,6 +953,131 @@ try {
 			'the first-app page carries the scaffold command',
 		);
 
+		// --- batch 4: the Building an app section -------------------------------
+		// Four pages. Three carry a widget whose whole teaching moment is a thing
+		// the reader does, and the checks below do exactly that and assert what
+		// the page says will happen. The fourth is the honest kind.
+		for (const href of [
+			'/markless/build/components',
+			'/markless/build/elements',
+			'/markless/build/storage',
+			'/markless/build/shared',
+		]) {
+			const response = await fetch(`${origin}${href}`);
+			check(response.status === 200, `GET ${href}`, String(response.status));
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const heading = ((await page.locator('h1').first().textContent()) ?? '').trim();
+			check(heading.length > 0, `${href} renders its h1 in the browser`, heading);
+			await page.screenshot({
+				path: `${shotsDir}/T006-${slugFor(href)}.png`,
+				fullPage: true,
+			});
+		}
+
+		// --- the components page is the honest kind ----------------------------
+		// A button in a child component calling a callback prop does not resume
+		// inside an MDX page on 0.3.1 (NOTES.md finding 29), so the page ships the
+		// pair in fences with a callout saying so. The day it resumes, the
+		// `.playground` check here fails and the note has to come out with it.
+		await page.goto(`${origin}/markless/build/components`, { waitUntil: 'load' });
+		check(
+			(await page.locator('.playground').count()) === 0,
+			'/markless/build/components really has no playground frame to mislead the reader',
+		);
+		const componentCallouts = await page
+			.locator('.callout-title')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+		check(
+			componentCallouts.some((title) => title.includes('no demo box on this page yet')),
+			'/markless/build/components says out loud why it has no demo box',
+			componentCallouts.join(' | '),
+		);
+		const componentBody = await page
+			.locator('.callout-body')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()).join(' '));
+		check(
+			componentBody.includes('finding 29'),
+			'/markless/build/components names the finding its missing widget is recorded under',
+		);
+
+		// --- widget: the focus field on the elements page ------------------------
+		// The claim is that the handle is the real node, so what is checked is the
+		// browser's own idea of which element has the caret.
+		await page.goto(`${origin}/markless/build/elements`, { waitUntil: 'load' });
+		const focusInput = page.locator('.playground input').first();
+		const focusButton = page.getByRole('button', { name: 'Put the cursor in the field' });
+		await focusButton.waitFor();
+		const activeIsField = () =>
+			page.evaluate(() => {
+				const field = document.querySelector('.playground input');
+				return Boolean(field) && document.activeElement === field;
+			});
+		check(!(await activeIsField()), 'the field does not start out focused');
+		await focusButton.click();
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			if (await activeIsField()) break;
+			await new Promise((done) => setTimeout(done, 100));
+		}
+		check(await activeIsField(), 'clicking the button puts the caret in the field');
+		await settleText(
+			page.locator('.playground .playground-output').first(),
+			(text) => text === 'The cursor is in the field',
+			'the focus field reports the cursor moved',
+		);
+		await page.screenshot({ path: `${shotsDir}/T006-focus-field-after.png`, fullPage: true });
+
+		// --- the storage page is the honest kind -------------------------------
+		// A second `storage()` binding on a page that already carries the theme
+		// toggle repaints but never persists (NOTES.md finding 30), so the page
+		// points at the header toggle instead of shipping a box that teaches the
+		// wrong half. The day it persists, the `.playground` check fails here.
+		await page.goto(`${origin}/markless/build/storage`, { waitUntil: 'load' });
+		check(
+			(await page.locator('.playground').count()) === 0,
+			'/markless/build/storage really has no playground frame to mislead the reader',
+		);
+		const storageCallouts = await page
+			.locator('.callout-title')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+		check(
+			storageCallouts.some((title) => title.includes('no demo box on this page yet')),
+			'/markless/build/storage says out loud why it has no demo box',
+			storageCallouts.join(' | '),
+		);
+		const storageBody = await page
+			.locator('.callout-body')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()).join(' '));
+		check(
+			storageBody.includes('finding 30'),
+			'/markless/build/storage names the finding its missing widget is recorded under',
+		);
+
+		// --- the shared page is the honest kind ---------------------------------
+		// `shared()` across two modules stalls the production build on 0.3.1
+		// (NOTES.md finding 27), so the page ships with no widget and says so. The
+		// day the build finishes, the `.playground` check here fails and the note
+		// has to come out with the fix.
+		await page.goto(`${origin}/markless/build/shared`, { waitUntil: 'load' });
+		check(
+			(await page.locator('.playground').count()) === 0,
+			'/markless/build/shared really has no playground frame to mislead the reader',
+		);
+		const sharedCallouts = await page
+			.locator('.callout-title')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()));
+		check(
+			sharedCallouts.some((title) => title.includes('when we tried it on 0.3.1')),
+			'/markless/build/shared says out loud what happened when it was tried',
+			sharedCallouts.join(' | '),
+		);
+		const sharedBody = await page
+			.locator('.callout-body')
+			.evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? '').trim()).join(' '));
+		check(
+			sharedBody.includes('NOTES.md'),
+			'/markless/build/shared names the finding its missing widget is recorded under',
+		);
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,

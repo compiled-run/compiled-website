@@ -50,6 +50,16 @@ export const nav: readonly NavSection[] = [
 			{ title: 'Styling', href: '/markless/concepts/styling', sprite: 'flower', number: '7' },
 		],
 	},
+	{
+		title: 'Building an app',
+		sprite: 'crown',
+		entries: [
+			{ title: 'Components', href: '/markless/build/components', sprite: 'crown', number: '1' },
+			{ title: 'Elements', href: '/markless/build/elements', sprite: 'bolt', number: '2' },
+			{ title: 'Storage', href: '/markless/build/storage', sprite: 'bookmark', number: '3' },
+			{ title: 'Shared', href: '/markless/build/shared', sprite: 'spiral', number: '4' },
+		],
+	},
 ];
 
 /** Every entry in reading order, which is what the prev/next pager walks. */
@@ -104,6 +114,10 @@ export const concepts: Readonly<Record<string, NavEntry>> = {
 	lists: { title: 'lists', href: '/markless/concepts/lists' },
 	state: { title: 'state', href: '/markless/concepts/state' },
 	styling: { title: 'styling', href: '/markless/concepts/styling' },
+	components: { title: 'components', href: '/markless/build/components' },
+	elements: { title: 'elements', href: '/markless/build/elements' },
+	storage: { title: 'storage', href: '/markless/build/storage' },
+	shared: { title: 'shared', href: '/markless/build/shared' },
 };
 
 export type AssumesItem = {

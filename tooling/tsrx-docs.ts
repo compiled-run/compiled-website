@@ -94,6 +94,10 @@ export const IDENTIFIER_DOCS: Readonly<Record<string, TokenDoc>> = {
 		kind: 'Scoped styles',
 		doc: 'A style block written inside a component, whose rules the compiler scopes to that component with a build-hashed class.',
 	},
+	children: {
+		kind: 'Projected content',
+		doc: 'The content written inside this component where it was used, which you may render, wrap or pass on, but not inspect or count.',
+	},
 	attach: {
 		kind: 'Element behaviour',
 		doc: 'Installs longer lived code on this element, and may return a cleanup function that runs when the element goes away.',
