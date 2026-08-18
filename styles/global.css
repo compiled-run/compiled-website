@@ -344,3 +344,93 @@ body::after {
 html {
 	background: var(--paper);
 }
+
+/* ---------------------------------------------------------------------------
+   Code blocks: shiki output coloured from the paper tokens.
+
+   plugins/highlight-mdx.ts renders every fence with shiki's CSS-variable theme
+   under a --code- prefix, so the palette lives here rather than in the build.
+   One light-page theme only; the code surface itself stays ink-on-paper the way
+   the rest of the site's boxes do.
+   --------------------------------------------------------------------------- */
+
+:root {
+	--code-background: var(--ink);
+	--code-foreground: color-mix(in oklch, var(--paper) 90%, white);
+	--code-token-keyword: var(--yellow);
+	--code-token-function: var(--green-star);
+	--code-token-constant: var(--purple);
+	--code-token-string: var(--green-soft);
+	--code-token-string-expression: var(--green-soft);
+	--code-token-parameter: var(--pink);
+	--code-token-comment: color-mix(in oklch, var(--paper) 55%, var(--ink));
+	--code-token-punctuation: color-mix(in oklch, var(--paper) 72%, var(--ink));
+	--code-token-link: var(--pink);
+}
+
+.prose pre.shiki {
+	/* The tooltip below is positioned against this box, and a box that scrolls
+	   clips at its padding edge, so the reserved padding is what keeps a
+	   tooltip on the last line of a sample from being cut off. */
+	position: relative;
+}
+
+.prose pre.shiki:has(.tsrx-hover) {
+	padding-bottom: calc(var(--space-s) + 3.6em);
+}
+
+/* ---------------------------------------------------------------------------
+   Hover docs on TSRX tokens. No script: the tooltip is a child of the token and
+   CSS shows it on hover and on keyboard focus. The token carries the same text
+   as an aria-label, so a screen reader gets it without the visual box.
+   --------------------------------------------------------------------------- */
+
+.tsrx-hover {
+	border-bottom: 1px dashed color-mix(in oklch, currentColor 55%, transparent);
+	cursor: help;
+	outline-offset: 2px;
+}
+
+.tsrx-hover:focus-visible {
+	outline: 2px solid var(--yellow);
+}
+
+.tsrx-tip {
+	position: absolute;
+	left: var(--space-s);
+	right: var(--space-s);
+	bottom: var(--space-xs);
+	z-index: 2;
+	background: var(--paper);
+	color: var(--ink);
+	border: 2px solid var(--ink);
+	box-shadow: 3px 3px 0 var(--purple);
+	font-family: 'Joy Elia';
+	font-size: var(--step--1);
+	line-height: 135%;
+	text-align: left;
+	white-space: normal;
+	user-select: none;
+	visibility: hidden;
+	opacity: 0;
+}
+
+.tsrx-hover:hover > .tsrx-tip,
+.tsrx-hover:focus > .tsrx-tip,
+.tsrx-hover:focus-visible > .tsrx-tip {
+	visibility: visible;
+	opacity: 1;
+}
+
+.tsrx-tip-title {
+	display: block;
+	padding: 0.15em 0.6em;
+	background: var(--yellow);
+	border-bottom: 2px solid var(--ink);
+	font-weight: 700;
+}
+
+.tsrx-tip-body {
+	display: block;
+	padding: 0.4em 0.6em 0.5em;
+}

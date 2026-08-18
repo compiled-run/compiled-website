@@ -105,3 +105,84 @@ Chrome, and clicks the counter. The count moves 0 -> 1 -> 2 and the screenshots 
 One caveat: two clicks fired back to back lose the second one. The first click is what wakes the
 island, and a click that lands mid-resume is dropped. The witness therefore waits for the text to
 settle between clicks. A reader hammering a demo button will see the same drop.
+
+## 8. What the MDX emit looks like at 0.2.2, and what that costs a highlighter
+
+Syntax highlighting had to be added without touching the `.mdx` sources, because of finding 5: the
+router's MDX plugin rejects raw HTML, so highlighted markup cannot be written into a page. The only
+place it can go is the module the router emits. Everything below was read out of
+`node_modules/@markless/router/dist/vite.js` and confirmed against the built output.
+
+### The shape
+
+`markless-router:mdx` runs at `enforce: 'pre'` and emits, for a page that composes components:
+
+```js
+const marklessMdxParts = [{"kind":"html","html":"…","elementCount":12},{"kind":"component","componentIndex":0}, …];
+```
+
+plus the same HTML again as string literals inside `renderSsr` and `renderCsr`. A page with no
+components emits no parts at all, only `return { html: "…" };`.
+
+`elementCount` is the number of elements in that chunk of HTML, descendants included.
+`composeMdxView` adds those counts up to work out the DOM-order index of every island element on the
+page, so **any rewrite of a part's HTML has to recount its elements or every island moves**. There
+is no `elementTags` array at 0.2.2, only the count.
+
+`tooling/highlight-mdx.ts` therefore recounts, and before it changes anything it checks its own
+counter against the count the router wrote. If the two ever disagree the build fails instead of
+shipping islands that resume against the wrong nodes. The witness proves the arithmetic end to end:
+the Counter island sits after a code block on `/markless/concepts/state`, its locator index moved
+from 15 to 27 when highlighting landed, and 27 is exactly where the `div.playground` is in the
+served DOM.
+
+One detail that costs an afternoon if you miss it: inside the emitted module the HTML lives in JS
+string literals, so the fence is spelled `<pre><code class=\"language-tsrx\">` there. A guard
+looking for the unescaped form never matches.
+
+### vite-plus does not call a bare `transform` function
+
+A plugin written as `{ name, transform(code, id) {…} }` had its `buildStart` called on every
+environment and its `transform` called never, silently. The same hook written as
+`{ name, transform: { handler(code, id) {…} } }` runs. Anything registered here should use the
+object form, and should fail loudly rather than no-op, because a hook that never runs looks exactly
+like a hook with nothing to do.
+
+### Nitro owns `plugins/`
+
+A `plugins/` directory in the project root is scanned by Nitro as *server* plugins, and the build
+dies with `"default" is not exported by "plugins/highlight-mdx.ts"`. Build-time tooling lives in
+`tooling/` for that reason.
+
+## 9. An island whose only job is `attach` never wakes
+
+The hover docs on code tokens are plain CSS, not a Markless island, and that is not a style
+preference. On a server-rendered page the inline resumer
+(`node_modules/@markless/web/dist/resumer-BsPf7l9a.js`) adds one listener per event name that
+appears in `view.events`, walks up from `event.target` looking for a host element the payload knows,
+and only then loads the runtime. Element behaviours installed with `attach` are not listeners: they
+install during resume, and resume is what has not happened yet. `hasBrowserTriggers` in
+`render-to-string` does count a behaviour as a reason to ship the payload, but nothing in the
+document triggers it.
+
+So a `SyntaxTooltip.tsrx` island that used `attach` to watch for `mouseover` on the highlighted
+spans would install its listener only after the reader had already clicked something else on the
+page. The spans it needs to watch also sit outside the island, in static HTML the router wrote, so
+they are not host elements the payload can route an event to either.
+
+The tooltip is therefore a child element of the token it explains, shown by `:hover` and `:focus`.
+It costs no JavaScript, it works on the first pointer movement rather than after a first gesture,
+and it is keyboard reachable. Revisit this if a future release lets a component subscribe to events
+on nodes it does not own, or wakes behaviours without an event.
+
+## 10. Smaller things learned
+
+- Code blocks keep the site's Joy Elia face rather than switching to a monospace stack. Nothing
+  forced that; it is just the look the rest of the site already had, and it is a one-line change in
+  `styles/global.css` if it should be monospace instead.
+- The tooltip is pinned to the bottom of its code block, and the block reserves a strip of padding
+  under the code for it. A box that scrolls clips its children at the padding edge, so a tooltip
+  positioned any other way is cut off by the block's own `overflow-x: auto`.
+- The site-wide prose glossary from the reference site is not built. Highlighting and the construct
+  tooltips were the must; the glossary needs a pass over the prose that this unit was told not to
+  touch.
