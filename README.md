@@ -177,14 +177,18 @@ screenshots into the markless repo's goal notes.
 - `components/docs/sidebar.tsrx`, `document.tsrx`, `nav.ts` — the chrome. `nav.ts` is the single
   source for the page list: the sidebar loops it, and the breadcrumb, the pager and the witness read
   it. Adding a page means adding an entry there and nothing else. `document.tsrx` keeps a plain
-  `<html>` root rather than `<Html>` from `@markless/router`, which still fails the build on 0.3.1
-  (`NOTES.md` findings 2 and 24).
+  `<html>` root rather than `<Html>` from `@markless/router`, which still fails the build on 0.3.3
+  (`NOTES.md` findings 2, 24 and 40).
 - `styles/global.css` — the look, copied from the markless repo's `docs/` app, plus the code-block
   palette, the hover-doc box and the dark theme. Below `70rem` the sidebar's list is collapsed
   behind a `<details>` and the "On this page" outline is laid on its side as a strip of chips, so
   the first phone screenful is the article rather than the navigation (`NOTES.md` finding 36).
 - `public/favicon.svg`, `public/robots.txt`, `public/sitemap.xml`, `public/llms.txt` — the head and
   crawler files. The last three are generated; `scripts/generate-seo.ts` is what writes them.
+- `public/theme/sun.png`, `public/theme/moon.png` — the two drawings on the theme toggle, cut from
+  the top pair of `theme-icons-sheet.png` by `tooling/cut-sprites.ts theme`. Each button carries the
+  drawing of the theme it is standing in, so the sun is only ever painted on paper and the moon only
+  ever on the dark ground (`NOTES.md` finding 41).
 - `components/sprite.tsrx`, `components/mascot.tsrx`, `components/sticker.tsrx` — the hand-drawn
   accents. `public/sprites/`, `public/mascots/` and `public/stickers/` hold the cut assets;
   `tooling/cut-sprites.ts` is what cut them and is not part of the build. Sprites are the flat
@@ -222,6 +226,19 @@ In a `tsrx` fence, the TSRX constructs and the framework calls carry a hover doc
 `state`, `attach` or an `onClick`-style prop, or tab to it, and one sentence explains it. The
 sentences live in `tooling/tsrx-docs.ts`. There is no JavaScript behind them; the box is a child of
 the token, shown by CSS on hover and on focus. `NOTES.md` section 9 says why it is not an island.
+
+## Links
+
+**Every internal link is a plain `<a href>`, and every navigation is a full document load.** Not for
+want of trying: `<Link>` from `@markless/router` cannot be imported into a `.tsrx` component on
+0.3.3 (`MARKLESS_CAPTURE_METADATA_MISSING`), cannot be imported into an `.mdx` page at all (the
+router's MDX transform takes default imports from `.tsrx` files only), and `<Html>` from the same
+package still fails the SSR build the way finding 2 said it did on 0.2.2. The router's own SPA
+machinery is in the built page and can be reached by hand — its click handler wants a
+`data-markless-router-link` attribute rather than the component — but it is bound to the page-body
+container, so the sidebar, the breadcrumb and the pager are outside it, and inside it a navigation
+changes the URL and then leaves the previous page on screen. `NOTES.md` finding 40 has the three
+probes, the exact errors and the browser measurement.
 
 ## Themes
 

@@ -276,10 +276,21 @@ body::after {
 	font-size: 1em;
 	line-height: 1;
 	color: var(--ink);
-	background: var(--tinted-quiet);
-	border: 2px solid var(--code-edge);
+	background: none;
+	border: 0;
 	border-radius: 999px;
 	cursor: pointer;
+}
+
+/* The drawing inside the button. It is a die-cut sticker with its own white
+   border and shadow, so it is given the button's whole box and no chrome of its
+   own: the ring the button used to draw around a glyph would be a second edge
+   around an edge. */
+.theme-toggle-icon {
+	display: block;
+	inline-size: var(--theme-toggle-size);
+	block-size: var(--theme-toggle-size);
+	object-fit: contain;
 }
 
 /* Which of the two buttons is the one to offer is the same question as which

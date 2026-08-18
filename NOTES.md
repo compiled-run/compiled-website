@@ -1403,3 +1403,126 @@ into `notes/shots/T034-pager-{light,dark}.png`.
 copies are identical and the later one wins, so a change made to one of them appears to do nothing.
 Both were edited here. Removing the duplicate is its own change set, because the file is 2,000 lines
 and the duplication may be load-bearing for something else in it.
+
+## 40. T036: `<Link>` is not usable on 0.3.3, so every internal link stays an anchor
+
+The site wanted client-side navigation. It cannot have it on 0.3.3, and the three probes below are
+why. All three were built with `npm run build`; each failed in under two seconds, so none of them
+went near finding 23's hanging-build territory.
+
+**Probe 1 — `Link` in a `.tsrx` component.** `components/docs/link-probe.tsrx`:
+
+```tsrx
+import { Link } from '@markless/router';
+
+export default function LinkProbe() @{
+	<p class="link-probe">
+		<Link href="/markless/concepts/state">State</Link>
+	</p>
+}
+```
+
+used from `pages/markless/index.mdx`. The client environment stops on:
+
+```
+[plugin vite-plugin-markless]
+Error: MARKLESS_CAPTURE_METADATA_MISSING: Parent module ".../components/docs/link-probe.tsrx?markless-symbols"
+composes imported child "@markless/router", but its compiled artifact has no current capture metadata.
+Rebuild the child with the current Markless compiler and clear any stale build cache.
+```
+
+This is finding 2's *second* wall, reached without the aliasing that was needed to get to it on
+0.2.2. Resolution of `@markless/router` from app code works now; composing a component out of it
+does not.
+
+**Probe 2 — `Link` imported straight into the `.mdx` page.** The router's MDX transform refuses the
+import before the compiler ever sees it:
+
+```
+[plugin markless-router:mdx] .../pages/markless/index.mdx
+Error: Markless Router MDX currently supports default imports from .tsrx files only
+```
+
+So there is no page-level route around probe 1: a named import from a package cannot appear in an
+`.mdx` file at all.
+
+**Probe 3 — `<Html>` in `document.tsrx`, which is finding 2's own reproduction.** Swapping the plain
+`<html>` root for `<Html>` from `@markless/router` on 0.3.3 fails exactly where it failed on 0.2.2
+and 0.3.1:
+
+```
+[UNLOADABLE_DEPENDENCY] Error: Could not load @markless/router - No such file or directory (os error 2).
+```
+
+**So finding 2 is unchanged on 0.3.3**, and the document keeps its plain `<html>` root. The three
+probe files were deleted again.
+
+### What the shipped runtime does with a plain anchor
+
+`<Link>` is not the only way in: the router's SPA machinery is already in the built page, and it is
+driven by an attribute rather than by the component. The served HTML carries a
+`<script data-markless-router-link-resumer>` whose click handler ignores any anchor without
+`data-markless-router-link`, which is the one attribute `Link`'s SSR output adds
+(`@markless/router/dist/index.js`, `linkAnchorAttributes`). Stamping that attribute onto an anchor
+by hand is therefore the same wire contract, minus the component that will not compile. Both halves
+of that were measured in Chrome against the production build:
+
+- **The chrome cannot use it at all.** The resumer binds its listener to the
+  `[data-async-container]` element, and that container holds the page body only — the sidebar, the
+  header breadcrumb and the pager are rendered from `document.tsrx`, which puts them outside it. A
+  stamped sidebar link is never seen by the handler, and the click is an ordinary document load.
+- **Inside the container it navigates and then does not render.** Stamping the attribute on the
+  assumes link of `/markless/concepts/state` and clicking it: the URL becomes
+  `/markless/start/reading-tsrx`, and a `window.__probe = 1` set before the click is still `1`
+  after it, so the navigation really was client-side. The page under it is still the old one — same
+  `h1`, same breadcrumb, same `<title>` — with two errors on the console:
+
+  ```
+  RuntimeResumeError: MARKLESS_EVENT_DISPATCH_UNMATCHED: No event record matched click dispatch at a.
+  Error: MARKLESS_PRERENDER_PROP_UNDERIVABLE: name
+  ```
+
+  `name` is `<Sprite name={…} />`, which every page has under its `H1` through `PageMeta`, so this
+  is not one unlucky page. A client-side navigation that changes the URL and leaves the previous
+  page on screen is worse than a document load, not better.
+
+**Every internal link on the site is therefore a plain `<a href>`** — the sidebar, the breadcrumb,
+the pager, the assumes line, and the markdown links in prose — and every navigation is a full
+document load. Prose links could not have been converted in any case: markdown emits a bare anchor,
+MDX rejects raw HTML (finding 5), and the attribute would have to come from a transform of the
+emitted HTML. The witness asserts the current behaviour, so the day the framework renders the new
+page the run goes red and this note comes out with the fix.
+
+## 41. T036: the theme toggle wears the owner's stickers
+
+`theme-icons-sheet.png` is six light/dark pairs of toggle icons, one pair a row, numbered down the
+left. The site takes the top pair — the plain sun and the crescent moon with its three stars — and
+the five rows under it are alternatives that were drawn and not picked.
+
+`tooling/cut-sprites.ts theme` cuts them into `public/theme/{sun,moon}.png` at 96px on the long
+side, through the sticker pipeline rather than the crayon one, because these are die-cut: a white
+border and a soft shadow around a cream body. Two things about that mode are worth writing down.
+
+**It names a band instead of segmenting a grid.** Only one row of six is wanted, so the cutter takes
+the components inside the top row's band and to the right of the pink row numbers, and splits them
+at the sheet's dashed divider. Everything it does not want — the heading, the numbers, five rows of
+alternatives — never becomes a component in the first place, which is simpler than cutting a 6x2
+grid and throwing ten twelfths of it away.
+
+**The ink floor is 20, not the sticker sheet's 700.** The moon's smallest sparkle is a mark of a few
+dozen pixels, and the sticker floor drops it: at 700 the moon comes out cut off through its stars.
+With the band window already excluding everything that is not one of the two drawings, a low floor
+costs nothing.
+
+**Each button carries the drawing of the theme it is standing in.** The toggle was already two
+buttons with CSS showing whichever matches the painted theme (finding 19), so the swap the owner
+asked for is that same swap: the light page's button shows the sun, the dark page's shows the moon,
+and `aria-label` is what says where the click goes ("Switch to the dark theme"). Because each
+drawing is only ever painted on one ground, neither needs a second cut the way a sprite does — the
+sun is only ever on paper, the moon only ever on the dark ground.
+
+The button's own pill — a tinted circle with a 2px edge — is gone: a die-cut sticker brings its own
+white border, and a ring around it was an edge around an edge. The drawing is given the whole
+`--theme-toggle-size` box, so the header slot and the fixed island still measure the same and the
+witness's `onSlot` check is unchanged. The witness now also reads the `src` of whichever button is
+displayed and checks the browser decoded it, in both themes.

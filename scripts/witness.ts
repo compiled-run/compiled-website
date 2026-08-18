@@ -553,6 +553,18 @@ try {
 						Boolean(slot && island) &&
 						Math.abs(slot!.left - island!.left) < 2 &&
 						Math.abs(slot!.right - island!.right) < 2,
+					// The drawing on the button that is actually offered, and whether
+					// the browser decoded it: a 404 still leaves the <img> in the DOM.
+					icon: (() => {
+						const shown = [...document.querySelectorAll('.theme-toggle')].find(
+							(node) => getComputedStyle(node as Element).display !== 'none',
+						);
+						const image = shown?.querySelector('img.theme-toggle-icon') as HTMLImageElement | null;
+						return {
+							src: image?.getAttribute('src') ?? '',
+							decoded: (image?.naturalWidth ?? 0) > 0,
+						};
+					})(),
 				};
 			});
 
@@ -564,6 +576,12 @@ try {
 			'exactly one button is offered, and on a light page it is the dark one',
 			atRest.offered,
 		);
+		check(
+			atRest.icon.src === '/markless/theme/sun.png',
+			'the light page shows the sun drawing',
+			atRest.icon.src,
+		);
+		check(atRest.icon.decoded, 'the sun drawing decoded');
 
 		await page.locator('.theme-toggle-to-dark').click();
 		for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -579,6 +597,12 @@ try {
 			`${atRest.paper} then ${dark.paper}`,
 		);
 		check(dark.offered === 'light', 'the dark page offers the light button', dark.offered);
+		check(
+			dark.icon.src === '/markless/theme/moon.png',
+			'the drawing swaps with the theme: dark shows the moon',
+			dark.icon.src,
+		);
+		check(dark.icon.decoded, 'the moon drawing decoded');
 
 		await page.reload({ waitUntil: 'load' });
 		const reloaded = await themeState();
@@ -599,6 +623,35 @@ try {
 		check(back.attr === 'light', 'the toggle goes back to light', String(back.attr));
 		check(back.paper === atRest.paper, 'light is the light it started on', back.paper);
 		await page.evaluate(() => localStorage.removeItem('theme'));
+
+		// --- navigation ---------------------------------------------------------
+		// Every internal link is a plain anchor, so a click is a document load:
+		// `<Link>` does not compile on 0.3.3 and the router's own click handler is
+		// bound to the page-body container, outside which the whole chrome sits
+		// (NOTES.md finding 40). The check is written the way the parked widgets are:
+		// it asserts what happens today, so the day a click keeps the page alive the
+		// run goes red and the note comes out with the fix.
+		await page.goto(`${origin}/markless/concepts/state`, { waitUntil: 'load' });
+		await page.evaluate(() => {
+			(window as { __beforeNavigation?: number }).__beforeNavigation = 1;
+		});
+		await page.locator('a.sidebar-link[href="/markless/concepts/computed"]').click();
+		await page.waitForURL('**/markless/concepts/computed');
+		const landed = await page.evaluate(() => ({
+			heading: document.querySelector('h1')?.textContent ?? '',
+			crumb: document.querySelector('.crumb-page')?.textContent ?? '',
+			survived: (window as { __beforeNavigation?: number }).__beforeNavigation === 1,
+		}));
+		check(
+			landed.crumb === 'Computed',
+			'a sidebar click lands on the page it names, chrome and all',
+			`${landed.crumb} / ${landed.heading}`,
+		);
+		check(
+			!landed.survived,
+			'that click is a document load, which is what finding 40 says it has to be',
+			landed.survived ? 'the window survived the click — client-side navigation works now' : '',
+		);
 
 		// --- sprites and mascots ------------------------------------------------
 		await page.goto(`${origin}/markless`, { waitUntil: 'load' });

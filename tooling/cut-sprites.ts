@@ -632,6 +632,99 @@ function cutStickers(): { name: string; w: number; h: number }[] {
 }
 
 /**
+ * `theme-icons-sheet.png` is six light/dark pairs of theme-toggle icons, one
+ * pair a row, numbered down the left in pink. The site uses the top pair — the
+ * plain sun and the crescent moon with its stars — and the five rows under it
+ * are alternatives the owner drew and did not pick.
+ *
+ * They are die-cut like the stickers, a white border and a soft shadow around a
+ * cream body, so they go through the sticker pipeline rather than the crayon
+ * one. Because only one row is wanted, the cutter names the band that row sits
+ * in rather than segmenting the whole sheet into a grid it would then throw
+ * away: the pink row numbers and the heading are outside the window, so they
+ * never become components in the first place.
+ */
+const THEME_SHEET = 'theme-icons-sheet.png';
+
+/** The top row's band, and the window that leaves the pink row number out of it. */
+const THEME_ROW = { top: 130, bottom: 310, left: 320 } as const;
+
+/** The sheet's dashed divider: left of it is the light icon, right of it the dark one. */
+const THEME_FENCE = 724;
+
+/** Long side of the cut file: 2x the largest size the toggle paints it at. */
+const THEME_SIZE = 96;
+
+/**
+ * The ink floor. It is far below the sticker sheet's 700 because the row window
+ * has already thrown away everything that is not one of these two drawings, and
+ * the moon's smallest sparkle is a mark of a few dozen pixels that the sticker
+ * floor drops — cutting the moon without its stars.
+ */
+const THEME_MIN_AREA = 20;
+
+function cutThemeIcons(): { name: string; w: number; h: number }[] {
+	const sheet = resolve(designDir, THEME_SHEET);
+	if (!existsSync(sheet)) {
+		console.warn(`${THEME_SHEET} not found — skipped`);
+		return [];
+	}
+	const { width, height } = sizeOf(sheet);
+	const maskPath = resolve(work, 'theme-mask.png');
+	buildMask(sheet, maskPath);
+	const mask = readGray(maskPath, width, height);
+	const inRow = components(mask, width, height, 130).filter(
+		(box) =>
+			box.area >= THEME_MIN_AREA &&
+			box.x >= THEME_ROW.left &&
+			box.y >= THEME_ROW.top &&
+			box.y + box.h <= THEME_ROW.bottom,
+	);
+	const sides = [
+		{ name: 'sun', boxes: inRow.filter((box) => box.x + box.w / 2 < THEME_FENCE) },
+		{ name: 'moon', boxes: inRow.filter((box) => box.x + box.w / 2 >= THEME_FENCE) },
+	];
+	const outDir = resolve(root, 'public/theme');
+	mkdirSync(outDir, { recursive: true });
+
+	const manifest: { name: string; w: number; h: number }[] = [];
+	for (const side of sides) {
+		if (side.boxes.length === 0) {
+			console.warn(`theme ${side.name}: nothing in the row band — skipped`);
+			continue;
+		}
+		const box = side.boxes.reduce((a, b) => union(a, b));
+		if (process.env.CUT_DEBUG)
+			console.log(`  ${side.name}: ${side.boxes.length} components -> ${box.x},${box.y} ${box.w}x${box.h}`);
+		const pad = 10;
+		const crop = `${box.w + pad * 2}x${box.h + pad * 2}+${box.x - pad}+${box.y - pad}`;
+		const piece = resolve(work, 'theme-piece.png');
+		const pieceMask = resolve(work, 'theme-piece-mask.png');
+		const solid = resolve(work, 'theme-solid.png');
+		const halo = resolve(work, 'theme-halo.png');
+		magick([sheet, '-crop', crop, '+repage', piece]);
+		buildMask(piece, pieceMask);
+		fillHoles(pieceMask, solid);
+		stickerBorder(solid, halo);
+		const out = resolve(outDir, `${side.name}.png`);
+		magick([
+			'(', piece, '-alpha', 'off', '-fill', '#faf5ec', '-colorize', '100', ')',
+			'(', piece, '-alpha', 'off', solid, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', ')',
+			'-compose', 'Over', '-composite',
+			halo, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
+			'-trim', '+repage',
+			'-resize', `${THEME_SIZE}x${THEME_SIZE}>`,
+			'-strip',
+			`PNG32:${out}`,
+		]);
+		const size = sizeOf(out);
+		manifest.push({ name: side.name, w: size.width, h: size.height });
+		console.log(`  ${side.name} ${size.width}x${size.height}`);
+	}
+	return manifest;
+}
+
+/**
  * `sidebar-sprites-sheet.png` is one icon per sidebar entry, drawn twice: the
  * light variant on paper in the left half, the dark variant on near-black in the
  * right half. The two halves are drawn on the same baseline grid, so the rows are
@@ -952,7 +1045,7 @@ function cutSidebar(): { name: string; variant: string; w: number; h: number }[]
 if (!existsSync(resolve(designDir, 'sprites-sheet.png')))
 	throw new Error(`no sprites-sheet.png under ${designDir} — set DESIGN_DIR`);
 
-// `node … cut-sprites.ts stickers` cuts one sheet; no argument cuts all three.
+// `node … cut-sprites.ts stickers` cuts one sheet; no argument cuts them all.
 const wanted = process.argv.slice(2);
 const asked = (sheet: string) => wanted.length === 0 || wanted.includes(sheet);
 
@@ -987,6 +1080,16 @@ try {
 				`${JSON.stringify({ source: SIDEBAR_SHEET, icons: sidebar }, undefined, '\t')}\n`,
 			);
 		console.log(`${sidebar.length} sidebar icons`);
+	}
+	if (asked('theme')) {
+		console.log('theme:');
+		const theme = cutThemeIcons();
+		if (theme.length > 0)
+			writeFileSync(
+				resolve(root, 'public/theme/manifest.json'),
+				`${JSON.stringify({ source: THEME_SHEET, icons: theme }, undefined, '\t')}\n`,
+			);
+		console.log(`${theme.length} theme icons`);
 	}
 	if (asked('stickers')) {
 		console.log('stickers:');

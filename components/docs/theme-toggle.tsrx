@@ -17,6 +17,12 @@
 // nothing for half of them. Each button assigns one constant, which is the kind
 // of update the resume payload performs on its own.
 //
+// Each button carries the drawing of the theme it is standing in, not the one
+// it switches to: the reader sees the sun while the page is light and the moon
+// while it is dark, and the button's label is what says where the click goes.
+// The two `<img>`s are the same swap the two buttons already are — CSS shows
+// one of them — because CSS cannot swap an image `src`.
+//
 // The fallback is `system` rather than `light` on purpose: the seed script
 // stamps the fallback when nothing is stored, and stamping `light` there would
 // override `@media (prefers-color-scheme: dark)` for every reader who never
@@ -38,7 +44,13 @@ export default function ThemeToggle() @{
 				theme = 'dark';
 			}}
 		>
-			<span aria-hidden="true">☾</span>
+			<img
+				class="theme-toggle-icon"
+				src="/markless/theme/sun.png"
+				alt=""
+				aria-hidden="true"
+				decoding="async"
+			/>
 		</button>
 		<button
 			class="theme-toggle theme-toggle-to-light"
@@ -50,7 +62,13 @@ export default function ThemeToggle() @{
 				theme = 'light';
 			}}
 		>
-			<span aria-hidden="true">☀</span>
+			<img
+				class="theme-toggle-icon"
+				src="/markless/theme/moon.png"
+				alt=""
+				aria-hidden="true"
+				decoding="async"
+			/>
 		</button>
 	</span>
 }
