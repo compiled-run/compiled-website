@@ -1277,6 +1277,75 @@ try {
 			check(referenceText.includes(code), `the reference diagnostics table carries ${code}`);
 		}
 
+		// --- the like heart under the rail -------------------------------------
+		// The pop, the burst and the "+1" are pressed-state transitions, so what
+		// proves the "+1" arrives is that it is painted while the button is held.
+		await page.goto(`${origin}/markless/concepts/state`, { waitUntil: 'load' });
+		const heartButton = page.locator('.like-heart-button');
+		const heartCount = page.locator('.like-heart-count');
+		await heartButton.waitFor();
+		check(
+			((await heartCount.textContent()) ?? '').trim() === '0',
+			'the like heart opens on nought likes',
+			((await heartCount.textContent()) ?? '').trim(),
+		);
+		const plusOpacity = () =>
+			page
+				.locator('.like-heart-plus')
+				.evaluate((node) => Number(getComputedStyle(node as Element).opacity));
+		check((await plusOpacity()) === 0, 'the +1 is not painted before the press', String(await plusOpacity()));
+		const heartBox = (await heartButton.boundingBox())!;
+		await page.mouse.move(heartBox.x + heartBox.width / 2, heartBox.y + heartBox.height / 2);
+		await page.mouse.down();
+		await page.waitForTimeout(60);
+		const pressedPlus = await plusOpacity();
+		const pressedBurst = await page
+			.locator('.like-burst-piece-1')
+			.evaluate((node) => Number(getComputedStyle(node as Element).opacity));
+		await page.mouse.up();
+		// The burst is only in the air on the way out, so the shot is of the
+		// release rather than the press.
+		await page.waitForTimeout(180);
+		await page.screenshot({ path: `${shotsDir}/T024-heart.png`, fullPage: false });
+		check(pressedPlus > 0.5, 'the +1 is painted under the press', String(pressedPlus));
+		check(pressedBurst > 0.5, 'the burst doodles are painted under the press', String(pressedBurst));
+		await settleText(heartCount, (text) => text === '1', 'the like heart counts the first click');
+		check(
+			((await heartCount.textContent()) ?? '').trim() === '1',
+			'clicking the heart adds a like',
+			((await heartCount.textContent()) ?? '').trim(),
+		);
+		await heartButton.click();
+		await settleText(heartCount, (text) => text === '2', 'the like heart counts a second click');
+		check(
+			((await heartCount.textContent()) ?? '').trim() === '2',
+			'the likes keep adding on repeat clicks',
+			((await heartCount.textContent()) ?? '').trim(),
+		);
+
+		// --- the stickers are on the pages that ask for them --------------------
+		await page.goto(`${origin}/markless`, { waitUntil: 'load' });
+		const heroSticker = page.locator('.sticker.is-hero');
+		check((await heroSticker.count()) === 1, 'the landing hero carries one sticker');
+		const heroLoaded = await heroSticker.evaluate(
+			(node) => (node as HTMLImageElement).naturalWidth > 0,
+		);
+		check(heroLoaded, 'the hero sticker is a cut asset the server really serves');
+		check(
+			(await page.locator('.pager-doodles .sticker').count()) === 2,
+			'the footer strip mixes two stickers in with the doodles',
+		);
+		await page.screenshot({ path: `${shotsDir}/T024-stickers-landing.png`, fullPage: true });
+		await page.goto(`${origin}/markless/concepts/lists`, { waitUntil: 'load' });
+		const cornerSticker = await page
+			.locator('.callout[data-sticker="map"]')
+			.evaluate((node) => getComputedStyle(node as Element, '::after').backgroundImage);
+		check(
+			cornerSticker.includes('/markless/stickers/map.png'),
+			'a concept page callout paints its corner sticker',
+			cornerSticker.slice(0, 60),
+		);
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,

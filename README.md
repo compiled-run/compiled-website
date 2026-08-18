@@ -65,9 +65,20 @@ block sits above it. It writes screenshots into the markless repo's goal notes.
   (`NOTES.md` findings 2 and 24).
 - `styles/global.css` — the look, copied from the markless repo's `docs/` app, plus the code-block
   palette, the hover-doc box and the dark theme.
-- `components/sprite.tsrx`, `components/mascot.tsrx` — the hand-drawn accents. `public/sprites/`
-  and `public/mascots/` hold the cut assets; `tooling/cut-sprites.ts` is what cut them and is not
-  part of the build.
+- `components/sprite.tsrx`, `components/mascot.tsrx`, `components/sticker.tsrx` — the hand-drawn
+  accents. `public/sprites/`, `public/mascots/` and `public/stickers/` hold the cut assets;
+  `tooling/cut-sprites.ts` is what cut them and is not part of the build. Sprites are the flat
+  crayon doodles and ship twice, once as drawn and once lifted to chalk for the dark ground.
+  Stickers are die-cut, with their own white border and shadow, so they carry depth and one file
+  reads on both grounds; they are the larger accents — the landing hero, a callout corner, the
+  footer strip, the like heart — while sprites stay small and inline.
+- `components/docs/like-heart.tsrx` — the heart under the "On this page" rail. Clicking it pops the
+  heart, throws four doodles out of it, floats a "+1" past the count and adds one to the count. The
+  count is a `state()` and resets on reload: it wants `storage()`, and a second `storage()` binding
+  on a page never persists on 0.3.1 while the theme toggle holds the first (`NOTES.md` finding 30).
+  The pop and the burst are pressed-state transitions in the stylesheet rather than keyframes on a
+  toggled class, because a `class={ternary}` binding is compiled without a dom update (finding 18);
+  `NOTES.md` finding 33 has the shape.
 - `tooling/` — build-time code. `highlight-mdx.ts` is a Vite plugin registered after `router()`;
   `highlight-code.ts` runs shiki; `tsrx-docs.ts` holds the one-sentence explanation of each TSRX
   token; `tsrx.tmLanguage.json` is the TSRX TextMate grammar. It is not called `plugins/` because

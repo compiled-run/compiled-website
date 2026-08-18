@@ -2,6 +2,7 @@ import PageMeta from '../../../components/page-meta.tsrx';
 import Collapsible from '../../../components/demos/collapsible.tsrx';
 import Callout from '../../../components/demos/callout.tsrx';
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A hidden branch is not hidden, it is gone
 
@@ -23,7 +24,7 @@ branch goes out with them.**
 Picture the three steps, because you can run them yourself in a minute: open the panel, type
 something into the field, close the panel, then open it again.
 
-<Callout sprite="cross" title="Why there is no demo box on this page yet" text="Every other page here hands you something to click. This one does not, and the honest reason is that a component using @if does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. Both files below are real and are the specification's own example, so they are what you will run in your own project. The panels come back to this page the day the build accepts them. NOTES.md section 21 in the site repository has the reproduction." />
+<Callout sticker="spring" sprite="cross" title="Why there is no demo box on this page yet" text="Every other page here hands you something to click. This one does not, and the honest reason is that a component using @if does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. Both files below are real and are the specification's own example, so they are what you will run in your own project. The panels come back to this page the day the build accepts them. NOTES.md section 21 in the site repository has the reproduction." />
 
 Your text is gone. The `draft` variable that was holding it lived inside the branch, so when the
 branch left the page the variable left with it. Opening the panel again did not restore anything.
@@ -148,3 +149,5 @@ time, so one value survives the toggle and the other does not. Type into both, c
 the two behaviours side by side in one panel is the fastest way to make the rule stick.
 
 Next: [rows that keep their own state when the list moves](/markless/concepts/lists).
+
+<LikeHeart />

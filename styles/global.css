@@ -1138,12 +1138,12 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 }
 
 /* 1 crown: tilts and lifts, landing with a small bounce. */
-.pager-doodles .sprite:nth-child(1):hover img {
+.pager-doodles .sprite:nth-child(2):hover img {
 	transform: rotate(-12deg) translateY(-5px);
 }
 
 /* 2 sparkle: turns over and grows. */
-.pager-doodles .sprite:nth-child(2):hover img {
+.pager-doodles .sprite:nth-child(3):hover img {
 	transform: rotate(180deg) scale(1.25);
 }
 
@@ -1166,7 +1166,7 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	}
 }
 
-.pager-doodles .sprite:nth-child(3):hover img {
+.pager-doodles .sprite:nth-child(4):hover img {
 	animation: doodle-heartbeat 380ms ease-in-out;
 }
 
@@ -1184,7 +1184,7 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	}
 }
 
-.pager-doodles .sprite:nth-child(4):hover img {
+.pager-doodles .sprite:nth-child(5):hover img {
 	animation: doodle-wiggle 360ms ease-in-out;
 }
 
@@ -1210,7 +1210,7 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	}
 }
 
-.pager-doodles .sprite:nth-child(5):hover img {
+.pager-doodles .sprite:nth-child(6):hover img {
 	animation: doodle-dart 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1227,7 +1227,7 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	}
 }
 
-.pager-doodles .sprite:nth-child(6):hover img {
+.pager-doodles .sprite:nth-child(7):hover img {
 	animation: doodle-roll 360ms ease-in-out;
 }
 
@@ -1420,4 +1420,254 @@ html[data-theme='dark'] .prose h3 {
 
 [data-swatch].pink {
 	background: var(--pink);
+}
+
+/* ---------------------------------------------------------------------------
+   Stickers. The owner's die-cut sheet, cut by tooling/cut-sprites.ts. Each one
+   carries its own white border and printed shadow, so unlike a crayon sprite it
+   needs no dark twin. They are the accents with depth: one at the corner of the
+   landing hero, at most one on a callout, two in the footer strip, and the
+   heart under the rail.
+   --------------------------------------------------------------------------- */
+
+.sticker {
+	display: inline-block;
+	width: var(--sticker-size);
+	height: auto;
+	flex: none;
+	vertical-align: -0.25em;
+}
+
+/* Taped on above the landing title, tilted the way a sticker lands. It sits in
+   the flow rather than over a corner: the header is directly above the top of
+   the prose column and the mascot already floats into its right. */
+.sticker.is-hero {
+	display: block;
+	margin: 0 0 -0.9rem -0.5rem;
+	rotate: -9deg;
+}
+
+.callout {
+	position: relative;
+}
+
+/* A callout's corner sticker. One rule per sticker a page has asked for; a
+   callout that names none carries `data-sticker=""` and paints nothing. */
+.callout[data-sticker='spring']::after,
+.callout[data-sticker='map']::after,
+.callout[data-sticker='cloud']::after,
+.callout[data-sticker='scribble']::after {
+	content: '';
+	position: absolute;
+	right: -1rem;
+	top: -1.4rem;
+	width: 3.6rem;
+	height: 3.6rem;
+	rotate: 9deg;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+	pointer-events: none;
+}
+
+.callout[data-sticker='spring']::after {
+	background-image: url('/markless/stickers/spring.png');
+}
+
+.callout[data-sticker='map']::after {
+	background-image: url('/markless/stickers/map.png');
+}
+
+.callout[data-sticker='cloud']::after {
+	background-image: url('/markless/stickers/cloud.png');
+}
+
+.callout[data-sticker='scribble']::after {
+	background-image: url('/markless/stickers/scribble.png');
+}
+
+.pager-doodles .sticker {
+	transition: rotate 220ms ease-out, translate 220ms ease-out;
+}
+
+.pager-doodles .sticker:hover {
+	rotate: -7deg;
+	translate: 0 -0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The like heart, under the "On this page" rail.
+
+   The pop, the burst and the "+1" are all pressed-state transitions rather than
+   keyframes on a toggled class: a `class={ternary}` binding is compiled without
+   a dom update on 0.3.1 (NOTES.md finding 18), so a class the framework has to
+   write would never arrive. Under the press each piece snaps to the middle of
+   the heart with no duration; on release it transitions out to where it rests
+   and fades, which is the burst. The heart itself is the same trick: squashed
+   instantly, released along a curve that overshoots, which is the wobble.
+   --------------------------------------------------------------------------- */
+
+.like-heart {
+	display: flex;
+	justify-content: center;
+	margin-top: var(--space-l);
+}
+
+@media (min-width: 70.01rem) {
+	/* Beside the rail rather than in it: the rail is static HTML the build writes
+	   into the page, and an island cannot be rendered inside it. Fixed to the
+	   same column, at the foot of the strip the shell reserves for it. */
+	.like-heart {
+		position: fixed;
+		right: var(--space-s-l);
+		width: 11rem;
+		justify-content: flex-start;
+		margin: 0;
+		top: calc(var(--header-height) + var(--space-s) + 21rem);
+	}
+
+	@supports (position-anchor: --on-this-page) {
+		.on-this-page {
+			anchor-name: --on-this-page;
+			max-height: calc(100vh - var(--header-height) - 2 * var(--space-s) - 5rem);
+		}
+		.like-heart {
+			position-anchor: --on-this-page;
+			top: calc(anchor(bottom) + var(--space-s));
+			left: anchor(left);
+			right: auto;
+		}
+	}
+}
+
+.like-heart-button {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.15rem;
+	padding: 0.25rem 0.4rem;
+	border: 0;
+	background: none;
+	font: inherit;
+	color: var(--ink);
+	cursor: pointer;
+}
+
+.like-heart-face {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+}
+
+.like-heart-image {
+	display: block;
+	width: 3.2rem;
+	height: auto;
+	rotate: -5deg;
+	transition: scale 600ms cubic-bezier(0.2, 1.7, 0.45, 1), rotate 600ms cubic-bezier(0.2, 1.7, 0.45, 1);
+}
+
+.like-heart-button:hover .like-heart-image {
+	scale: 1.07;
+}
+
+.like-heart-button:active .like-heart-image {
+	scale: 0.82;
+	rotate: 7deg;
+	transition-duration: 0s;
+}
+
+.like-burst {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.like-burst-piece {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 1.35rem;
+	height: 1.35rem;
+	margin: -0.675rem 0 0 -0.675rem;
+	opacity: 0;
+	transition: translate 620ms cubic-bezier(0.15, 0.85, 0.3, 1), rotate 620ms ease-out,
+		scale 620ms ease-out, opacity 620ms ease-out;
+}
+
+.like-burst-piece img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.like-burst-piece .sprite-ink-light {
+	display: var(--sprite-light);
+}
+
+.like-burst-piece .sprite-ink-dark {
+	display: var(--sprite-dark);
+}
+
+.like-burst-piece-1 {
+	translate: -2.1rem -1.9rem;
+	rotate: -22deg;
+}
+
+.like-burst-piece-2 {
+	translate: 2rem -2.1rem;
+	rotate: 18deg;
+}
+
+.like-burst-piece-3 {
+	translate: -2.3rem 1.2rem;
+	rotate: -12deg;
+}
+
+.like-burst-piece-4 {
+	translate: 2.2rem 1.3rem;
+	rotate: 24deg;
+}
+
+.like-heart-button:active .like-burst-piece {
+	opacity: 1;
+	translate: 0 0;
+	rotate: 0deg;
+	scale: 0.4;
+	transition-duration: 0s;
+}
+
+/* The accents are pastels meant to be printed on, not printed with, so the
+   count is the page's ink pulled towards pink rather than the pink itself. */
+.like-heart-count {
+	font-size: var(--step-0);
+	color: color-mix(in oklch, var(--pink) 55%, var(--ink));
+	font-variant-numeric: tabular-nums;
+}
+
+.like-heart-plus {
+	position: absolute;
+	right: -0.35rem;
+	top: 0.1rem;
+	font-size: var(--step--2);
+	color: color-mix(in oklch, var(--pink) 55%, var(--ink));
+	opacity: 0;
+	translate: 0 -1.2rem;
+	transition: translate 700ms ease-out, opacity 700ms ease-out;
+	pointer-events: none;
+}
+
+.like-heart-button:active .like-heart-plus {
+	opacity: 1;
+	translate: 0 0;
+	transition-duration: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.like-heart-image,
+	.like-burst-piece,
+	.like-heart-plus,
+	.pager-doodles .sticker {
+		transition-duration: 1ms;
+	}
 }

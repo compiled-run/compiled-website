@@ -1,8 +1,9 @@
 // Cuts the owner's hand-drawn reference sheets into the transparent assets under
-// `public/sprites/` and `public/mascots/`. It is not part of the build: run it by
-// hand when a reference sheet changes.
+// `public/sprites/`, `public/mascots/` and `public/stickers/`. It is not part of
+// the build: run it by hand when a reference sheet changes.
 //
-//   node --experimental-strip-types tooling/cut-sprites.ts
+//   node --experimental-strip-types tooling/cut-sprites.ts            # all three
+//   node --experimental-strip-types tooling/cut-sprites.ts stickers   # one sheet
 //
 // Needs ImageMagick 7 (`magick`) on PATH. The reference sheets live in the
 // markless repo's goal notes, not in this repo, so the script is a no-op with a
@@ -490,26 +491,185 @@ function cutMascots(): { name: string; w: number; h: number }[] {
 	return manifest;
 }
 
+/**
+ * A sheet laid out on a known grid, cut without proximity clustering. The
+ * sticker sheet defeats `cluster`: every die-cut carries a printed drop shadow
+ * and a few loose ink marks, and those bridge one sticker to the next until the
+ * whole sheet is a single blob at any gap, including zero. The grid is what the
+ * sheet actually is, so the pieces are grouped by where they sit instead: rows
+ * by centre height, then each row into its known number of columns at its
+ * widest horizontal gaps.
+ */
+function segmentGrid(
+	mask: Uint8Array,
+	width: number,
+	height: number,
+	options: {
+		minArea: number;
+		threshold: number;
+		columns: readonly number[];
+		fences?: Readonly<Record<number, readonly number[]>>;
+	},
+): Box[][] {
+	const found = components(mask, width, height, options.threshold).filter(
+		(box) => box.area >= options.minArea,
+	);
+	const rows = intoRows(found, options.columns.length);
+	return rows.map((row, rowIndex) => {
+		const columnCount = options.columns[rowIndex] ?? 1;
+		const sorted = [...row].sort((a, b) => a.x - b.x);
+		// A row whose own widest gaps do not fall between its stickers gets hand
+		// column boundaries instead; a piece belongs to the column its centre is in.
+		const fences = options.fences?.[rowIndex];
+		if (fences) {
+			const cells: Box[] = [];
+			for (let column = 0; column < columnCount; column += 1) {
+				const left = column === 0 ? -Infinity : fences[column - 1]!;
+				const right = column === columnCount - 1 ? Infinity : fences[column]!;
+				const group = sorted.filter((box) => box.x + box.w / 2 >= left && box.x + box.w / 2 < right);
+				if (group.length > 0) cells.push(group.reduce((box, next) => union(box, next)));
+			}
+			return cells;
+		}
+		const cuts = sorted
+			.slice(1)
+			.map((box, index) => ({ index: index + 1, gap: box.x - (sorted[index]!.x + sorted[index]!.w) }))
+			.sort((a, b) => b.gap - a.gap)
+			.slice(0, columnCount - 1)
+			.map((entry) => entry.index)
+			.sort((a, b) => a - b);
+		const cells: Box[] = [];
+		let start = 0;
+		for (const cut of [...cuts, sorted.length]) {
+			const group = sorted.slice(start, cut);
+			start = cut;
+			if (group.length === 0) continue;
+			cells.push(group.reduce((box, next) => union(box, next)));
+		}
+		return cells;
+	});
+}
+
+/** Row-major names for `stickers-sheet.png`. The first row is one short. */
+const STICKER_NAMES: readonly (readonly string[])[] = [
+	['crown', 'shooting-star', 'heart', 'star-face', 'arrow'],
+	['speech-bubble', 'sparkle', 'mug', 'bolt', 'spring', 'flag'],
+	['tape', 'melting-smiley', 'map', 'cloud', 'burst', 'scribble'],
+	['hooded-tent', 'stamp-frame', 'folder', 'magnifier', 'juice-box', 'tent'],
+];
+
+/**
+ * The stickers are die-cut like the mascots — a white border and a soft shadow
+ * around a drawing whose body is the same cream as the paper — so they go
+ * through the mascot pipeline (fill the holes the mask leaves inside a closed
+ * outline, then grow the border back), not the crayon one.
+ */
+function cutStickers(): { name: string; w: number; h: number }[] {
+	const sheet = resolve(designDir, 'stickers-sheet.png');
+	if (!existsSync(sheet)) {
+		console.warn('stickers-sheet.png not found — skipped');
+		return [];
+	}
+	const { width, height } = sizeOf(sheet);
+	const maskPath = resolve(work, 'sticker-mask.png');
+	buildMask(sheet, maskPath);
+	const mask = readGray(maskPath, width, height);
+	const grid = segmentGrid(mask, width, height, {
+		minArea: Number(process.env.STICKER_MIN_AREA ?? 700),
+		threshold: Number(process.env.STICKER_THRESHOLD ?? 130),
+		columns: STICKER_NAMES.map((row) => row.length),
+		// The hooded tent's loose yellow backdrop reaches most of the way to the
+		// stamp frame, so the bottom row's widest gaps are inside a sticker rather
+		// than between two. Its five boundaries are measured off the sheet.
+		fences: { 3: [292, 520, 770, 1005, 1240] },
+	});
+	if (process.env.CUT_DEBUG)
+		grid.forEach((row, index) =>
+			console.log(`  line ${index}: ${row.map((b) => `${b.x},${b.y} ${b.w}x${b.h}`).join(' | ')}`),
+		);
+	if (process.env.CUT_DEBUG) writePreview(sheet, grid, resolve(root, '.sprite-cut-preview-stickers.png'));
+	const outDir = resolve(root, 'public/stickers');
+	mkdirSync(outDir, { recursive: true });
+
+	const manifest: { name: string; w: number; h: number }[] = [];
+	grid.forEach((row, rowIndex) => {
+		const names = STICKER_NAMES[rowIndex] ?? [];
+		if (row.length !== names.length)
+			console.warn(`sticker row ${rowIndex}: cut ${row.length} pieces, named ${names.length}`);
+		row.forEach((box, columnIndex) => {
+			const name = names[columnIndex];
+			if (!name) {
+				console.warn(`sticker row ${rowIndex} piece ${columnIndex} at ${box.x},${box.y} has no name — skipped`);
+				return;
+			}
+			const pad = 10;
+			const crop = `${box.w + pad * 2}x${box.h + pad * 2}+${box.x - pad}+${box.y - pad}`;
+			const piece = resolve(work, 'sticker-piece.png');
+			const pieceMask = resolve(work, 'sticker-piece-mask.png');
+			const solid = resolve(work, 'sticker-solid.png');
+			const halo = resolve(work, 'sticker-halo.png');
+			magick([sheet, '-crop', crop, '+repage', piece]);
+			buildMask(piece, pieceMask);
+			fillHoles(pieceMask, solid);
+			stickerBorder(solid, halo);
+			const out = resolve(outDir, `${name}.png`);
+			magick([
+				'(', piece, '-alpha', 'off', '-fill', '#faf5ec', '-colorize', '100', ')',
+				'(', piece, '-alpha', 'off', solid, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', ')',
+				'-compose', 'Over', '-composite',
+				halo, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
+				'-trim', '+repage',
+				'-resize', '360x360>',
+				'-strip',
+				`PNG32:${out}`,
+			]);
+			const size = sizeOf(out);
+			manifest.push({ name, w: size.width, h: size.height });
+			console.log(`  ${name} ${size.width}x${size.height}`);
+		});
+	});
+	return manifest;
+}
+
 if (!existsSync(resolve(designDir, 'sprites-sheet.png')))
 	throw new Error(`no sprites-sheet.png under ${designDir} — set DESIGN_DIR`);
+
+// `node … cut-sprites.ts stickers` cuts one sheet; no argument cuts all three.
+const wanted = process.argv.slice(2);
+const asked = (sheet: string) => wanted.length === 0 || wanted.includes(sheet);
 
 rmSync(work, { recursive: true, force: true });
 mkdirSync(work, { recursive: true });
 try {
-	console.log('sprites:');
-	const sprites = cutSpriteSheet();
-	console.log('mascots:');
-	const mascots = cutMascots();
-	writeFileSync(
-		resolve(root, 'public/sprites/manifest.json'),
-		`${JSON.stringify({ source: 'sprites-sheet.png', sprites }, undefined, '\t')}\n`,
-	);
-	if (mascots.length > 0)
+	if (asked('sprites')) {
+		console.log('sprites:');
+		const sprites = cutSpriteSheet();
 		writeFileSync(
-			resolve(root, 'public/mascots/manifest.json'),
-			`${JSON.stringify({ source: 'mascots.png', mascots }, undefined, '\t')}\n`,
+			resolve(root, 'public/sprites/manifest.json'),
+			`${JSON.stringify({ source: 'sprites-sheet.png', sprites }, undefined, '\t')}\n`,
 		);
-	console.log(`\n${sprites.length} sprites, ${mascots.length} mascot assets`);
+		console.log(`${sprites.length} sprites`);
+	}
+	if (asked('mascots')) {
+		console.log('mascots:');
+		const mascots = cutMascots();
+		if (mascots.length > 0)
+			writeFileSync(
+				resolve(root, 'public/mascots/manifest.json'),
+				`${JSON.stringify({ source: 'mascots.png', mascots }, undefined, '\t')}\n`,
+			);
+		console.log(`${mascots.length} mascot assets`);
+	}
+	if (asked('stickers')) {
+		console.log('stickers:');
+		const stickers = cutStickers();
+		if (stickers.length > 0)
+			writeFileSync(
+				resolve(root, 'public/stickers/manifest.json'),
+				`${JSON.stringify({ source: 'stickers-sheet.png', stickers }, undefined, '\t')}\n`,
+			);
+		console.log(`${stickers.length} stickers`);
+	}
 } finally {
 	rmSync(work, { recursive: true, force: true });
 }

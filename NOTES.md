@@ -1196,3 +1196,56 @@ Five pages, four live widgets, no honest-kind callouts needed.
 - `how-it-works.mdx` gets an extra witness check the other pages do not: the two doctrine sentences
   have to be on the page verbatim, and the words "virtual DOM" may not appear anywhere in the prose
   outside the `<details>` comparison. Both are asserted from the rendered DOM, not the source.
+
+
+## 33. T024: the like heart, and animation without a class the framework has to write
+
+The heart under the "On this page" rail is a third island on every page — `PageMeta`,
+`ThemeToggle`, then `LikeHeart` — and it resumes. The witness clicks it on `concepts/state` and
+reads the count back as 1, then 2, and every other widget on the site still passes, so a third
+island is not in itself a problem on 0.3.1. It is rendered as the last block of each `.mdx` page
+rather than the first, so it cannot shift the locators of the islands above it (finding 29).
+
+**The count is `state()`, not `storage()`.** Per-reader likes want `storage('likes-<page>', 0)`,
+and a second `storage()` binding on a page repaints but never persists (finding 30): the theme
+toggle already holds the first one on every page of this site. So the count resets on reload, and
+`components/docs/like-heart.tsrx` carries the one line to change the day that is fixed.
+
+**The animation is a pressed-state transition, not a keyframe on a toggled class.** A
+`class={ternary}` is compiled without a dom update (finding 18), so a class the framework has to
+write would never arrive, and `@if` hangs the build (finding 23). What the stylesheet does instead:
+every burst piece rests where it will end up, invisible; `:active` snaps it to the middle of the
+heart at full opacity with `transition-duration: 0s`; releasing the button transitions it back out
+along its own curve while it fades. The press is instant and the release is the animation, which is
+a burst. The heart is the same trick — squashed instantly, released along a curve that overshoots —
+and so is the floating "+1". No component is nested inside the island either; its four doodles are
+written as plain `<img>` pairs, because nesting is the seam findings 29 and 31 live on and the
+island has to resume.
+
+The witness proves the "+1" and the burst the way they exist: it holds the button down, reads the
+painted opacity of both, releases, and shoots `T024-heart.png` 180ms into the release, which is
+when the doodles are in the air.
+
+## 34. T024: the sticker sheet defeats proximity clustering
+
+`stickers-sheet.png` is 23 die-cut stickers, and the cutter's `cluster()` returns **one** box for
+the whole sheet at any gap, including zero. The raw connected components are fine — 59 of them,
+each a plausible 200-by-200 piece — so the merge is what fails: every die-cut carries a printed
+drop shadow and a few loose ink marks, and those chain one sticker to its neighbour until the sheet
+is a single blob. Raising the ink threshold from 40 to 245 does not break the chain.
+
+`segmentGrid()` in `tooling/cut-sprites.ts` cuts it the way the sheet is actually laid out instead:
+rows by centre height, then each row into its known number of columns at that row's widest
+horizontal gaps. That is exact for three of the four rows. The bottom row's widest gaps fall inside
+a sticker rather than between two, because the hooded tent's loose yellow backdrop reaches most of
+the way to the stamp frame, so that row gets five hand-measured column boundaries.
+
+The stickers themselves go through the mascot pipeline, not the crayon one: a die-cut body is the
+same cream as the paper, so the mask is filled inside its closed outline and the white border is
+grown back from the filled body. `node --experimental-strip-types tooling/cut-sprites.ts stickers`
+cuts this one sheet; with no argument the script still cuts all three.
+
+Where they are used, kept to accents: the landing hero, one callout corner on four concept pages,
+two in the footer doodle strip, and the like heart. A callout's corner sticker is a
+`data-sticker` attribute the stylesheet paints, not an `<img>`: an element cannot be left out
+without `@if`, and a hidden `<img>` would still fetch its src.
