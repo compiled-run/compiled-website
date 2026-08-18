@@ -13,8 +13,7 @@
 // The count is read straight into a text binding, which is the update shape the
 // resume payload performs on its own (NOTES.md finding 31).
 //
-// Nothing here toggles a class, because a `class={ternary}` binding is compiled
-// without a dom update (NOTES.md finding 18), and no component is nested inside
+// Nothing here toggles a class, and no component is nested inside
 // this island, because the island has to resume and the seams around nested
 // components are where findings 29 and 31 live. So the animation is driven from
 // `:active` in styles/global.css: the pieces snap into the middle of the heart

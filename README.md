@@ -5,28 +5,39 @@ on released `@markless/*` packages, so everything on it is doing what a reader's
 
 ## Where the framework comes from
 
-The site installs `@markless/*` `^0.3.1` from npm. There is no `vendor/` directory and no
-`@markless/*` override any more: the interim tarball vendoring described in `NOTES.md` findings 13
-and 18 is closed, because 0.3.1 is published and carries the two fixes the site was waiting on (MDX
-state composition prefixes `deriveSymbolId`, so a derived island resumes; `storage()` records
-compose through MDX state, so the theme toggle works).
+The site installs `@markless/*` `^0.3.3` from npm. There is no `vendor/` directory, no `@markless/*`
+override, and — since 0.3.3 — no `overrides` block at all: `@tsrx/runtime@0.1.1` is published now,
+so the `"@tsrx/core": "0.1.58"` pin that findings 1 and 22 needed is gone. Proven by deleting the
+block and running `rm -rf node_modules package-lock.json && npm install` on this `package.json`: it
+succeeds, `@tsrx/core` resolves to 0.1.60, and the build, the doctor and the witness are green on it.
 
 `scripts/markless-doctor.mjs` compares the *installed* version of each `@markless/*` package, so a
 `^` range that resolved somewhere unexpected fails the check rather than passing on the string.
 
-**To move to the next release**, say 0.3.2: change the four `^0.3.1` ranges in `dependencies` and
+**To move to the next release**, say 0.3.4: change the four `^0.3.3` ranges in `dependencies` and
 `devDependencies`, then `rm -rf node_modules package-lock.json && npm install`, then
 `npm run build && npm run doctor && npm run witness`. The witness is the thing that tells you what
 the release actually changed: a check that was `known-failing` and now passes fails the run on
-purpose, so the note explaining the failure has to be removed in the same change set. On 0.3.1 the
-one known failure is the `class={ternary}` binding on the reading-a-`.tsrx` page (`NOTES.md`
-finding 18), fixed on the framework's `main` and expected in 0.3.2.
+purpose, so the note explaining the failure has to be removed in the same change set.
 
-The `"@tsrx/core": "0.1.58"` override is the one pin that stays. `@markless/compiler` asks for
-`@tsrx/core@^0.1.58`, which resolves to `0.1.60`, which depends on `@tsrx/runtime@0.1.1` — a package
-that is not on npm. Proven on 0.3.1 by installing this same `package.json` with only the override
-removed: `npm error 404 Not Found - GET https://registry.npmjs.org/@tsrx%2fruntime`. `NOTES.md`
-findings 1 and 22 have the detail.
+**On 0.3.3 nothing is known-failing.** 0.3.1's one known failure — the `class={ternary}` binding on
+the reading-a-`.tsrx` page, `NOTES.md` finding 18 — is fixed: the highlight moves on click, the
+assertion is real again, and the honesty callout that stood over that widget is deleted. What is
+*not* re-tested on 0.3.3 is findings 25, 26, 29, 30 and 31, whose widgets are still parked and whose
+pages still describe 0.3.1 measurements; finding 23 was re-run and still holds — an `@if` inside a
+component still hangs the build, killed at 180 s on 0.3.3, which is why the sidebar picks an icon
+with an expression on `src` rather than a branch. `NOTES.md` finding 37 has the detail.
+
+## Working locally
+
+```sh
+npm install && npm run dev
+```
+
+npm is the primary: `package-lock.json` is the lockfile in the repo. pnpm works too — the site
+carries a `pnpm-workspace.yaml` naming itself, so `pnpm install` scopes to this project instead of
+walking up into whatever workspace the checkout happens to sit inside, and the `pnpm-lock.yaml` it
+writes is git-ignored rather than committed beside the npm one.
 
 ## Run it
 

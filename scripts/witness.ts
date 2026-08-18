@@ -25,9 +25,9 @@ const themeShots: Record<string, unknown>[] = [];
  * widget, because it is what the page teaches with, and the witness keeps
  * checking it so the day the framework fix lands the run goes green on its own.
  *
- * One thing is under it now: a `class={ternary}` binding, which the compiler
- * writes no dom update for (finding 18). The two widgets that were under
- * finding 14 are real assertions again.
+ * Nothing is under it on 0.3.3: finding 18's `class={ternary}` binding emits a
+ * dom update now, so the three-differences highlight is a real assertion again,
+ * as are the two widgets that were under finding 14.
  */
 let knownFailingReason: string | undefined;
 const check = (ok: boolean, label: string, detail = '') => {
@@ -481,28 +481,23 @@ try {
 			'three-differences lights the two body lines to start with',
 			String(await litLines.count()),
 		);
-		// The sentence under the file is a text binding and moves. The highlight is
-		// `class={ternary}`, and the compiler writes no dom update for a class
-		// binding at all, so it cannot move (NOTES.md finding 18).
-		knownFailingReason = 'NOTES.md finding 18';
+		// Both the sentence and the highlight move on 0.3.3: the compiler emits the
+		// dom update for a `class={ternary}` binding now (NOTES.md finding 18).
 		await page.getByRole('button', { name: 'The markup' }).click();
 		await settleText(
 			explorerNote,
 			(text) => text.includes('The markup is a statement'),
 			'three-differences explains the markup after a click',
 		);
-		knownFailingReason = undefined;
 		check(
 			((await explorerNote.textContent()) ?? '').includes('The markup is a statement'),
 			'clicking a label swaps the sentence under the file',
 		);
-		knownFailingReason = 'NOTES.md finding 18';
 		check(
 			(await litLines.count()) === 1,
 			'clicking a label moves the highlight to one line',
 			String(await litLines.count()),
 		);
-		knownFailingReason = undefined;
 		// The widget shows `components/demos/counter.tsrx` line for line, so the
 		// page carries one counter file rather than two that differ. The counter
 		// renders a single element, so the fragment is taught from its own
@@ -527,7 +522,6 @@ try {
 			path: `${shotsDir}/T005-three-differences-after.png`,
 			fullPage: true,
 		});
-		knownFailingReason = undefined;
 
 		// --- the theme toggle --------------------------------------------------
 		// The toggle is a `storage()` island each page renders, not part of the
@@ -692,6 +686,62 @@ try {
 			'the code block paints different token colours in the two themes',
 			[...new Set(themeShots.map((shot) => shot.token))].join(' vs '),
 		);
+		await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+
+		// --- T034: one hand-drawn icon per sidebar entry, in both themes --------
+		// Every entry carries both cuts and the theme picks one, so what is checked
+		// is the cut the theme actually displays: it has to have decoded, which is
+		// what `naturalWidth` says, and every entry has to have one.
+		for (const theme of ['light', 'dark'] as const) {
+			await page.goto(`${origin}/markless`, { waitUntil: 'load' });
+			await page.evaluate((wanted) => {
+				document.documentElement.setAttribute('data-theme', wanted);
+				document.querySelector('details.sidebar-disclosure')?.setAttribute('open', '');
+			}, theme);
+			await page.waitForTimeout(300);
+			const icons = await page.evaluate(async () => {
+				const links = [...document.querySelectorAll('.sidebar-link')];
+				const shown = links.map((link) => {
+					const images = [...link.querySelectorAll('img.nav-icon-ink')] as HTMLImageElement[];
+					const visible = images.filter((image) => getComputedStyle(image).display !== 'none');
+					return { count: images.length, visible: visible.length, image: visible[0] };
+				});
+				await Promise.all(
+					shown.map((entry) => (entry.image && !entry.image.complete ? entry.image.decode().catch(() => {}) : undefined)),
+				);
+				return {
+					links: links.length,
+					pairs: shown.filter((entry) => entry.count === 2).length,
+					oneVisible: shown.filter((entry) => entry.visible === 1).length,
+					loaded: shown.filter((entry) => (entry.image?.naturalWidth ?? 0) > 0).length,
+					sources: shown.map((entry) => entry.image?.getAttribute('src') ?? ''),
+				};
+			});
+			check(icons.links === 19, 'the sidebar lists every page', String(icons.links));
+			check(
+				icons.pairs === icons.links,
+				'every sidebar entry carries both cuts of its icon',
+				`${icons.pairs} of ${icons.links}`,
+			);
+			check(
+				icons.oneVisible === icons.pairs,
+				`the ${theme} theme displays exactly one cut per entry`,
+				String(icons.oneVisible),
+			);
+			check(
+				icons.loaded === icons.pairs,
+				`every ${theme} sidebar icon is a file the server really serves`,
+				`${icons.loaded} decoded — e.g. ${icons.sources[0]}`,
+			);
+			check(
+				icons.sources.filter((source) => source.includes(`/sidebar/`) && source.endsWith(`-${theme}.png`)).length ===
+					icons.links - 1,
+				`the ${theme} theme asks for the ${theme} cut of eighteen sheet icons and one doodle`,
+				icons.sources[1] ?? '',
+			);
+			const rail = page.locator('nav.sidebar');
+			await rail.screenshot({ path: `${shotsDir}/T034-sidebar-${theme}.png` });
+		}
 		await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
 
 		// --- T017: header, outline rail, and the page at 390 --------------------
@@ -918,12 +968,12 @@ try {
 			'the first pager doodle moves when it is pointed at',
 			`${restingCrown.transform} then ${hoveredCrown.transform}`,
 		);
-		// The star and the smiley are keyframed rather than swapped for another
-		// drawing: what proves the reaction is that an animation is running on the
-		// image the reader is looking at, not that its src changed.
+		// The sun is keyframed rather than swapped for another drawing: what proves
+		// the reaction is that an animation is running on the image the reader is
+		// looking at, not that its src changed. The flower turns on the row's own
+		// spring transition instead, so it is read as a transform.
 		for (const [index, name] of [
-			[4, 'doodle-dart'],
-			[5, 'doodle-roll'],
+			[4, 'doodle-sun-turn'],
 		] as const) {
 			await page.mouse.move(0, 0);
 			await page.waitForTimeout(80);
@@ -938,6 +988,26 @@ try {
 				hovered.animation,
 			);
 		}
+		await page.mouse.move(0, 0);
+		await page.waitForTimeout(80);
+		// The strip on paper: the doodles are the low-contrast end of the palette,
+		// so both themes are shot for a look rather than only measured.
+		for (const theme of ['light', 'dark'] as const) {
+			await page.evaluate((wanted) => document.documentElement.setAttribute('data-theme', wanted), theme);
+			await page.waitForTimeout(120);
+			await page.locator('.pager').screenshot({ path: `${shotsDir}/T034-pager-${theme}.png` });
+		}
+		await page.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+		await page.waitForTimeout(80);
+		const restingFlower = await doodleMotion(5);
+		await doodles.nth(5).hover();
+		await page.waitForTimeout(360);
+		const hoveredFlower = await doodleMotion(5);
+		check(
+			restingFlower.transform !== hoveredFlower.transform && hoveredFlower.transform !== 'none',
+			'the flower turns when it is pointed at',
+			`${restingFlower.transform} then ${hoveredFlower.transform}`,
+		);
 		await page.mouse.move(0, 0);
 
 		// --- batch 2: events, conditionals, lists ------------------------------

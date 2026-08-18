@@ -1318,3 +1318,88 @@ in both themes, and asserts the opposite at 1440: the list visible, the summary 
 `.sidebar-list` inside a `content-visibility: hidden` subtree still reports a non-zero
 `getBoundingClientRect()`. `element.checkVisibility({ contentVisibilityAuto: true })` returns
 `false`, which is what the witness uses.
+
+## 37. T034: the site is on published 0.3.3, the `@tsrx/core` pin is gone, and finding 18 is fixed
+
+`@markless/*` 0.3.3 is on npm, and the four ranges in `package.json` are `^0.3.3`. `npm ls
+@markless/router @markless/core` reports 0.3.3 for both.
+
+**The `@tsrx/core` override is gone, and the proof is a clean install without it.** Findings 1 and
+22 kept `"@tsrx/core": "0.1.58"` because `@markless/compiler` asks for `^0.1.58`, which resolves to
+0.1.60, which depends on `@tsrx/runtime@0.1.1` — and that package was not on npm, so the install
+died on `404 Not Found - GET https://registry.npmjs.org/@tsrx%2fruntime`. It is published now
+(`npm view @tsrx/runtime version` answers `0.1.1`), so `rm -rf node_modules package-lock.json && npm
+install` with no `overrides` block at all succeeds, `@tsrx/core` lands on 0.1.60, and the build,
+the doctor and the witness are green on it. The site now installs from npm with nothing pinned.
+
+**Finding 18 is fixed on 0.3.3.** The `class={ternary}` binding emits a dom update. On the
+reading-a-`.tsrx` page the three-differences widget's highlight moves on click — the witness counts
+one lit line after clicking "The markup", where 0.3.1 left two — so the `knownFailingReason` wrapper
+is gone from `scripts/witness.ts` and both checks are real assertions. The honesty callout on
+`pages/markless/start/reading-tsrx.mdx` ("Half of this box is dead") is deleted, because the box is
+not dead any more. `knownFailing` is empty on this build: nothing on the site is under a known
+framework defect today.
+
+**What was not re-tested on 0.3.3.** Findings 23 (`@if` inside a component hangs the build), 25, 26,
+29, 30 and 31 are still written against 0.3.1 measurements, and the pages that carry their honesty
+callouts still say 0.3.1. The rest are one build and one witness cycle each and belong to the next
+task. Nothing was softened: a callout stays until a witness run proves the widget works.
+
+**Finding 23 was re-run, and it still holds.** The same two-file reproduction — `draft-kept.tsrx`
+with the `@if`, its wrapper, and a one-line `.mdx` page — was rebuilt on 0.3.3. `npm run build`
+printed `transforming...` and made no further progress; killed at 180 s, against the 30-40 s this
+site builds in with the reproduction removed. So an `@if` inside a component still hangs the build
+on 0.3.3, and the three probe files were deleted again. That is why the new sidebar picks its icon
+with an expression on `src` rather than a branch.
+
+## 38. T034: one hand-drawn icon per sidebar entry, cut in both variants
+
+`sidebar-sprites-sheet.png` draws every sidebar entry's icon twice: the light variant on paper in
+the left half of the sheet, the dark variant on near-black in the right half. `tooling/cut-sprites.ts
+sidebar` cuts all 36 into `public/sidebar/<slug>-{light,dark}.png`, where the slug is the nav href's
+last segment, and writes `public/sidebar/manifest.json`.
+
+**The two halves share a baseline grid, so the rows are found once.** Segmenting the dark half on
+its own merges icons that the paper separates, because the near-black ground carries the sticker's
+glow between them. The cutter finds the row bands on the light half — an ink profile down each
+column window, the section titles dropped by a height floor, each titled group split at its quietest
+rows when the sheet's own spacing does not separate it — and reuses those bands for the dark half
+with that half's own column window.
+
+**Alpha is distance from that half's ground, ramped rather than thresholded**, so the sticker keeps
+its white border and the drop shadow fades instead of ending on a hard edge; and each piece is then
+masked to its own sticker, keeping the biggest run of ink plus anything within 8px of it that does
+not lean on the top or bottom edge of the crop. That last rule is what removes the strays: with a
+generous crop pad the box reaches the neighbour's stroke, and the neighbour arrives as its own run
+touching an edge. The pad is 2px now and the contact sheet
+(`notes/shots/T034-sidebar-icons-montage.png`) is clean; `async-light` keeps a faint arc of the
+brush stroke drawn under it, which is the one imperfect cut.
+
+**The reference page is the one entry with no icon on the sheet**, so it keeps its crayon doodle,
+served through the same two-image shape. That is an expression on `src`, not an `@if`, because
+finding 23 is still open.
+
+The witness checks, in both themes, that all 19 entries carry both cuts, that exactly one is
+displayed, that the displayed one decoded (`naturalWidth > 0`), and that the eighteen sheet icons
+ask for that theme's cut. It writes `notes/shots/T034-sidebar-{light,dark}.png`.
+
+## 39. T034: two doodles in the pager strip, and why the strip is drawn heavier
+
+The owner rejected the star face and the smiley: their reactions read badly whatever the timing, so
+they are replaced rather than re-animated. The strip is now crown, sparkle, heart, squiggle, sun,
+flower. The sun turns once, slowly — `doodle-sun-turn`, 600ms, a full rotation with a 1.12 scale at
+the half turn. The flower turns half a turn and grows to 1.15 on the row's own spring transition, so
+leaving it springs the turn back rather than snapping. Everything else about the strip is unchanged:
+the enlarged hitboxes, the reduced-motion path, and the four doodles that were already right.
+
+**The strip was hard to see on paper.** Yellow crayon on a cream ground is nearly the ground, so the
+sun and the squiggle vanished and the sparkle was too small to find. Two changes: every doodle is
+about 1.5x the size it was (crown 2.2em, squiggle 2.4em, sun 2.1em, sparkle and flower 2em, heart
+1.8em), and each drawing is given one line of ink under it with a pair of `drop-shadow` filters
+rather than an outline, so it keeps its own crayon edge. The witness shoots the strip in both themes
+into `notes/shots/T034-pager-{light,dark}.png`.
+
+**Note for whoever edits `styles/global.css` next: the pager block is in the file twice.** The two
+copies are identical and the later one wins, so a change made to one of them appears to do nothing.
+Both were edited here. Removing the duplicate is its own change set, because the file is 2,000 lines
+and the duplication may be load-bearing for something else in it.
