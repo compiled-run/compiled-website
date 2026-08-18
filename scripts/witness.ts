@@ -1078,6 +1078,205 @@ try {
 			'/markless/build/shared names the finding its missing widget is recorded under',
 		);
 
+		// --- batch 5: the Router section, how it works, and the reference -------
+		// Five pages, four of them carrying a widget that is a plain state read
+		// plus text bindings. Each check does what its page tells the reader to
+		// do and asserts the line the page says they will then be looking at.
+		for (const href of [
+			'/markless/router/pages',
+			'/markless/router/links',
+			'/markless/router/data',
+			'/markless/how-it-works',
+			'/markless/reference',
+		]) {
+			const response = await fetch(`${origin}${href}`);
+			check(response.status === 200, `GET ${href}`, String(response.status));
+			await page.goto(`${origin}${href}`, { waitUntil: 'load' });
+			const heading = ((await page.locator('h1').first().textContent()) ?? '').trim();
+			check(heading.length > 0, `${href} renders its h1 in the browser`, heading);
+			await page.screenshot({ path: `${shotsDir}/T030-${slugFor(href)}.png`, fullPage: true });
+		}
+
+		// --- widget: the route tree on the pages page ---------------------------
+		await page.goto(`${origin}/markless/router/pages`, { waitUntil: 'load' });
+		const routeUrl = page.locator('.playground .playground-output').first();
+		const routeNote = page.locator('.playground .explorer-note').first();
+		await routeUrl.waitFor();
+		check(
+			((await routeUrl.textContent()) ?? '').trim() === '/',
+			'the route tree opens on the index file, which is the site root',
+			((await routeUrl.textContent()) ?? '').trim(),
+		);
+		await page.getByRole('button', { name: 'pages/blog/[slug].tsrx' }).click();
+		await settleText(
+			routeUrl,
+			(text) => text === '/blog/:slug',
+			'the route tree answers with the dynamic route URL',
+		);
+		check(
+			((await routeUrl.textContent()) ?? '').trim() === '/blog/:slug',
+			'clicking a bracketed file name shows the URL it produces',
+		);
+		check(
+			((await routeNote.textContent()) ?? '').includes('parameter'),
+			'the route tree explains what the brackets did',
+			((await routeNote.textContent()) ?? '').slice(0, 60),
+		);
+		await page.getByRole('button', { name: 'pages/docs/[...slug].mdx' }).click();
+		await settleText(
+			routeUrl,
+			(text) => text === '/docs/**',
+			'the route tree answers with the catch-all route URL',
+		);
+		await page.screenshot({ path: `${shotsDir}/T030-route-tree-after.png`, fullPage: true });
+
+		// --- widget: the renamed route on the links page ------------------------
+		await page.goto(`${origin}/markless/router/links`, { waitUntil: 'load' });
+		const typoLine = page.locator('.playground .file-line').first();
+		const typoAnswer = page.locator('.playground .playground-output').first();
+		await typoAnswer.waitFor();
+		check(
+			((await typoAnswer.textContent()) ?? '').includes('This one compiles'),
+			'the link widget opens on the link that compiles',
+			((await typoAnswer.textContent()) ?? '').slice(0, 60),
+		);
+		await page.getByRole('button', { name: 'Somebody renamed the folder' }).click();
+		await settleText(
+			typoAnswer,
+			(text) => text.includes('Type error on href'),
+			'the link widget shows the type error after the rename',
+		);
+		check(
+			((await typoLine.textContent()) ?? '').includes('/blogs/[slug]'),
+			'the code line above the error carries the typo',
+			((await typoLine.textContent()) ?? '').slice(0, 60),
+		);
+		await page.screenshot({ path: `${shotsDir}/T030-link-typo-after.png`, fullPage: true });
+
+		// --- widget: the streaming illustration on the data page ----------------
+		await page.goto(`${origin}/markless/router/data`, { waitUntil: 'load' });
+		const stepMark = page.locator('.playground .playground-output').first();
+		const stepNote = page.locator('.playground .explorer-note').first();
+		await stepMark.waitFor();
+		check(
+			((await stepMark.textContent()) ?? '').trim() === 'Request',
+			'the streaming illustration starts at the request',
+			((await stepMark.textContent()) ?? '').trim(),
+		);
+		const stepButton = page.getByRole('button', { name: 'Step forward' });
+		await stepButton.click();
+		await settleText(
+			stepMark,
+			(text) => text === 'First flush',
+			'the streaming illustration reaches the first flush',
+		);
+		await stepButton.click();
+		await stepButton.click();
+		await settleText(
+			stepMark,
+			(text) => text === 'Committed',
+			'the streaming illustration reaches the commit',
+		);
+		check(
+			((await stepNote.textContent()) ?? '').includes('live'),
+			'the last step says the settled content is live',
+			((await stepNote.textContent()) ?? '').slice(0, 60),
+		);
+		await page.getByRole('button', { name: 'Back to the start' }).click();
+		await settleText(stepMark, (text) => text === 'Request', 'the illustration can be replayed');
+		await page.screenshot({ path: `${shotsDir}/T030-stream-steps-after.png`, fullPage: true });
+
+		// --- widget: the tier ladder on the how-it-works page -------------------
+		// This is the page's whole argument, so the check is the argument: the
+		// first three tiers run no component code and the last two do.
+		await page.goto(`${origin}/markless/how-it-works`, { waitUntil: 'load' });
+		const tierLine = page.locator('.playground .playground-output').first();
+		const runsLine = page.locator('.playground [data-runs-code]').first();
+		await tierLine.waitFor();
+		check(
+			((await tierLine.textContent()) ?? '').trim() === 'Tier 1, value slots',
+			'the tier ladder opens on tier 1',
+			((await tierLine.textContent()) ?? '').trim(),
+		);
+		check(
+			((await runsLine.textContent()) ?? '').trim() === 'No component code runs.',
+			'changing a number runs no component code',
+			((await runsLine.textContent()) ?? '').trim(),
+		);
+		await page.getByRole('button', { name: 'Toggle a panel' }).click();
+		await settleText(
+			tierLine,
+			(text) => text === 'Tier 3, branch range flips',
+			'the tier ladder puts a branch flip at tier 3',
+		);
+		check(
+			((await runsLine.textContent()) ?? '').trim() === 'No component code runs.',
+			'a branch flip still runs no component code',
+			((await runsLine.textContent()) ?? '').trim(),
+		);
+		await page.getByRole('button', { name: 'Load slow data' }).click();
+		await settleText(
+			tierLine,
+			(text) => text === 'Tier 4, arm commit',
+			'the tier ladder puts an async settle at tier 4',
+		);
+		await settleText(
+			runsLine,
+			(text) => text.startsWith('Component code runs'),
+			'the tier ladder says out loud that tier 4 executes components',
+		);
+		await page.screenshot({ path: `${shotsDir}/T030-tier-ladder-after.png`, fullPage: true });
+
+		// The how-it-works page is the most over-claimable on the site, so the
+		// quoted doctrine sentence has to be on it verbatim, and the comparison
+		// words may only appear inside the closed collapsible.
+		const howItWorksText = (await page.locator('.prose').first().innerText()).replace(/\s+/g, ' ');
+		check(
+			howItWorksText.includes(
+				'"No hydration" forbids re-executing components over existing server HTML; it does not forbid rendering new content client-side',
+			),
+			'how-it-works quotes the doctrine sentence rather than upgrading it',
+		);
+		check(
+			howItWorksText.includes('Component execution is paid exactly once per appearance of content'),
+			'how-it-works quotes the vanilla-JS floor paragraph',
+		);
+		const virtualDomOutsideCollapsible = await page.evaluate(() => {
+			const prose = document.querySelector('.prose');
+			if (!prose) return true;
+			const clone = prose.cloneNode(true) as HTMLElement;
+			for (const details of clone.querySelectorAll('details')) details.remove();
+			return /virtual DOM/i.test(clone.textContent ?? '');
+		});
+		check(
+			!virtualDomOutsideCollapsible,
+			'the words virtual DOM appear only inside the collapsible comparison',
+		);
+
+		// --- the reference page names the surface it promises -------------------
+		await page.goto(`${origin}/markless/reference`, { waitUntil: 'load' });
+		const referenceText = (await page.locator('.prose').first().innerText()).replace(/\s+/g, ' ');
+		for (const name of [
+			'state',
+			'computed',
+			'storage',
+			'element',
+			'attach',
+			'@if',
+			'@for',
+			'@try',
+		]) {
+			check(referenceText.includes(name), `the reference page lists ${name}`);
+		}
+		for (const code of [
+			'MARKLESS_ASYNC_BOUNDARY_REQUIRED',
+			'MARKLESS_REPEAT_KEY_REQUIRED',
+			'MARKLESS_ATTACH_HOST_ELEMENT_REQUIRED',
+			'MARKLESS_SERIALIZE_UNSUPPORTED_VALUE',
+		]) {
+			check(referenceText.includes(code), `the reference diagnostics table carries ${code}`);
+		}
+
 		await writeFile(
 			`${shotsDir}/T016-witness.json`,
 			`${JSON.stringify({ origin, tokenCount, expectedTitle, before, after, assetPath, hug, themeShots, knownFailing, failures }, undefined, '\t')}\n`,

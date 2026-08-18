@@ -1,0 +1,102 @@
+import PageMeta from '../../../components/page-meta.tsrx';
+import StreamStepsDemo from '../../../components/demos/stream-steps-demo.tsrx';
+import Collapsible from '../../../components/demos/collapsible.tsrx';
+import Callout from '../../../components/demos/callout.tsrx';
+import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+
+# There is no loader, because a page is already the loader
+
+<PageMeta level="Building" time="8 min" assumes="async" sprite="drops" />
+
+<ThemeToggle />
+
+Here is the API you are looking for, and it does not exist. No `getServerSideProps`, no exported
+`load`, no data function sitting above the component waiting to hand it an object.
+
+**A page receives the request in its props, and an async `computed` that reads them is the load.**
+You already know both halves. The only new part is where the request comes from.
+
+## A page takes props, and the router fills them in
+
+```tsrx
+import type { PageProps } from '@markless/router';
+
+export function App({ url, params }: PageProps) @{
+	// url.href, url.pathname, url.search
+	// params.slug, for a page called [slug].tsrx
+}
+```
+
+`params` holds the pieces of the path that were in brackets, so a page at
+`pages/blog/[slug].tsrx` gets `params.slug`. `url` is the address that was asked for, split into
+the parts you normally want.
+
+Then the load is the thing you would have written anyway:
+
+```tsrx
+const feed = computed(async ({ signal }) => fetchLocalUpdates(url.href, signal));
+```
+
+That is a `computed` whose body is `async`. It depends on `url` because it read `url`, so a
+different URL is a different value, worked out again, without you wiring anything up. The `signal`
+is an `AbortSignal`, so a request that is no longer wanted can be cancelled.
+
+The waiting and the failure are the arms you already know:
+
+```tsrx
+@try {
+	<p class="channel">{feed.channel}</p>
+} @pending {
+	<p class="pending">Checking local updates...</p>
+} @catch {
+	<p class="error">Local updates unavailable</p>
+}
+```
+
+`@try` / `@pending` / `@catch` is the only async status vocabulary there is. There is no
+`navigation.pending` and no status property you read in a template, so anything you want to show
+about progress is expressed structurally, in an arm.
+
+## The server does not wait for the slow part
+
+This is the part worth understanding, because it changes what you put on a page. The server does
+not hold the whole document until every boundary settles. From the specification:
+
+> The server flushes the document with each still-pending boundary showing its @pending arm between
+> its existing comment anchors, and keeps the response open. When a boundary settles, the server
+> appends to the same stream.
+
+The settled arm arrives as an inert `<template>`, which the browser parses without rendering, and a
+small executor moves that content into the boundary's anchors. In the specification's words:
+
+> The pending arm is genuinely replaced, not hidden and kept.
+
+## Try it: step through one request
+
+Press "Step forward" three times, and read the sentence each time. This is an illustration of a
+sequence you cannot watch inside a demo box, not a live request:
+
+<StreamStepsDemo />
+
+The reason the last step is cheap is worth saying out loud. A streamed commit is one fragment move
+plus record registration, and nothing else, because the framework has no runtime copy of the
+document to reconcile the new content against.
+
+<Callout sprite="speech-bubble" title="Is streaming something I turn on?" text="It is the default posture for server rendering, and the specification says blocking render is the explicit opt-out. The reason it is safe as a default is that it degrades gracefully: a buffering proxy in front of your server delivers one complete document whose inert templates commit on parse, so early paint is lost and correctness never is. Structure decides the rest. An authored @pending arm is the boundary's declaration that it is willing to stream, because that arm is the waiting UI." />
+
+## Navigating away does not blank the screen
+
+When the reader clicks through to another page whose data is slow, the outgoing page stays live and
+interactive until the destination settles. You do not have to build that behaviour, and you do not
+have to hold a spinner over the whole layout to get it.
+
+<Collapsible sprite="star-badge" summary="What about API routes and middleware?" text="They are top-level folders beside pages/, not inside it, and each is an ordinary module with a default export. An api/health.ts exports a function returning a Response, so the whole file can be one line of work. A middleware/request.ts exports a function taking the request context, and it runs before the request reaches a page, which is where a header, a redirect or an auth check belongs. Note that pages/api/ is not supported: a file there is a page with a confusing name." />
+
+## Try it yourself
+
+Give a page an async `computed` that reads `params`, and put a slow call in it. Load the page and
+watch the `@pending` arm appear and then be replaced. Then add a second boundary next to the first
+with a faster call, and notice that the fast one does not wait for the slow one, because they are
+separate boundaries and each settles on its own.
+
+Next: [what the compiler is doing underneath all of this](/markless/how-it-works).

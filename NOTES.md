@@ -1130,3 +1130,69 @@ payload.
 callout naming this finding. It does have a live demo to point at, and it points at it: the theme
 toggle in this site's header is a `storage()` binding, and flipping it then reloading is exactly the
 lesson the page teaches. The witness asserts the callout and the absence of a `.playground` frame.
+
+
+## 31. T030: a `computed` that reads a plain object is not in the chunk the click loads
+
+The four batch-5 widgets were written the way the packet asked for: a `state('')` holding the
+reader's selection, and a `computed` looking the answer up out of a record, so the page could show
+one text binding per line instead of a nest of ternaries.
+
+Every one of them rendered correctly from the server and then did nothing at all when clicked.
+
+```
+markless: resumed — 0.0 KB app executed, 84 modules preloaded (0 app executed)
+Failed to load resource: the server responded with a status of 404
+Uncaught ReferenceError: urls is not defined
+```
+
+The shape that fails, reduced:
+
+```tsx
+const urls: Record<string, string> = { index: '/', about: '/about' };
+
+export default function RouteTree() @{
+	let picked = state('index');
+	const url = computed(() => urls[picked] ?? '');
+
+	<p class="playground-output">{url}</p>
+}
+```
+
+**Moving the record inside the component body does not help.** Measured: the same
+`urls is not defined`, same 404, same dead widget. So this is not the module-scope-import rule
+(`MARKLESS_STATE_CROSS_MODULE_IMPORT`, which would have been a compile error anyway). The value the
+`computed` closes over is simply absent from the browser chunk that the click resolves, whether it
+was declared beside the component or inside it.
+
+**What does work** is a text binding that reads graph state directly, which is the same shape
+finding 18's `explorer-note` uses and the witness has proven since T005:
+
+```tsx
+<p class="playground-output">{picked === 'index' ? '/' : picked === 'about' ? '/about' : '...'}</p>
+```
+
+Note the difference from `cart-total.tsrx` on the computed page, which resumes fine: its
+`computed(() => shirts * 20 + mugs * 8)` reads only graph state. A `computed` is not broken. A
+`computed` that captures a non-graph local or module value is.
+
+**What it costs the docs.** Nothing visible. All four batch-5 widgets ship live, written with
+ternary text bindings, and each one carries a comment naming this finding so the shape is not
+quietly reintroduced. It is worth a framework issue: the capture rule says plain serializable values
+may be captured, and a plain object of string constants is about as serializable as a value gets.
+
+## 32. T030: what batch 5 shipped
+
+Five pages, four live widgets, no honest-kind callouts needed.
+
+- `router/pages.mdx`, `router/links.mdx`, `router/data.mdx`, `how-it-works.mdx`, `reference.mdx`.
+- `route-tree`, `link-typo`, `stream-steps`, `tier-ladder`: all four are one `state()` plus text
+  bindings, all four resume, and the witness clicks every one of them by role and name.
+- `stream-steps` is labelled on its page as an illustration rather than a demo, because an async
+  boundary inside an MDX page still cannot resume (finding 25) and a fake one would be a lie.
+- `link-typo` is labelled a toggle rather than a compiler, for the same reason.
+- Every batch-5 page carries exactly one `assumes` key, because two or more shift the next island's
+  locators (finding 29). That is the constraint that decided which prerequisite each page names.
+- `how-it-works.mdx` gets an extra witness check the other pages do not: the two doctrine sentences
+  have to be on the page verbatim, and the words "virtual DOM" may not appear anywhere in the prose
+  outside the `<details>` comparison. Both are asserted from the rendered DOM, not the source.

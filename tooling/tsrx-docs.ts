@@ -98,6 +98,18 @@ export const IDENTIFIER_DOCS: Readonly<Record<string, TokenDoc>> = {
 		kind: 'Projected content',
 		doc: 'The content written inside this component where it was used, which you may render, wrap or pass on, but not inspect or count.',
 	},
+	Html: {
+		kind: 'Document root',
+		doc: 'The root element of document.tsrx, which lets the router put the built asset tags and its pre-paint script in the head for you.',
+	},
+	Link: {
+		kind: 'Route link',
+		doc: 'Renders a real anchor and navigates on the client, taking the route pattern as its href and the pieces of the path as params.',
+	},
+	PageProps: {
+		kind: 'Page props',
+		doc: 'The props the router hands a page: params for the bracketed parts of the path, url for the address that was asked for, and status.',
+	},
 	attach: {
 		kind: 'Element behaviour',
 		doc: 'Installs longer lived code on this element, and may return a cleanup function that runs when the element goes away.',

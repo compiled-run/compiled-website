@@ -60,6 +60,25 @@ export const nav: readonly NavSection[] = [
 			{ title: 'Shared', href: '/markless/build/shared', sprite: 'spiral', number: '4' },
 		],
 	},
+	{
+		title: 'Router',
+		sprite: 'arrow-straight',
+		entries: [
+			{ title: 'Pages', href: '/markless/router/pages', sprite: 'square', number: '1' },
+			{ title: 'Links', href: '/markless/router/links', sprite: 'arrow-curve', number: '2' },
+			{ title: 'Page data', href: '/markless/router/data', sprite: 'drops', number: '3' },
+		],
+	},
+	{
+		title: 'How it works',
+		sprite: 'rays',
+		entries: [{ title: 'How it works', href: '/markless/how-it-works', sprite: 'rays', number: '1' }],
+	},
+	{
+		title: 'Reference',
+		sprite: 'hash',
+		entries: [{ title: 'Reference', href: '/markless/reference', sprite: 'hash', number: '1' }],
+	},
 ];
 
 /** Every entry in reading order, which is what the prev/next pager walks. */
@@ -118,6 +137,9 @@ export const concepts: Readonly<Record<string, NavEntry>> = {
 	elements: { title: 'elements', href: '/markless/build/elements' },
 	storage: { title: 'storage', href: '/markless/build/storage' },
 	shared: { title: 'shared', href: '/markless/build/shared' },
+	routes: { title: 'routes are files', href: '/markless/router/pages' },
+	links: { title: 'links', href: '/markless/router/links' },
+	data: { title: 'page data', href: '/markless/router/data' },
 };
 
 export type AssumesItem = {

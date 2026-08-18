@@ -121,7 +121,13 @@ case the witness asserts both the callout and the absence of a demo frame, so th
 accepts those components the run goes red and the note has to come out with the fix.
 
 `start/first-app.mdx` has no widget by design: it is a terminal transcript, and a fake terminal
-would be a lie.
+would be a lie. `reference.mdx` has none for the same kind of reason: it is a lookup page, not a
+page anyone reads front to back.
+
+Every widget on the site reads its state directly in a text binding. A `computed` that closes over
+a plain object is missing from the chunk a click loads, whether the object sits at module scope or
+in the component body (`NOTES.md` finding 31), so the four Router and How-it-works widgets are
+written as ternary text bindings and say so in a comment.
 
 `NOTES.md` records what 0.2.2, then 0.3.0, then 0.3.1 could and could not do while this was built.
 Read it before changing the shell or the build config.
