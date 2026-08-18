@@ -653,6 +653,14 @@ const SIDEBAR_NAMES = {
  */
 const SIDEBAR_WIDEN: Record<string, number> = { async: 7, storage: 7 };
 
+/**
+ * Rows the profile cannot separate on its own: the lists icon's pink strokes
+ * run to within five rows of the async arrows, so the detector merges them and
+ * splits the pair evenly, clipping both. Measured off the light half; the dark
+ * half shares the layout.
+ */
+const SIDEBAR_BAND_OVERRIDE: Record<string, [number, number]> = { lists: [666, 712], async: [714, 759] };
+
 /** How many icons sit in each titled group of a column, top to bottom. */
 const SIDEBAR_GROUPS = { A: [3, 7], B: [4, 3, 1] } as const;
 
@@ -890,12 +898,15 @@ function cutSidebar(): { name: string; variant: string; w: number; h: number }[]
 			const bands = rows[key];
 			if (bands.length !== names.length)
 				console.warn(`sidebar column ${key}: found ${bands.length} rows, named ${names.length}`);
-			bands.forEach((band, index) => {
+			bands.forEach((detected, index) => {
+				let band = detected;
 				const name = names[index];
 				if (!name) return;
 				// Two pixels: the rows are already the icon's own ink, and the sheet
 				// stacks them close enough that a generous pad reaches the neighbour.
 				const pad = 2;
+				const override = SIDEBAR_BAND_OVERRIDE[name];
+				if (override) band = override;
 				const [x0, x1] = column[key];
 				const right = Math.min(half - 1, x1 + (SIDEBAR_WIDEN[name] ?? 0));
 				const top = Math.max(0, band[0] - pad);
