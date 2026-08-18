@@ -7,6 +7,13 @@ export type NavEntry = {
 	readonly title: string;
 	readonly href: string;
 	readonly sprite?: string;
+	/**
+	 * The hand-drawn icon the sidebar paints for this entry, cut in a light and a
+	 * dark variant into `public/sidebar/<icon>-{light,dark}.png`. It is the href's
+	 * last segment for every sidebar page; entries that never reach the sidebar
+	 * leave it out.
+	 */
+	readonly icon?: string;
 	readonly number?: string;
 	/**
 	 * One sentence about the page, for the document head, `sitemap.xml` and
@@ -19,6 +26,8 @@ export type NavEntry = {
 export type NavSection = {
 	readonly title: string;
 	readonly sprite: string;
+	/** The colour of the hand-drawn underline under this section's title. */
+	readonly stroke?: string;
 	readonly entries: readonly NavEntry[];
 };
 
@@ -27,12 +36,14 @@ export const siteName = 'Markless';
 export const nav: readonly NavSection[] = [
 	{
 		title: 'Start here',
+		stroke: 'pink',
 		sprite: 'star-face',
 		entries: [
 			{
 				title: 'What is Markless',
 				href: '/markless',
 				sprite: 'crown',
+				icon: 'what-is-markless',
 				number: '1',
 				description:
 					'What Markless is: a compiler that works out what changes while it builds your file, so the browser ships the update rather than the machinery for finding it.',
@@ -41,6 +52,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Your first app',
 				href: '/markless/start/first-app',
 				sprite: 'plus',
+				icon: 'first-app',
 				number: '2',
 				description:
 					'Scaffold a Markless app with one command, then live in the dev, build and preview scripts, with the npm override a clean install needs today.',
@@ -49,6 +61,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Reading a .tsrx file',
 				href: '/markless/start/reading-tsrx',
 				sprite: 'bookmark',
+				icon: 'reading-tsrx',
 				number: '3',
 				description:
 					'A .tsrx file is TypeScript with three unfamiliar things in it: the at-sign body, markup written as a statement, and the fragment. That is the whole list.',
@@ -57,12 +70,14 @@ export const nav: readonly NavSection[] = [
 	},
 	{
 		title: 'Core concepts',
+		stroke: 'purple',
 		sprite: 'bolt',
 		entries: [
 			{
 				title: 'State',
 				href: '/markless/concepts/state',
 				sprite: 'sparkle',
+				icon: 'state',
 				number: '1',
 				description:
 					'state() is how you tell the page to watch a variable. No wrapper, no setter and no .value: you read it and assign to it like any other let.',
@@ -71,6 +86,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Computed',
 				href: '/markless/concepts/computed',
 				sprite: 'spiral',
+				icon: 'computed',
 				number: '2',
 				description:
 					'A value you work out is never out of date. computed() derives one value from others and works it out again when one of them changes.',
@@ -79,6 +95,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Events',
 				href: '/markless/concepts/events',
 				sprite: 'bolt',
+				icon: 'events',
 				number: '3',
 				description:
 					'An event prop is on plus the DOM event name, and the browser hands your handler its own typed event object.',
@@ -87,6 +104,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Conditionals',
 				href: '/markless/concepts/conditionals',
 				sprite: 'corner-bracket',
+				icon: 'conditionals',
 				number: '4',
 				description:
 					'@if puts real elements into the page and takes them out again, and anything declared inside the branch is disposed along with it.',
@@ -95,6 +113,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Lists',
 				href: '/markless/concepts/lists',
 				sprite: 'dashes',
+				icon: 'lists',
 				number: '5',
 				description:
 					'A key answers the question of which row is which. Once a row has one, its state, its DOM and its event wiring move with it through a sort.',
@@ -103,6 +122,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Async',
 				href: '/markless/concepts/async',
 				sprite: 'arrow-loop',
+				icon: 'async',
 				number: '6',
 				description:
 					'Waiting is a block, not a flag: @try, @pending and @catch are the whole status vocabulary, so there is no loading boolean to forget.',
@@ -111,6 +131,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Styling',
 				href: '/markless/concepts/styling',
 				sprite: 'flower',
+				icon: 'styling',
 				number: '7',
 				description:
 					'A style block written inside a component styles that component and nothing else, so two components can both call something .card.',
@@ -119,12 +140,14 @@ export const nav: readonly NavSection[] = [
 	},
 	{
 		title: 'Building an app',
+		stroke: 'yellow',
 		sprite: 'crown',
 		entries: [
 			{
 				title: 'Components',
 				href: '/markless/build/components',
 				sprite: 'crown',
+				icon: 'components',
 				number: '1',
 				description:
 					'A component is a function and props are its parameters, callbacks and children included, with the parent value read through live.',
@@ -133,6 +156,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Elements',
 				href: '/markless/build/elements',
 				sprite: 'bolt',
+				icon: 'elements',
 				number: '2',
 				description:
 					'A DOM node is not state. element() hands you a claim ticket for one node, bound with el, that you cash in inside a handler.',
@@ -141,6 +165,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Storage',
 				href: '/markless/build/storage',
 				sprite: 'bookmark',
+				icon: 'storage',
 				number: '3',
 				description:
 					'storage() is a variable you read and write like any other, saved in the browser and applied before the first paint.',
@@ -149,6 +174,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Shared',
 				href: '/markless/build/shared',
 				sprite: 'spiral',
+				icon: 'shared',
 				number: '4',
 				description:
 					'shared() gives a piece of data a name, so a component that wants it calls the name instead of having it threaded down through props.',
@@ -157,12 +183,14 @@ export const nav: readonly NavSection[] = [
 	},
 	{
 		title: 'Router',
+		stroke: 'green',
 		sprite: 'arrow-straight',
 		entries: [
 			{
 				title: 'Pages',
 				href: '/markless/router/pages',
 				sprite: 'square',
+				icon: 'pages',
 				number: '1',
 				description:
 					'A file under pages/ is a URL, brackets in the file name are parameters, and the path on disk is the path in the address bar.',
@@ -171,6 +199,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Links',
 				href: '/markless/router/links',
 				sprite: 'arrow-curve',
+				icon: 'links',
 				number: '2',
 				description:
 					'A link is a route plus its parts rather than a string you build, so a renamed folder is a type error instead of a 404.',
@@ -179,6 +208,7 @@ export const nav: readonly NavSection[] = [
 				title: 'Page data',
 				href: '/markless/router/data',
 				sprite: 'drops',
+				icon: 'data',
 				number: '3',
 				description:
 					'There is no loader: a page receives the request in its props, and an async computed that reads them is the load.',
@@ -187,12 +217,14 @@ export const nav: readonly NavSection[] = [
 	},
 	{
 		title: 'How it works',
+		stroke: 'yellow',
 		sprite: 'rays',
 		entries: [
 			{
 				title: 'How it works',
 				href: '/markless/how-it-works',
 				sprite: 'rays',
+				icon: 'how-it-works',
 				number: '1',
 				description:
 					'Follow one click from the compiled artifact down to the DOM update, through the five tiers of the arm rendering ladder.',

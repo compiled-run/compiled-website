@@ -21,12 +21,12 @@ export default function Pager({ pathname }: { readonly pathname: string }) @{
 		</a>
 		<span class="pager-doodles" aria-hidden="true">
 			<Sticker name="tape" size="3.4em" spot="pager" />
-			<Sprite name="crown" size="1.5em" />
-			<Sprite name="sparkle" size="1.3em" />
-			<Sprite name="heart" size="1.2em" />
-			<Sprite name="squiggle-yellow" size="1.6em" />
-			<Sprite name="star-face" size="1.4em" />
-			<Sprite name="smiley" size="1.3em" />
+			<Sprite name="crown" size="2.2em" />
+			<Sprite name="sparkle" size="2em" />
+			<Sprite name="heart" size="1.8em" />
+			<Sprite name="squiggle-yellow" size="2.4em" />
+			<Sprite name="sun" size="2.1em" />
+			<Sprite name="flower" size="2em" />
 			<Sticker name="spring" size="2.6em" spot="pager" />
 		</span>
 		<a

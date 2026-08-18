@@ -10,6 +10,8 @@
 	/* Code surface: paper, a shade lighter than the page, with a quiet edge. */
 	--code-surface: oklch(96% 0.02 79);
 	--code-edge: color-mix(in oklch, var(--ink) 22%, transparent);
+	/* The section-title underline: two quick crayon passes, drawn once here. */
+	--sidebar-stroke-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M3 7.5C28 4 62 9.5 116 5'/%3E%3Cpath d='M9 10.5C36 8 70 12 108 8.5' stroke-width='2' opacity='.75'/%3E%3C/g%3E%3C/svg%3E");
 
 	/* Every pastel accent is light in both themes, so anything printed on one is
 	   always the dark ink, never the page's foreground. */
@@ -343,9 +345,15 @@ html[data-theme='dark'] .theme-toggle-to-light {
 	width: 16rem;
 	max-height: calc(100vh - var(--header-height) - var(--space-s));
 	overflow-y: auto;
-	scrollbar-width: thin;
+	/* The rail scrolls, but its track is not part of the drawing: the fade at the
+	   bottom (T017) is what says there is more list under the fold. */
+	scrollbar-width: none;
 	padding-block: var(--space-s);
 	font-size: var(--step--1);
+}
+
+.sidebar::-webkit-scrollbar {
+	display: none;
 }
 
 /* On this page: the outline of the page's own h2/h3, written into the page HTML
@@ -515,6 +523,83 @@ html[data-theme='dark'] .theme-toggle-to-light {
 	opacity: 0.7;
 }
 
+/* One hand-drawn icon per sidebar entry, cut from the owner's sheet in both
+   variants (`tooling/cut-sprites.ts sidebar`). Both are in the markup and the
+   theme decides which one is displayed, the same trick `.sprite` uses. */
+.nav-icon {
+	display: inline-block;
+	width: 2.6em;
+	height: 2.6em;
+	flex: none;
+	line-height: 1;
+}
+
+/* The phone gets the whole list at once, so the icon steps down there. */
+@media (max-width: 70rem) {
+	.nav-icon {
+		width: 2em;
+		height: 2em;
+	}
+	.sidebar-link {
+		min-height: 2.5em;
+	}
+}
+
+.nav-icon-ink {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.nav-icon-light {
+	display: var(--sprite-light);
+}
+
+.nav-icon-dark {
+	display: var(--sprite-dark);
+}
+
+/* The section title's underline is the reference sheet's short crayon stroke: an
+   SVG path used as a mask, so one file paints in each section's own colour. */
+.sidebar-title.has-stroke {
+	position: relative;
+	display: inline-block;
+	margin-top: var(--space-xs);
+	padding-bottom: 0.5em;
+}
+
+.sidebar-title.has-stroke::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 0.45em;
+	background: var(--sidebar-stroke, var(--pink));
+	-webkit-mask-image: var(--sidebar-stroke-mask);
+	mask-image: var(--sidebar-stroke-mask);
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+}
+
+.sidebar-title.stroke-pink {
+	--sidebar-stroke: var(--pink);
+}
+
+.sidebar-title.stroke-purple {
+	--sidebar-stroke: var(--purple);
+}
+
+.sidebar-title.stroke-yellow {
+	--sidebar-stroke: var(--yellow);
+}
+
+.sidebar-title.stroke-green {
+	--sidebar-stroke: var(--green-star);
+}
+
 .sidebar-list {
 	display: grid;
 	gap: 0.15em;
@@ -528,10 +613,11 @@ html[data-theme='dark'] .theme-toggle-to-light {
    one, so nothing shifts when an entry becomes the current page. */
 .sidebar-link {
 	display: grid;
-	grid-template-columns: 1.4em 1.2em 1fr;
-	gap: 0.3em;
+	grid-template-columns: 2.6em 1.2em 1fr;
+	gap: 0.45em;
 	align-items: center;
-	padding: 0.22em 0.5em;
+	min-height: 3em;
+	padding: 0.3em 0.5em;
 	color: var(--ink);
 	text-decoration: none;
 	border: 2px solid transparent;
@@ -1219,8 +1305,13 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	inset-inline: 0;
 }
 
+/* Yellow crayon on paper is nearly the paper, so every doodle in the strip is
+   given one line of ink under it. It is a shadow rather than an outline, so the
+   drawing keeps its own edge. */
 .pager-doodles .sprite img {
 	transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	filter: drop-shadow(0 1px 0 color-mix(in oklch, var(--ink) 35%, transparent))
+		drop-shadow(0 0 1px color-mix(in oklch, var(--ink) 20%, transparent));
 }
 
 /* 1 crown: tilts and lifts, landing with a small bounce. */
@@ -1274,47 +1365,27 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	animation: doodle-wiggle 360ms ease-in-out;
 }
 
-/* 5 star face: darts up and to the right like a shooting star and springs back,
-   dragging a short trail behind it. The trail is a drop-shadow cast the way it
-   came from, so it needs no second copy of the drawing. */
-@keyframes doodle-dart {
+/* 5 sun: one slow turn, growing a little as it goes round. */
+@keyframes doodle-sun-turn {
 	0% {
-		transform: translate(0, 0) rotate(0deg);
-		filter: none;
+		transform: rotate(0deg) scale(1);
 	}
-	40% {
-		transform: translate(10px, -10px) rotate(16deg);
-		filter: drop-shadow(-7px 7px 2px color-mix(in oklch, var(--yellow) 65%, transparent));
-	}
-	70% {
-		transform: translate(-3px, 3px) rotate(-7deg);
-		filter: drop-shadow(-2px 2px 1px color-mix(in oklch, var(--yellow) 35%, transparent));
+	50% {
+		transform: rotate(180deg) scale(1.12);
 	}
 	100% {
-		transform: translate(0, 0) rotate(0deg);
-		filter: none;
+		transform: rotate(360deg) scale(1);
 	}
 }
 
 .pager-doodles .sprite:nth-child(6):hover img {
-	animation: doodle-dart 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	animation: doodle-sun-turn 600ms ease-in-out;
 }
 
-/* 6 smiley: rolls a full turn with a hop in the middle of it. */
-@keyframes doodle-roll {
-	0% {
-		transform: rotate(0deg) translateY(0);
-	}
-	50% {
-		transform: rotate(180deg) translateY(-7px);
-	}
-	100% {
-		transform: rotate(360deg) translateY(0);
-	}
-}
-
+/* 6 flower: half a turn and a little bigger, sprung there and sprung back. The
+   spring is the row's own transition easing, so leaving it undoes the turn. */
 .pager-doodles .sprite:nth-child(7):hover img {
-	animation: doodle-roll 360ms ease-in-out;
+	transform: rotate(180deg) scale(1.15);
 }
 
 /* The sidebar's section marks get the same lift, since it is one more rule. */
@@ -1617,8 +1688,13 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	inset-inline: 0;
 }
 
+/* Yellow crayon on paper is nearly the paper, so every doodle in the strip is
+   given one line of ink under it. It is a shadow rather than an outline, so the
+   drawing keeps its own edge. */
 .pager-doodles .sprite img {
 	transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	filter: drop-shadow(0 1px 0 color-mix(in oklch, var(--ink) 35%, transparent))
+		drop-shadow(0 0 1px color-mix(in oklch, var(--ink) 20%, transparent));
 }
 
 /* 1 crown: tilts and lifts, landing with a small bounce. */
@@ -1672,47 +1748,27 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	animation: doodle-wiggle 360ms ease-in-out;
 }
 
-/* 5 star face: darts up and to the right like a shooting star and springs back,
-   dragging a short trail behind it. The trail is a drop-shadow cast the way it
-   came from, so it needs no second copy of the drawing. */
-@keyframes doodle-dart {
+/* 5 sun: one slow turn, growing a little as it goes round. */
+@keyframes doodle-sun-turn {
 	0% {
-		transform: translate(0, 0) rotate(0deg);
-		filter: none;
+		transform: rotate(0deg) scale(1);
 	}
-	40% {
-		transform: translate(10px, -10px) rotate(16deg);
-		filter: drop-shadow(-7px 7px 2px color-mix(in oklch, var(--yellow) 65%, transparent));
-	}
-	70% {
-		transform: translate(-3px, 3px) rotate(-7deg);
-		filter: drop-shadow(-2px 2px 1px color-mix(in oklch, var(--yellow) 35%, transparent));
+	50% {
+		transform: rotate(180deg) scale(1.12);
 	}
 	100% {
-		transform: translate(0, 0) rotate(0deg);
-		filter: none;
+		transform: rotate(360deg) scale(1);
 	}
 }
 
 .pager-doodles .sprite:nth-child(6):hover img {
-	animation: doodle-dart 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	animation: doodle-sun-turn 600ms ease-in-out;
 }
 
-/* 6 smiley: rolls a full turn with a hop in the middle of it. */
-@keyframes doodle-roll {
-	0% {
-		transform: rotate(0deg) translateY(0);
-	}
-	50% {
-		transform: rotate(180deg) translateY(-7px);
-	}
-	100% {
-		transform: rotate(360deg) translateY(0);
-	}
-}
-
+/* 6 flower: half a turn and a little bigger, sprung there and sprung back. The
+   spring is the row's own transition easing, so leaving it undoes the turn. */
 .pager-doodles .sprite:nth-child(7):hover img {
-	animation: doodle-roll 360ms ease-in-out;
+	transform: rotate(180deg) scale(1.15);
 }
 
 /* The sidebar's section marks get the same lift, since it is one more rule. */
