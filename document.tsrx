@@ -1,4 +1,3 @@
-import { siteName } from './nav';
 import Sidebar from './components/docs/Sidebar.tsrx';
 import stylesheet from './styles/global.css?url';
 
@@ -19,9 +18,6 @@ export default function Document({
 			<link rel="stylesheet" href={stylesheet} />
 		</head>
 		<body>
-			<header class="site-header">
-				<a class="site-name" href="/markless">{siteName}</a>
-			</header>
 			<div class="site-shell">
 				<Sidebar pathname={pathname} />
 				<main class="prose">{children}</main>

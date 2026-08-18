@@ -79,9 +79,9 @@
 body {
 	background: var(--paper);
 	color: var(--ink);
-	font-size: var(--step-0);
+	font-size: var(--step-1);
 	margin: 0;
-	line-height: 145%;
+	line-height: 150%;
 }
 
 /* The base offset plus its four corners at --shadow-grow: a solid silhouette
@@ -105,9 +105,9 @@ h6 {
 }
 
 h1 {
-	font-size: var(--step-5);
+	font-size: calc(var(--step-5) * 1.35);
 	--shadow-color: var(--pink);
-	line-height: 120%;
+	line-height: 115%;
 }
 
 /* Paper grain over the whole viewport */
@@ -139,34 +139,40 @@ body::after {
    --------------------------------------------------------------------------- */
 
 .site-header {
-	padding: var(--space-s) var(--space-s-l);
-	border-bottom: 2px solid var(--ink);
+	display: none;
 }
 
 .site-name {
+	display: block;
 	font-size: var(--step-1);
 	font-weight: 700;
 	color: var(--ink);
 	text-decoration: none;
+	margin-bottom: var(--space-m);
+	--shadow-color: var(--yellow);
 }
 
 .site-shell {
-	display: grid;
-	grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
-	gap: var(--space-m);
-	align-items: start;
 	padding-inline: var(--space-s-l);
 }
 
-@media (max-width: 60rem) {
-	.site-shell {
-		grid-template-columns: minmax(0, 1fr);
+@media (max-width: 70rem) {
+	.sidebar {
+		position: static;
+		width: auto;
+		max-height: none;
+		max-width: 68ch;
+		margin-inline: auto;
 	}
 }
 
 .sidebar {
-	position: sticky;
+	position: fixed;
+	left: var(--space-s-l);
 	top: var(--space-s);
+	width: 16rem;
+	max-height: calc(100vh - var(--space-s));
+	overflow-y: auto;
 	padding-block: var(--space-m);
 }
 
@@ -207,7 +213,8 @@ body::after {
 }
 
 .prose {
-	max-width: 65ch;
+	max-width: 68ch;
+	margin-inline: auto;
 	padding-block: var(--space-m) var(--space-2xl);
 }
 

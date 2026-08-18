@@ -2,6 +2,7 @@
 // in the document shell on published 0.2.2 (see NOTES.md), so they are written out.
 export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 	<nav class="sidebar" aria-label="Documentation">
+		<a class="site-name" href="/markless">Markless</a>
 		<div class="sidebar-section">
 			<p class="sidebar-title">Start here</p>
 			<ul class="sidebar-list">
