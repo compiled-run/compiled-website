@@ -3,26 +3,30 @@
 The Markless documentation site, served at `compiled.run/markless`. It is a real Markless app built
 on released `@markless/*` packages, so everything on it is doing what a reader's own app would do.
 
-## Where the framework comes from right now
+## Where the framework comes from
 
-**Interim.** The site is on `@markless/*` 0.3.0, which is not on npm yet, so it installs nine
-tarballs committed under `vendor/`. The four packages the app names directly carry a
-`file:vendor/…tgz` specifier; the five they pull in transitively are pinned to their tarballs through
-`overrides`, because otherwise npm would go looking for 0.3.0 on the registry and not find it.
+The site installs `@markless/*` `^0.3.1` from npm. There is no `vendor/` directory and no
+`@markless/*` override any more: the interim tarball vendoring described in `NOTES.md` findings 13
+and 18 is closed, because 0.3.1 is published and carries the two fixes the site was waiting on (MDX
+state composition prefixes `deriveSymbolId`, so a derived island resumes; `storage()` records
+compose through MDX state, so the theme toggle works).
 
-Seven of the nine are packed from the framework repo's `main` at release commit `b12b7806`.
-`markless-router-0.3.0.tgz` and `markless-serializer-0.3.0.tgz` are packed from the fix branch
-`worktree-agent-a69a84d1a53118f1d` at `a87f9f74`, which is `b12b7806` plus the two fixes the site
-needed: MDX state composition now prefixes `deriveSymbolId`, so an island that derives a value
-resumes, and it carries `storage()` records, so the theme toggle works. Rebuilding the other seven
-from that commit changed nothing but content-hash chunk names, so they were left alone. When that
-branch merges, repack all nine from one commit.
+`scripts/markless-doctor.mjs` compares the *installed* version of each `@markless/*` package, so a
+`^` range that resolved somewhere unexpected fails the check rather than passing on the string.
 
-When 0.3.0 is published: delete `vendor/`, drop the `@markless/*` entries from `overrides`, and put
-`^0.3.0` back in `dependencies` and `devDependencies`.
+**To move to the next release**, say 0.3.2: change the four `^0.3.1` ranges in `dependencies` and
+`devDependencies`, then `rm -rf node_modules package-lock.json && npm install`, then
+`npm run build && npm run doctor && npm run witness`. The witness is the thing that tells you what
+the release actually changed: a check that was `known-failing` and now passes fails the run on
+purpose, so the note explaining the failure has to be removed in the same change set. On 0.3.1 the
+one known failure is the `class={ternary}` binding on the reading-a-`.tsrx` page (`NOTES.md`
+finding 18), fixed on the framework's `main` and expected in 0.3.2.
 
-The `"@tsrx/core": "0.1.58"` override is not interim in the same way — it works around an
-unpublished `@tsrx/runtime`, and 0.3.0 still needs it. `NOTES.md` findings 1 and 13 have the detail.
+The `"@tsrx/core": "0.1.58"` override is the one pin that stays. `@markless/compiler` asks for
+`@tsrx/core@^0.1.58`, which resolves to `0.1.60`, which depends on `@tsrx/runtime@0.1.1` — a package
+that is not on npm. Proven on 0.3.1 by installing this same `package.json` with only the override
+removed: `npm error 404 Not Found - GET https://registry.npmjs.org/@tsrx%2fruntime`. `NOTES.md`
+findings 1 and 22 have the detail.
 
 ## Run it
 
@@ -54,7 +58,11 @@ block sits above it. It writes screenshots into the markless repo's goal notes.
   exports of `.tsrx` files, imported at the top and used as top-level blocks.
 - `components/demos/` — the demos. `Counter.tsrx` is the teaching component shown verbatim on the
   page; `CounterDemo.tsrx` wraps it in the playground frame, because MDX cannot nest components.
-- `components/docs/Sidebar.tsrx`, `document.tsrx`, `nav.ts` — the chrome.
+- `components/docs/sidebar.tsrx`, `document.tsrx`, `nav.ts` — the chrome. `nav.ts` is the single
+  source for the page list: the sidebar loops it, and the breadcrumb, the pager and the witness read
+  it. Adding a page means adding an entry there and nothing else. `document.tsrx` keeps a plain
+  `<html>` root rather than `<Html>` from `@markless/router`, which still fails the build on 0.3.1
+  (`NOTES.md` findings 2 and 24).
 - `styles/global.css` — the look, copied from the markless repo's `docs/` app, plus the code-block
   palette, the hover-doc box and the dark theme.
 - `components/sprite.tsrx`, `components/mascot.tsrx` — the hand-drawn accents. `public/sprites/`
@@ -101,5 +109,11 @@ can resume. The header reserves `.theme-toggle-slot` at the end of its tools row
 pinned to it. `NOTES.md` finding 19 has the reasoning, including why the component has two buttons
 instead of one.
 
-`NOTES.md` records what 0.2.2 and then 0.3.0 could and could not do while this was built. Read it before
-changing the shell or the build config.
+Two pages, `concepts/conditionals.mdx` and `concepts/lists.mdx`, ship without a live widget: a
+component whose body uses `@if` makes the production build stop making progress on 0.3.1, and the
+transform that never returns is named in `NOTES.md` finding 23. Both pages say so on the page, and
+the witness asserts both the callout and the absence of a demo frame, so the day the compiler
+accepts those components the run goes red and the note has to come out with the fix.
+
+`NOTES.md` records what 0.2.2, then 0.3.0, then 0.3.1 could and could not do while this was built.
+Read it before changing the shell or the build config.

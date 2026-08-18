@@ -1,24 +1,50 @@
-export type NavEntry = { readonly title: string; readonly href: string };
-export type NavSection = { readonly title: string; readonly entries: readonly NavEntry[] };
+/**
+ * One page. `sprite` and `number` are what the sidebar paints beside the title;
+ * they are optional because the `concepts` map below reuses this type for links
+ * that never appear in the sidebar.
+ */
+export type NavEntry = {
+	readonly title: string;
+	readonly href: string;
+	readonly sprite?: string;
+	readonly number?: string;
+};
+export type NavSection = {
+	readonly title: string;
+	readonly sprite: string;
+	readonly entries: readonly NavEntry[];
+};
 
 export const siteName = 'Markless';
 
 export const nav: readonly NavSection[] = [
 	{
 		title: 'Start here',
+		sprite: 'star-face',
 		entries: [
-			{ title: 'What is Markless', href: '/markless' },
-			{ title: 'Reading a .tsrx file', href: '/markless/start/reading-tsrx' },
+			{ title: 'What is Markless', href: '/markless', sprite: 'crown', number: '1' },
+			{
+				title: 'Reading a .tsrx file',
+				href: '/markless/start/reading-tsrx',
+				sprite: 'bookmark',
+				number: '2',
+			},
 		],
 	},
 	{
 		title: 'Core concepts',
+		sprite: 'bolt',
 		entries: [
-			{ title: 'State', href: '/markless/concepts/state' },
-			{ title: 'Computed', href: '/markless/concepts/computed' },
-			{ title: 'Events', href: '/markless/concepts/events' },
-			{ title: 'Conditionals', href: '/markless/concepts/conditionals' },
-			{ title: 'Lists', href: '/markless/concepts/lists' },
+			{ title: 'State', href: '/markless/concepts/state', sprite: 'sparkle', number: '1' },
+			{ title: 'Computed', href: '/markless/concepts/computed', sprite: 'spiral', number: '2' },
+			{ title: 'Events', href: '/markless/concepts/events', sprite: 'bolt', number: '3' },
+			{
+				title: 'Conditionals',
+				href: '/markless/concepts/conditionals',
+				sprite: 'corner-bracket',
+				number: '4',
+			},
+			{ title: 'Lists', href: '/markless/concepts/lists', sprite: 'dashes', number: '5' },
 		],
 	},
 ];
@@ -112,66 +138,4 @@ export function assumesFor(assumes: string): readonly AssumesItem[] {
 				lead: index === 0 ? '' : ', ',
 			};
 		});
-}
-
-export type AssumesSlot = {
-	readonly lead: string;
-	readonly title: string;
-	readonly href: string;
-	readonly linkClass: string;
-	readonly textClass: string;
-};
-
-export type AssumesLine = {
-	/** Printed as written: "nothing", or the tail of a list longer than three. */
-	readonly plain: string;
-	readonly one: AssumesSlot;
-	readonly two: AssumesSlot;
-	readonly three: AssumesSlot;
-};
-
-const HIDDEN = 'is-hidden';
-const emptySlot: AssumesSlot = {
-	lead: '',
-	title: '',
-	href: '/markless',
-	linkClass: `page-meta-assume-link ${HIDDEN}`,
-	textClass: `page-meta-assume-plain ${HIDDEN}`,
-};
-
-function slotFor(item: AssumesItem | undefined): AssumesSlot {
-	if (!item) return emptySlot;
-	return {
-		lead: item.lead,
-		title: item.title,
-		href: item.known ? item.href : '/markless',
-		linkClass: item.known ? 'page-meta-assume-link' : `page-meta-assume-link ${HIDDEN}`,
-		textClass: item.known ? `page-meta-assume-plain ${HIDDEN}` : 'page-meta-assume-plain',
-	};
-}
-
-/**
- * The `assumes` line as three fixed slots rather than a list, because neither
- * `@for` nor `@if` renders anything on 0.3.0 — not in the document shell
- * (NOTES.md finding 3) and, as this page-meta line proved, not inside a page
- * component either. Three is what the pages need; a fourth key onwards is
- * printed as plain text so nothing is silently dropped.
- */
-export function assumesLine(assumes: string): AssumesLine {
-	const items = assumesFor(assumes);
-	const overflow = items.slice(3);
-	if (overflow.length > 0)
-		console.warn(
-			`page-meta: "assumes" names ${items.length} concepts and the line has three link slots; ` +
-				`${overflow.map((one) => one.key).join(', ')} will be printed as plain text.`,
-		);
-	return {
-		plain:
-			items.length === 0
-				? assumes
-				: overflow.map((one) => `${one.lead}${one.title}`).join(''),
-		one: slotFor(items[0]),
-		two: slotFor(items[1]),
-		three: slotFor(items[2]),
-	};
 }

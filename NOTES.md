@@ -703,3 +703,151 @@ teaching components and their wrappers were deleted rather than left unimported,
 **What still works.** State, computed, events, `storage()` and class-free text bindings are all
 unaffected: `concepts/events.mdx` builds, resumes and is witnessed clicking. Nothing here changes
 findings 18, 19 or 20; this is the same family as 20, found from the build side.
+
+## 22. T027: the site is on published 0.3.1, and the `@tsrx/core` pin is the only one left
+
+`@markless/*` 0.3.1 is on npm, so the interim tarball vendoring of finding 13 is over. `vendor/` and
+its nine tarballs are deleted, the five `@markless/*` `overrides` entries are gone, and the four
+packages the app names carry `^0.3.1`:
+
+```
+@markless/analyzer@0.3.1  @markless/bundler@0.3.1  @markless/compiler@0.3.1  @markless/core@0.3.1
+@markless/router@0.3.1  @markless/runtime@0.3.1  @markless/serializer@0.3.1  @markless/web@0.3.1
+@markless/typescript-plugin@0.3.1
+```
+
+(`npm ls` after `rm -rf node_modules package-lock.json && npm install`; every node in the tree reads
+0.3.1.)
+
+**The two fixes the site was carrying on repacked tarballs are in the release.** The witness runs
+green against the registry build with no allowlist beyond the one below: the cart total on the
+computed page still moves 20 -> 40 -> 48 (finding 14's defect, fixed), and the theme toggle still
+writes `data-theme`, persists to `localStorage` and survives a reload (finding 15's defect, fixed).
+
+**Finding 18 is still open on 0.3.1 and is the one known-failing check.** `class={ternary}` produces
+no dom update, so the highlighted line on the reading-a-`.tsrx` page never moves; the witness keeps
+it under `knownFailingReason = 'NOTES.md finding 18'`. The compiler fix for it landed on the
+framework's `main` after the 0.3.1 cut and is expected in 0.3.2, at which point that check passes,
+the witness goes red on the stale allowlist, and the note comes out with it.
+
+**Finding 1 survives, and was re-proven rather than assumed.** Installing this `package.json` with
+`"overrides": { "@tsrx/core": "0.1.58" }` removed and nothing else changed:
+
+```
+npm error 404 Not Found - GET https://registry.npmjs.org/@tsrx%2fruntime - Not found
+npm error 404  The requested resource '@tsrx/runtime@0.1.1' could not be found
+```
+
+`@markless/compiler@0.3.1` asks for `@tsrx/core@^0.1.58`, which resolves to `0.1.60`, which depends
+on the unpublished `@tsrx/runtime@0.1.1`. The pin stays until either the framework's catalog range
+stops floating past `0.1.58` or `@tsrx/runtime` is published.
+
+## 23. T027: `@if` still hangs the build on published 0.3.1, and here is the module it stalls on
+
+Finding 21 found the hang on the vendored 0.3.0 mix and could not say whether the tarball mixture
+was to blame. It is not. On a clean install of published `@markless/*@0.3.1` the same two-file
+reproduction hangs the same way, and this time the stuck module is named.
+
+**The reproduction, unchanged from finding 21.** `components/demos/draft-kept.tsrx`:
+
+```tsx
+import { state } from '@markless/core';
+
+export default function DraftKept() @{
+	let open = state(false);
+	let draft = state('');
+
+	<section>
+		<button onClick={() => (open = !open)}>Toggle the panel</button>
+
+		@if (open) {
+			<label class="echo-field">
+				Your message
+				<input value={draft} onInput={(event) => (draft = event.currentTarget.value)} />
+			</label>
+			<p class="playground-output">Draft: {draft}</p>
+		}
+	</section>
+}
+```
+
+plus the wrapper MDX needs (`draft-kept-demo.tsrx`, a `<div class="playground">` around
+`<DraftKept />`) and a one-line `.mdx` page that imports the wrapper as a top-level block.
+`npm run build` prints
+
+```
+vite v8.0.10 building client environment for production...
+transforming...
+```
+
+and then makes no further progress. Killed at 248 s. Every other page on this site builds in well
+under 90 s, so this is the same "never settles" signature, not slowness.
+
+**Which module.** `DEBUG=vite:*` is no help on Vite 8 — it dumps the resolved config and then goes
+quiet, because the per-module work happens in rolldown's Rust workers and never reaches the
+`vite:transform` debug channel. What does work is a pair of trivial local plugins, one with
+`transform: { order: 'pre' }` and one with `order: 'post'`, each appending `ENTER <id>` / `DONE <id>`
+to a file. Diff the two sets after the kill and exactly five ids are entered and never finished:
+
+```
+<site>/components/demos/draft-kept.tsrx
+<site>/components/demos/draft-kept-demo.tsrx
+<site>/components/demos/draft-kept-demo.tsrx?markless-render-data
+<site>/components/demos/draft-kept-demo.tsrx?markless-symbols
+<site>/components/demos/draft-kept-demo.tsrx?markless-render-data&markless-reached-from=<site>/pages/markless/concepts/probe.mdx
+```
+
+679 transform records in total; those five are the only ones with no `DONE`. The base id
+`draft-kept.tsrx` — the component that contains the `@if`, before any MDX composition — is entered
+and never returns, and the four wrapper ids are the ones waiting on it. No id belonging to any other
+page appears in the unfinished set, which is why the rest of the site is unaffected and why the two
+pages can ship without their widgets.
+
+So the framework bug to chase is inside the transform of a `.tsrx` module whose body contains an
+`@if` block: it returns a promise that never settles rather than throwing. `sample` on the build
+process confirms the process is parked in `uv__io_poll` with the rolldown workers idle, exactly as
+finding 21 described.
+
+**What it still costs the docs.** `concepts/conditionals.mdx` and `concepts/lists.mdx` keep their
+files in fences and their "why there is no demo box" callouts, and the witness keeps asserting both
+the callout and the absence of a `.playground` frame on those two pages. The plan in the T011
+outlines (outline 7's `DraftPanel` pair, outline 8's `SortableRows`) is unchanged and waiting; it
+needs a framework fix, not another app-side shape.
+
+Note that this is a different defect from the `@for`-renders-nothing one that 0.3.1 fixed. That fix
+was about a repeat over a plain collection rendering zero rows at run time; this is a build that does
+not finish at all.
+
+## 24. T027: the sidebar and the assumes line are loops again, and `<Html>` still is not usable
+
+0.3.1 fixes `@for` over a plain collection (a module constant, an imported constant, an inline
+array), which is what findings 3 and 20 ran into. Both workarounds built on that defect are retired
+and both are proven by a build and the witness, not by reading the release note:
+
+- **The sidebar loops `nav.ts`.** `components/docs/sidebar.tsrx` was thirty lines of hand-written
+  `<li>`s that had to be kept in step with `nav.ts` by hand. It is now two nested `@for`s —
+  `@for (const section of nav; key section.title)` around
+  `@for (const entry of section.entries; key entry.href)` — and `nav.ts` carries the sprite name and
+  the in-section number for each entry, so the file that the breadcrumb and the pager already read
+  is now the only place a page is listed. The served HTML for `/markless/concepts/state` has all
+  seven `sidebar-text` titles in reading order and exactly one `sidebar-link is-active`.
+- **The assumes line loops its items.** `components/page-meta.tsrx` printed three fixed slots and
+  hid the unused ones. It now loops `assumesFor(assumes)`, so there is no slot limit and no hidden
+  markup, and `assumesLine`, `AssumesSlot`, `AssumesLine`, `slotFor` and the overflow warning are
+  gone from `nav.ts`. The witness's existing assertions on that line ("the assumes line has the
+  links it should", and that each link answers 200) pass unchanged.
+
+One shape rule worth writing down, learned from the first failed build: **a `@for` body renders a
+single node.** Three siblings inside the loop fails the build with `A code block renders a single
+node; wrap multiple nodes or text in a fragment '<>…</>'`, ten times over. The assumes item is
+wrapped in one `<span class="page-meta-assume">` for that reason.
+
+**`<Html>` is still unusable, so finding 2's workaround stays.** Swapping `document.tsrx`'s plain
+`<html>` root for `<Html>` from `@markless/router` on 0.3.1 fails the build in the same place it did
+on 0.2.2:
+
+```
+[UNLOADABLE_DEPENDENCY] Error: Could not load @markless/router - No such file or directory (os error 2).
+```
+
+The document keeps its plain `<html>` root.

@@ -13,14 +13,14 @@
 		"witness": "node --experimental-strip-types scripts/witness.ts"
 	},
 	"dependencies": {
-		"@markless/core": "file:vendor/markless-core-0.3.0.tgz",
-		"@markless/router": "file:vendor/markless-router-0.3.0.tgz",
+		"@markless/core": "^0.3.1",
+		"@markless/router": "^0.3.1",
 		"nitro": "3.0.260429-beta",
 		"vite-plus": "0.1.20"
 	},
 	"devDependencies": {
-		"@markless/analyzer": "file:vendor/markless-analyzer-0.3.0.tgz",
-		"@markless/typescript-plugin": "file:vendor/markless-typescript-plugin-0.3.0.tgz",
+		"@markless/analyzer": "^0.3.1",
+		"@markless/typescript-plugin": "^0.3.1",
 		"@types/node": "^26.2.0",
 		"playwright-core": "^1.56.0",
 		"shiki": "^4.4.3",
@@ -28,11 +28,6 @@
 		"vite": "^8.0.16"
 	},
 	"overrides": {
-		"@tsrx/core": "0.1.58",
-		"@markless/bundler": "file:vendor/markless-bundler-0.3.0.tgz",
-		"@markless/compiler": "file:vendor/markless-compiler-0.3.0.tgz",
-		"@markless/runtime": "file:vendor/markless-runtime-0.3.0.tgz",
-		"@markless/serializer": "file:vendor/markless-serializer-0.3.0.tgz",
-		"@markless/web": "file:vendor/markless-web-0.3.0.tgz"
+		"@tsrx/core": "0.1.58"
 	}
 }
