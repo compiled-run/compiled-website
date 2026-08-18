@@ -783,7 +783,7 @@ function trimSidebarEdges(file: string, size: { w: number; h: number }): void {
 		file,
 		'(', '+clone', '-alpha', 'extract',
 		'(', '-size', `${size.w}x${size.h}`, 'xc:white', '-fill', 'black',
-		'-draw', `rectangle 0,0 ${size.w},2`, '-draw', `rectangle 0,${size.h - 3} ${size.w},${size.h}`, ')',
+		'-draw', `rectangle 0,0 ${size.w},1`, '-draw', `rectangle 0,${size.h - 2} ${size.w},${size.h}`, ')',
 		'-compose', 'multiply', '-composite', ')',
 		'-alpha', 'off', '-compose', 'copy_opacity', '-composite', file,
 	]);
@@ -925,12 +925,13 @@ function cutSidebar(): { name: string; variant: string; w: number; h: number }[]
 				if (override) band = override;
 				// The dark half's sticker glow reaches past the light silhouette, so
 				// its rows grow toward the neighbours, stopping halfway to each.
-				if (variant === 'dark') {
+				{
 					const prev = bands[index - 1];
 					const next = bands[index + 1];
-					const up = prev ? Math.floor((prev[1] + band[0]) / 2) + 1 : band[0] - 10;
-					const down = next ? Math.floor((band[1] + next[0]) / 2) - 1 : band[1] + 10;
-					band = [Math.max(up, band[0] - 6), Math.min(down, band[1] + 1)];
+					const grow = variant === 'dark' ? 8 : 6;
+					const up = prev ? Math.floor((prev[1] + band[0]) / 2) + 1 : band[0] - grow;
+					const down = next ? Math.floor((band[1] + next[0]) / 2) - 1 : band[1] + grow;
+					band = [Math.max(up, band[0] - grow), Math.min(down, band[1] + grow)];
 				}
 				const [x0, x1] = column[key];
 				const right = Math.min(half - 1, x1 + (SIDEBAR_WIDEN[name] ?? 0));
