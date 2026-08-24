@@ -46,7 +46,7 @@ export const nav: readonly NavSection[] = [
 				icon: 'what-is-markless',
 				number: '1',
 				description:
-					'What Markless is: a compiler that works out what changes while it builds your file, so the browser ships the update rather than the machinery for finding it.',
+					'What Markless is: the reliable way to build software with AI agents. Plain TypeScript functions, a compiler that checks the whole interface before anything ships, and nothing hidden to trip over.',
 			},
 			{
 				title: 'Your first app',
@@ -258,7 +258,7 @@ export type Crumb = { readonly section: string; readonly page: string };
  * throw, and the header renders the mug on its own.
  */
 export function breadcrumbFor(pathname: string): Crumb {
-	for (const section of nav)
+	for (const section of allNav)
 		for (const entry of section.entries)
 			if (entry.href === pathname) return { section: section.title, page: entry.title };
 	return { section: '', page: '' };
@@ -279,7 +279,7 @@ export type Head = { readonly title: string; readonly description: string };
  * the site's own name and sentence rather than throwing.
  */
 export function headFor(pathname: string): Head {
-	const entry = flatNav.find((one) => one.href === pathname);
+	const entry = allFlat.find((one) => one.href === pathname);
 	if (!entry) return { title: `${siteName} docs`, description: siteDescription };
 	return {
 		title: `${entry.title} | ${siteName} docs`,
@@ -294,11 +294,12 @@ export type Pager = {
 	readonly nextHref: string;
 };
 
-/** The neighbours of one pathname in `flatNav`. Missing ends are empty strings. */
+/** The neighbours of one pathname in its own section. Missing ends are empty strings. */
 export function pagerFor(pathname: string): Pager {
-	const at = flatNav.findIndex((entry) => entry.href === pathname);
-	const previous = at > 0 ? flatNav[at - 1] : undefined;
-	const next = at >= 0 && at + 1 < flatNav.length ? flatNav[at + 1] : undefined;
+	const list = flatNavFor(pathname);
+	const at = list.findIndex((entry) => entry.href === pathname);
+	const previous = at > 0 ? list[at - 1] : undefined;
+	const next = at >= 0 && at + 1 < list.length ? list[at + 1] : undefined;
 	return {
 		prevTitle: previous ? previous.title : '',
 		prevHref: previous ? previous.href : '',
@@ -369,4 +370,249 @@ export function assumesFor(assumes: string): readonly AssumesItem[] {
 				lead: index === 0 ? '' : ', ',
 			};
 		});
+}
+
+
+/* ---------------------------------------------------------------------------
+   The UI section. `@markless/ui` is a second set of pages under /markless/ui,
+   and the switch at the top of the sidebar moves a reader between the two. What
+   follows is the same shape as the framework nav above, so one file still
+   decides the sidebar, the breadcrumb, the pager and the document head.
+   --------------------------------------------------------------------------- */
+
+export type ModeKey = 'framework' | 'ui';
+
+/** One choice on the sidebar's switch: the word on it and where it goes. */
+export type Mode = { readonly key: ModeKey; readonly title: string; readonly href: string };
+
+/**
+ * The two sets of pages, keyed rather than listed, so the sidebar names the one
+ * it wants instead of searching for it and each title is written once.
+ */
+export const modes: Readonly<Record<ModeKey, Mode>> = {
+	framework: { key: 'framework', title: 'Framework', href: '/markless' },
+	ui: { key: 'ui', title: 'UI', href: '/markless/ui' },
+};
+
+export const uiNav: readonly NavSection[] = [
+	{
+		title: 'Start here',
+		stroke: 'pink',
+		sprite: 'star-face',
+		entries: [
+			{
+				title: 'Overview',
+				href: '/markless/ui',
+				sprite: 'star-face',
+				number: '1',
+				description:
+					'Nineteen component families that ship the behaviour and the accessibility and nothing else: no styles, no class names, and no theme to argue with.',
+			},
+		],
+	},
+	{
+		title: 'Forms',
+		stroke: 'purple',
+		sprite: 'pill',
+		entries: [
+			{
+				title: 'checkbox',
+				href: '/markless/ui/checkbox',
+				sprite: 'check',
+				number: '1',
+				description:
+					'A box that is on, off or mixed, with a hidden native input carrying it into a form under the name the root declares.',
+			},
+			{
+				title: 'checklist',
+				href: '/markless/ui/checklist',
+				sprite: 'dashes',
+				number: '2',
+				description:
+					'A group of checkboxes with a select-all that works its own value out from the group rather than being told what it is.',
+			},
+			{
+				title: 'combobox',
+				href: '/markless/ui/combobox',
+				sprite: 'cursor',
+				number: '3',
+				description:
+					'A text field with a list attached. Focus never leaves the input, and the highlighted option is family state rather than the focused element.',
+			},
+			{
+				title: 'otp',
+				href: '/markless/ui/otp',
+				sprite: 'hash',
+				number: '4',
+				description:
+					'One real input stretched over a row of boxes, so paste, one-time-code autofill, undo and a single tab stop all come free.',
+			},
+			{
+				title: 'radiogroup',
+				href: '/markless/ui/radiogroup',
+				sprite: 'oval',
+				number: '5',
+				description:
+					'A fieldset whose legend names it natively, one tab stop for the whole group, and the arrow keys walking the options.',
+			},
+			{
+				title: 'select',
+				href: '/markless/ui/select',
+				sprite: 'triangle',
+				number: '6',
+				description:
+					'A button that opens a listbox, with typeahead over the options and a hidden native select carrying the choice into a form.',
+			},
+			{
+				title: 'textbox',
+				href: '/markless/ui/textbox',
+				sprite: 'pill',
+				number: '7',
+				description:
+					'A labelled field over one line or many, where a restriction set on the root or on the control stands either way.',
+			},
+			{
+				title: 'toggle',
+				href: '/markless/ui/toggle',
+				sprite: 'bolt',
+				number: '8',
+				description:
+					'A switch that reads as on or off, with a thumb to move and a hidden native input carrying it into a form.',
+			},
+		],
+	},
+	{
+		title: 'Show and hide',
+		stroke: 'yellow',
+		sprite: 'corner-bracket',
+		entries: [
+			{
+				title: 'accordion',
+				href: '/markless/ui/accordion',
+				sprite: 'arrow-curve',
+				number: '1',
+				description:
+					'Sections that open one at a time, or several at once, with every panel staying in the page when it closes.',
+			},
+			{
+				title: 'collapsible',
+				href: '/markless/ui/collapsible',
+				sprite: 'plus',
+				number: '2',
+				description:
+					'One button that shows and hides the panel below it, and a closed panel the browser can still find text inside.',
+			},
+			{
+				title: 'modal',
+				href: '/markless/ui/modal',
+				sprite: 'square',
+				number: '3',
+				description:
+					'A dialog over a backdrop that marks the rest of the page inert, and puts focus back where it found it on the way out.',
+			},
+			{
+				title: 'navbar',
+				href: '/markless/ui/navbar',
+				sprite: 'arrow-straight',
+				number: '4',
+				description:
+					'A navigation landmark whose entries show and hide dropdowns. It is a disclosure, deliberately never a menubar.',
+			},
+			{
+				title: 'tabs',
+				href: '/markless/ui/tabs',
+				sprite: 'bookmark',
+				number: '5',
+				description:
+					'A row of tabs over panels that stay in the page, so focus, scroll position and form state survive a tab change.',
+			},
+			{
+				title: 'tree',
+				href: '/markless/ui/tree',
+				sprite: 'spiral',
+				number: '6',
+				description:
+					'Rows that open and close, with one tab stop for the whole tree and a typeahead that matches on the row labels.',
+			},
+		],
+	},
+	{
+		title: 'Display',
+		stroke: 'green',
+		sprite: 'rays',
+		entries: [
+			{
+				title: 'carousel',
+				href: '/markless/ui/carousel',
+				sprite: 'arrow-loop',
+				number: '1',
+				description:
+					'Slides you drag, step through or play, each one named by a value rather than counted by its position.',
+			},
+			{
+				title: 'pagination',
+				href: '/markless/ui/pagination',
+				sprite: 'dots',
+				number: '2',
+				description:
+					'A navigation landmark of page controls, where the page number is written once on the item and read back by the control inside it.',
+			},
+			{
+				title: 'progress',
+				href: '/markless/ui/progress',
+				sprite: 'drops',
+				number: '3',
+				description:
+					'A bar over a range you name, or over an amount nobody knows yet, with the numbers reported to a screen reader.',
+			},
+			{
+				title: 'qrcode',
+				href: '/markless/ui/qrcode',
+				sprite: 'star-badge',
+				number: '4',
+				description:
+					'A scannable code drawn as one SVG path, with a quiet zone around it and room for a logo on top.',
+			},
+			{
+				title: 'toaster',
+				href: '/markless/ui/toaster',
+				sprite: 'speech-bubble',
+				number: '5',
+				description:
+					'A live region that is on the page before the first message, with a queue your own handler writes to.',
+			},
+		],
+	},
+];
+
+/** The UI section in reading order, which is what its own pager walks. */
+export const flatUiNav: readonly NavEntry[] = uiNav.flatMap((section) => section.entries);
+
+/** Both sections, for the lookups that only need to find a page by its href. */
+const allNav: readonly NavSection[] = [...nav, ...uiNav];
+const allFlat: readonly NavEntry[] = [...flatNav, ...flatUiNav];
+
+/** Which of the two sets of pages a pathname belongs to. */
+export function modeOf(pathname: string): ModeKey {
+	const inUi = pathname === '/markless/ui' || pathname.startsWith('/markless/ui/');
+	return inUi ? 'ui' : 'framework';
+}
+
+/** The switch's current choice, which is the word printed on it. */
+export function modeFor(pathname: string): Mode {
+	return modes[modeOf(pathname)];
+}
+
+/** The tree the sidebar paints for one pathname. */
+export function navFor(pathname: string): readonly NavSection[] {
+	return modeOf(pathname) === 'ui' ? uiNav : nav;
+}
+
+/**
+ * That pathname's own section in reading order. The pager walks this rather
+ * than every page there is, so Next at the end of the framework run does not
+ * drop a reader into the component library.
+ */
+export function flatNavFor(pathname: string): readonly NavEntry[] {
+	return modeOf(pathname) === 'ui' ? flatUiNav : flatNav;
 }

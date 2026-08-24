@@ -1,0 +1,53 @@
+import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+
+# Components you style yourself
+
+<ThemeToggle />
+
+`@markless/ui` is nineteen families of component — a select, a modal, a set of tabs — with the
+keyboard, the focus and the screen-reader wiring already written, and the look left entirely to
+you. There is no stylesheet in the package. Nothing arrives carrying a colour, a border, a font or
+a class name you have to argue with.
+
+```bash
+npm install @markless/ui
+```
+
+One family is one import, and its parts are properties on it:
+
+```tsrx
+import { accordion } from '@markless/ui';
+```
+
+## Styling: the ui- attributes
+
+A part writes plain attributes onto its own element as its state changes, so your stylesheet
+reaches them the way it reaches `:hover` — no class to add, nothing to keep in sync:
+
+```css
+[ui-checked] {
+	background: rebeccapurple;
+}
+```
+
+They are attributes with no value: `ui-checked` is on the element while the box is ticked and gone
+while it is not. Every family's page lists the ones it writes.
+
+## The nineteen
+
+**Forms** — [checkbox](/markless/ui/checkbox), [checklist](/markless/ui/checklist),
+[combobox](/markless/ui/combobox), [otp](/markless/ui/otp),
+[radiogroup](/markless/ui/radiogroup), [select](/markless/ui/select),
+[textbox](/markless/ui/textbox), [toggle](/markless/ui/toggle).
+
+**Show and hide** — [accordion](/markless/ui/accordion),
+[collapsible](/markless/ui/collapsible), [modal](/markless/ui/modal),
+[navbar](/markless/ui/navbar), [tabs](/markless/ui/tabs), [tree](/markless/ui/tree).
+
+**Display** — [carousel](/markless/ui/carousel), [pagination](/markless/ui/pagination),
+[progress](/markless/ui/progress), [qrcode](/markless/ui/qrcode),
+[toaster](/markless/ui/toaster).
+
+There is a twentieth import, `base`, holding three primitives the families are built from — a
+button, a label and a visually hidden span. It has no page of its own; you almost never reach for
+it directly.

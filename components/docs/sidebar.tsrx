@@ -5,25 +5,48 @@
 // inside the section, and the title, so the icons and numbers line up down the
 // column. The icon is in the markup twice, light variant and dark variant, and
 // CSS shows the one that matches the theme, because CSS cannot swap an `src`.
-// The reference page is the one entry with no icon of its own on the sheet, so
-// it keeps the crayon doodle it always had, in the same two-cut shape.
+// An entry with no icon of its own on the sheet - the reference page, and every
+// page of the UI section - keeps a crayon doodle instead, in the same two-cut
+// shape.
 //
 // The list is inside a <details> so a phone gets one line of navigation instead
 // of nineteen. It has no `open` attribute, so it is shut by default and the
 // stylesheet opens it again above 70rem, where the column is beside the prose
 // rather than on top of it.
+//
+// The switch above it is a second <details>, styled as a select. It is markup
+// and CSS with no state behind it because it cannot be anything else: the
+// router serves only the document's HTML and drops the document's state
+// payload, so a cell anywhere on this path never resumes (NOTES.md finding 19).
+// A <details> needs no script to open, which is the whole reason it is one.
 import Mascot from '../mascot.tsrx';
-import { nav } from '../../nav.ts';
+import { modeFor, modes, navFor } from '../../nav.ts';
 
 export default function Sidebar({ pathname }: { readonly pathname: string }) @{
+	const sections = navFor(pathname);
+	const here = modeFor(pathname);
+	const framework = modes.framework;
+	const library = modes.ui;
+
 	<nav class="sidebar" aria-label="Documentation">
 		<a class="site-mark" href="/markless">
 			<Mascot name="markless" size="3.4rem" variant="mark" />
 			<span class="site-name">Markless</span>
 		</a>
+		<details class="mode-select">
+			<summary class="mode-summary">{here.title}</summary>
+			<a
+				class={here.key === 'framework' ? 'mode-option is-current' : 'mode-option'}
+				href={framework.href}
+			>{framework.title}</a>
+			<a
+				class={here.key === 'ui' ? 'mode-option is-current' : 'mode-option'}
+				href={library.href}
+			>{library.title}</a>
+		</details>
 		<details class="sidebar-disclosure">
 			<summary class="sidebar-summary">All pages</summary>
-			@for (const section of nav; key section.title) {
+			@for (const section of sections; key section.title) {
 				<div class="sidebar-section">
 					<p class={section.stroke ? 'sidebar-title has-stroke stroke-' + section.stroke : 'sidebar-title'}>
 						{section.title}

@@ -34,6 +34,7 @@ export default function Document({
 			<link rel="icon" href="/markless/favicon.svg" type="image/svg+xml" />
 			<link rel="apple-touch-icon" href="/markless/mascots/markless.png" />
 			<link rel="stylesheet" href={stylesheet} />
+			<script src="/markless/theme.js"></script>
 		</head>
 		<body>
 			<SiteHeader pathname={pathname} />
