@@ -6,31 +6,31 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A value you work out is never out of date
 
-<PageMeta level="Start here" time="4 min" assumes="state" sprite="spiral" />
+<PageMeta level="Start here" time="3 min" assumes="state" sprite="spiral" />
 
 <ThemeToggle />
 
-Everybody has shipped this bug. Two numbers on a screen disagree with each other. One of them was
-updated, and the other was supposed to be updated at the same time and was not.
+Everybody has shipped this bug. Two numbers on a screen disagree with each other, because one was
+updated and the other was supposed to be updated at the same time and was not. The cart says three
+items and the total says the price of two.
 
-The cart says three items and the total says the price of two. The code that was meant to keep them
-in step is somewhere, and it is right nine times out of ten.
+The code that keeps them in step is somewhere in the file, and it is right nine times out of ten.
 
-That bug exists because the total was stored. Storing it made it a second source of truth, and
-somebody has to maintain it.
+That bug exists because the total was stored. Storing it made it a second source of truth that
+somebody has to maintain.
 
-**If a value can be worked out from other values, do not store it. Work it out.** `computed()` is
-the word for that.
+**If a value can be worked out from other values, do not store it. Work it out.** That is what
+`computed()` is for.
 
 ```tsrx
 const total = computed(() => shirts * 20 + mugs * 8);
 ```
 
-You read `total` like any other variable. You never call it. You never pass it a list of the things
+You read `total` like any other variable. You never call it, you never hand it a list of the things
 it depends on, and you never tell it that something changed. The compiler read the body, so it
 already knows this value is made out of `shirts` and `mugs`.
 
-Here is that running. Add a shirt, wait a beat, then add a mug, and watch the total:
+Here it is running. Add a shirt, wait a beat, then add a mug, and watch the total:
 
 <CartTotalDemo />
 
@@ -54,40 +54,38 @@ export default function CartTotal() @{
 }
 ```
 
-There is not one. The two buttons change a quantity and stop there.
-
-The total is not a thing that gets updated. It is a description of how to work the total out. It is
-only ever worked out when something on screen actually needs it.
+There is not one. The two buttons change a quantity and stop there. `total` is not a thing that gets
+updated. It is a description of how to work the total out, and the only moment it is ever worked out
+is a moment when something on screen needs it.
 
 ## Nothing runs until the screen asks for it
 
-That last sentence is not a detail. It is the design. The whole graph is driven by demand from the
-page: state feeds computed values, computed values feed the DOM, and updating the DOM is the only
-effect in the system. Nothing computes unless the screen needs it.
+That is the design, not a detail. The specification states the invariant:
+
+> The entire graph is demand-driven from the DOM. State to computed to DOM updates, where
+> compiler-generated DOM update symbols are the only effects in the system. Nothing computes unless
+> the screen needs it.
 
 Two things follow. A `computed()` costs you nothing while nothing is looking at it. And a value on
-screen cannot lag behind its inputs, because being on screen is what causes it to be worked out.
+screen cannot lag behind its inputs, because being on screen is exactly what causes it to be worked
+out.
 
-## Two rules, and that is all of them
+## Two rules, and then you know this
 
 **Do not write to a computed.** It is derived, so assigning to it would be claiming two different
 answers at once. Change the values it is made from instead.
 
-**Do not declare something as state if you could derive it.** Here is the tell. You write a line
-whose only job is keeping one variable in agreement with another. That second variable wanted to be
-a `computed()`.
+**Do not declare something as state if you could derive it.** Here is the tell: if you catch
+yourself writing a line whose only job is keeping one variable in agreement with another, the second
+one wanted to be a `computed()`.
 
-<Collapsible sprite="star-badge" summary="Where is the dependency list, and where is the effect hook?" text="There is no dependency list because there is nothing for you to keep accurate: the compiler reads the body of the computed and works out what it read. There is no effect primitive either, and there never will be. The reasoning is that a computed and an effect are the same node. The only difference is when they run. A computed runs when it is read. An effect runs because its inputs changed, with nobody asking. That second property is the one that breaks resumability, because it is code that wakes itself up. The classic uses each have a home. Deriving a value from other values is a computed. Fetching data is an async computed. One-off side work belongs in the event handler where the change actually originated." />
+<Collapsible sprite="star-badge" summary="Where is the dependency list, and where is the effect hook?" text="There is no dependency list because there is nothing for you to keep accurate: the compiler reads the body of the computed and works out what it read. There is no effect primitive either, and the specification is direct that there never will be. Its reasoning is that a computed and an effect are the same node, and the only difference is that a computed runs when it is read while an effect runs because its inputs changed, with nobody asking. That second property is the one that breaks resumability, because it is code that wakes itself up. The classic uses each have a home: deriving a value from other values is computed, fetching data is an async computed, and one-off side work belongs in the event handler where the change actually originated." />
 
 ## Where to go next
 
-If you take one habit from this page, take the tell above. A line whose job is keeping two variables
-in agreement is a `computed()` waiting to be written. You do not have to spot it in advance. You
-will notice it the second time you write it.
+If you take one habit from this page, take the tell. You do not have to spot it in advance. You will
+notice it the second time you write it.
 
-Have not read [State](/markless/concepts/state) yet? Read that first, since everything here sits on
-top of it. Otherwise the next unfamiliar thing on the list is
-[Reading a .tsrx file](/markless/start/reading-tsrx), the short page on the three bits of syntax
-these samples use.
+Next: [events](/markless/concepts/events), which is where a click turns into a change.
 
 <LikeHeart />
