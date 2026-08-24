@@ -35,7 +35,7 @@ on disk, and `params` fills in the one hole in it. The router builds `/blog/what
 for you.
 
 A catch-all works the same way, and takes a string, a number, or a readonly array of segments. The
-next two show the element on its own, to be written inside a component of your own with `Link`
+next two are the element on its own, to be written inside a component of your own with `Link`
 imported the same way:
 
 ```tsrx
@@ -91,18 +91,17 @@ was renamed, because every one of them stops compiling.
 
 ## What a `Link` is at runtime
 
-It renders a real `<a>` with a real `href`, so the browser treats it as a link: middle-click opens
-a tab, right-click offers to copy the address, and a reader with JavaScript off still gets where
-they are going. On a click it navigates on the client instead, and the router owns that navigation.
+It renders a real `<a>` with a real `href`, so the browser treats it as a link: middle-click opens a
+tab, right-click offers to copy the address, and a reader with JavaScript off still gets where they
+are going. On a click it navigates on the client instead, and the router owns that navigation.
 
 <Collapsible sprite="star-badge" summary="The three props you will reach for eventually" text="prefetch asks the router to start fetching the destination before the click, so the navigation begins with work already done. Its type is boolean | 'intent' | 'viewport', and the two strings are the useful part: 'intent' starts the fetch when the reader hovers or focuses the link, and 'viewport' starts it when the link scrolls into view. replace swaps the current history entry instead of adding one, which is what you want after a form submission or a redirect, so the back button does not walk the reader into the page they just left. scroll controls whether arriving at the new page moves the reader back to the top. All three are ordinary props on Link, and all three are optional." />
 
 ## Try it yourself
 
 Add a `Link` to a page that exists, then change one letter of the `href` and watch the editor
-underline it before you have saved. Then try the other half: pass `params` a key the pattern does
-not have, and read that error too. Both of those are the same check, and both of them happen
-without running anything.
+underline it before you have saved. Then pass `params` a key the pattern does not have, and read
+that error too. Both of those are the same check, and neither one runs anything.
 
 Next: [where a page gets its data](/markless/router/data).
 

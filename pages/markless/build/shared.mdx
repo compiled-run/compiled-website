@@ -6,7 +6,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # One name for a piece of data, so nobody has to pass it down
 
-<PageMeta level="Building" time="5 min" assumes="state, components" sprite="spiral" />
+<PageMeta level="Building" time="4 min" assumes="state, components" sprite="spiral" />
 
 <ThemeToggle />
 
@@ -16,10 +16,9 @@ component in between, and everyone who has done that knows how it ends.
 
 **`shared()` gives that data a name. A component that wants it calls the name.**
 
-This page is shorter and more careful than the rest of this section, because this is the one part of
+This page is shorter and more careful than the rest of the section, because this is the one part of
 the authoring surface that this site could not get working on the version you can install today.
-What is below is the design, quoted from its specification, plus exactly what happened when we tried
-it.
+What is below is the design, plus exactly what happened when we tried it.
 
 ## The shape of it
 
@@ -63,9 +62,8 @@ export default function Header() @{
 }
 ```
 
-The specification says what that call means: resolve this named dataflow instance for the current
-graph context, and that context is usually the request, the container or the page
-(`specs/framework/03-state-graph.md`, "Shared state").
+That call means: resolve this named dataflow instance for the current graph context, and that
+context is usually the request, the container or the page.
 
 A few consequences worth knowing before you reach for it. There is no provider component to place
 and no orphan-provider error to handle, because the boundary is the dataflow rather than a spot in
@@ -99,12 +97,11 @@ module-scope binding already, and any component in the module tree can import an
 
 ## Try it yourself
 
-If you are on a newer release than 0.3.1, the useful thing you can do is re-run the test above:
-a module exporting `shared(() => state({ count: 0 }))`, a second module reading `.count`, a third
-writing to it, and both on one page. If the build finishes and the number moves, this page is out of
-date and we would like to know.
+If you are on a newer release than 0.3.1, re-run the test above: a module exporting
+`shared(() => state({ count: 0 }))`, a second module reading `.count`, a third writing to it, and
+both on one page. If the build finishes and the number moves, this page is out of date and we would
+like to know.
 
-That is the end of this section. If you have not built anything of your own yet,
-[your first app](/markless/start/first-app) is a single command and four questions.
+That is the end of this section. Next: [make a file, get a URL](/markless/router/pages).
 
 <LikeHeart />

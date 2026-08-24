@@ -6,7 +6,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # A key tells the page which row is which
 
-<PageMeta level="Start here" time="6 min" assumes="state, conditionals" sprite="dashes" />
+<PageMeta level="Start here" time="5 min" assumes="state, conditionals" sprite="dashes" />
 
 <ThemeToggle />
 
@@ -14,25 +14,23 @@ Everybody ships this bug once. A table with a checkbox on every row. You tick on
 table, and the tick is now on somebody else's row. Nothing threw. Nothing looked broken. The wrong
 person got the email.
 
-The reason is that the page had no idea the rows were the same rows in a new order. It saw three
-slots, and it filled them again from the top.
+The page had no idea the rows were the same rows in a new order. It saw three slots, and it filled
+them again from the top.
 
 **A key is the answer to "which row is this?", and once a row has one, everything attached to that
 row moves with it.**
 
 ## Tick the middle row, then sort
 
+<Callout sticker="map" sprite="cross" title="Why the rows on this page are a file rather than a box" text="The rows below are meant to be a box you can tick and sort. They are not on the page yet, because a component using @for does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. The file below is real and is what you will run in your own project, and the page comes back with its widget the day the build accepts it. NOTES.md finding 23 in the site repository has the reproduction." />
+
 Three rows, one checkbox each, and a button that sorts them alphabetically. Put the file below in
 your own project, tick the middle row, Pears, then press Sort, and watch where the word "picked"
 ends up.
 
-<Callout sticker="map" sprite="cross" title="Why there is no demo box on this page yet" text="The rows below are meant to be a box you can tick and sort. They are not on the page yet, because a component using @for does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. The file below is real and is what you will run in your own project, and the page comes back with its widget the day the build accepts it. NOTES.md finding 23 in the site repository has the reproduction." />
-
-Pears will move, and the tick will move with it. Nothing in the code copies a checkbox state from one
-row to another, because nothing needs to: the row is a thing with a name, and the name did not
-change when its position did.
-
-Here is the file:
+Pears moves, and the tick moves with it. Nothing in the code copies a checkbox state from one row to
+another, because nothing needs to. The row is a thing with a name, and the name did not change when
+its position did.
 
 ```tsrx
 import { state } from '@markless/core';
@@ -76,9 +74,8 @@ The whole of the identity story is `key row.id` in the loop header.
 ## What a key buys you
 
 The specification is specific about what travels with a keyed row: its component instances, its
-local `state()`, its derived values, its async work, its DOM updates, and its event wiring all stay
-attached to the same logical item "across reorder, insert, and delete operations"
-(`specs/framework/01-tsrx-host-contract.md`, "Loop identity").
+local `state()`, its derived values, its async work, its DOM updates and its event wiring all stay
+attached to the same logical item "across reorder, insert, and delete operations".
 
 So a key is not a hint for a diffing algorithm to do better. It is the identity of the row, and it
 is what makes a row a place where state can live at all.
@@ -89,9 +86,9 @@ Use the thing that identifies the item in your data. A database id, a slug, an o
 to be stable, meaning the same item carries the same key on every render, and unique within the
 list.
 
-Two things not to use. Do not use the array index by accident, because it names the slot rather
-than the item, which is the original bug in a new costume. Do not use a value the user can edit,
-because a row that gets renamed becomes, as far as the page is concerned, a different row.
+Two things not to use. Not the array index by accident, because it names the slot rather than the
+item, which is the original bug in a new costume. And not a value the reader can edit, because a row
+that gets renamed becomes, as far as the page is concerned, a different row.
 
 Naming the position is sometimes genuinely what you want, and TSRX has a way to say so out loud:
 
@@ -115,8 +112,8 @@ wrong for a list that reorders.
 
 ## An empty list gets its own branch
 
-You do not need an `@if` around the loop to say "nothing here yet". `@empty` belongs to the loop
-and renders when it has no items:
+You do not need an `@if` around the loop to say "nothing here yet". `@empty` belongs to the loop and
+renders when it has no items:
 
 ```tsrx
 import { state } from '@markless/core';
@@ -140,10 +137,11 @@ export default function Updates() @{
 ## Why the sort was cheap
 
 Reordering a keyed list moves existing rows. It does not rebuild them, and it does not run any
-component function again: the rows already exist, keyed, and the work is moving DOM nodes into a
-new order (`specs/framework/12-arm-rendering.md`, the arm rendering ladder). This is the same
-promise as the previous pages, kept at a different scale. Changing a number touched one piece of
-text. Sorting a list touched the order of some rows. Neither one re-ran your code.
+component function again: the rows already exist, keyed, and the work is moving DOM nodes into a new
+order.
+
+That is the same promise as the previous pages, kept at a different scale. Changing a number touched
+one piece of text. Sorting a list touched the order of some rows. Neither one re-ran your code.
 
 <Collapsible sprite="star-badge" summary="Coming from another framework?" text="If you have written keys before, you have probably been told they are a performance hint, and that using the index is a small sin you can get away with in a static list. The framing here is different and stricter. A key is the identity root for the row's own graph scope, which is to say it is what makes local state inside a row possible in the first place. That is also why the compiler refuses to guess: an interactive loop without a stable key is a build error rather than a warning in a console you may never open." />
 
@@ -154,6 +152,6 @@ follow their rows. Then change `key row.id` to `key i`, using an `index i` claus
 Watching the counts stay behind while the labels move is the clearest demonstration of what a key
 does that exists.
 
-Next: [how a page waits for data](/markless/concepts/async) without you ever writing a loading flag.
+Next: [how a page waits for data](/markless/concepts/async), without you ever writing a loading flag.
 
 <LikeHeart />

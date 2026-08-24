@@ -7,15 +7,15 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # Make a file, get a URL
 
-<PageMeta level="Building" time="5 min" assumes="components" sprite="square" />
+<PageMeta level="Building" time="4 min" assumes="components" sprite="square" />
 
 <ThemeToggle />
 
 You have opened the folder looking for the file where the routes are declared. It is not there.
 There is no `routes.ts`, no array of path objects, no `register()` call at the bottom of a config.
 
-**A file under `pages/` is a URL, and its path on disk is the path in the address bar.** That is
-the whole routing system. You add a page by adding a file, and you move a page by moving the file.
+**A file under `pages/` is a URL, and its path on disk is the path in the address bar.** That is the
+whole routing system. You add a page by adding a file, and you move a page by moving the file.
 
 ## The mapping is a table you can hold in your head
 
@@ -39,13 +39,13 @@ page reads back at runtime, and `[...slug]` is every segment underneath, however
 
 ## Try it: click a file, read its URL
 
-Click each file name below, and watch the line under it. The sentence after that says why:
+Click each file name below, and watch the line under it:
 
 <RouteTreeDemo />
 
-Every one of those answers came from the file's own name. Nothing registered a route, and nothing
-had to be kept in step with anything else, which is the point: a wrong URL and a wrong file name
-are now the same mistake, and you can see it in the file tree.
+Every one of those answers came from the file's own name. Nothing registered a route, and nothing had
+to be kept in step with anything else. A wrong URL and a wrong file name are now the same mistake,
+and you can see it in the file tree.
 
 ## Two files, one URL, is an error you get told about
 
@@ -90,7 +90,7 @@ convention either.
 
 <Callout sprite="cross" title="This site's own document does not use Html" text="The document you are reading right now keeps a plain <html> root instead, because importing @markless/router into this site's app code fails its production build on 0.3.1. It is recorded as findings 2 and 24 in this site's NOTES.md, and it is a bug in the version, not the design. Write the Html form above in your own app: that is the shipped starter, and it is what the router expects." />
 
-## The parts of a page that are not pages
+## The parts of a project that are not pages
 
 Four names sit beside `pages/` at the top of the project, and each one owns exactly one job:
 
@@ -106,8 +106,8 @@ middleware/    code that runs before a request reaches a page
 `pages/api/` is not supported, so a file there would be a page with a strange name rather than a
 handler.
 
-You do not write an entry file for any of this. A client entry, a server entry, a render shell and
-a resume entry are all named in the render specification as things that are not valid app-authored
+You do not write an entry file for any of this. A client entry, a server entry, a render shell and a
+resume entry are all named in the render specification as things that are not valid app-authored
 requirements, and the router owns every one of them.
 
 <Collapsible sprite="star-badge" summary="Where do 404 and 500 come from, and where is the layout file?" text="pages/404.tsrx answers any request that matched no other page, with status 404, and pages/500.tsrx answers a page that threw while rendering, with status 500. Both are ordinary pages: they take the same props and you write them the same way. As for layouts, there is no layout.tsrx convention at all. A layout in Markless is an ordinary component that takes children, and a page uses it by writing it, which means the thing wrapping your page is visible in the page's own file rather than implied by where the file sits." />
@@ -116,8 +116,6 @@ requirements, and the router owns every one of them.
 
 Rename one of your pages, say `pages/about.tsrx` to `pages/team.tsrx`, and reload. The old URL now
 answers with your 404 page and the new one works, and you changed nothing except the file's name.
-Then add `pages/blog/[slug].tsrx` and visit `/blog/anything`: the page renders, and the segment you
-typed is waiting in its props.
 
 Next: [linking to a page without typing its URL](/markless/router/links).
 

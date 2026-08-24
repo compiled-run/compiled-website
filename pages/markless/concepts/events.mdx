@@ -7,7 +7,7 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 # Events give you the browser's own event
 
-<PageMeta level="Start here" time="5 min" assumes="state" sprite="bolt" />
+<PageMeta level="Start here" time="4 min" assumes="state" sprite="bolt" />
 
 <ThemeToggle />
 
@@ -29,22 +29,19 @@ object.**
 <input onInput={(event) => (name = event.currentTarget.value)} />
 ```
 
-There is no wrapper object in between. `event.currentTarget`, `event.key`, `event.target`,
+There is no wrapper object in between. `event.currentTarget`, `event.key`, `event.target` and
 `event.preventDefault()` are the real ones, described by the same documentation you already read
 when you learned the DOM.
 
 ## Try it: type, then press Enter
 
-The box below has one state variable and two handlers. Type your name into the field and watch the
-line under it keep up with you. Then, with the cursor still in the field, press Enter and watch the
-page not reload:
+Type your name into the field and watch the line under it keep up. Then, with the cursor still in
+the field, press Enter and watch the page not reload:
 
 <NameEchoDemo />
 
-Both halves of that are worth naming. The echo moved because `onInput` assigned to a watched
-variable, which is the whole of the [state](/markless/concepts/state) page applied to a keystroke.
-The page stayed put because the submit handler called `event.preventDefault()`, exactly as it
-would in a script tag.
+The echo moved because `onInput` assigned to a watched variable. The page stayed put because the
+submit handler called `event.preventDefault()`, exactly as it would in a script tag.
 
 Here is the file, all of it:
 
@@ -67,8 +64,8 @@ export default function NameEcho() @{
 
 ## The name is the DOM event name in camel case
 
-`click` becomes `onClick`. `input` becomes `onInput`. `dblclick` becomes `onDblClick`. If you want
-the capture phase, add `Capture` to the end.
+`click` becomes `onClick`. `input` becomes `onInput`. `dblclick` becomes `onDblClick`. For the
+capture phase, add `Capture` to the end, as in `onClickCapture`.
 
 ```tsrx
 import { state } from '@markless/core';
@@ -87,19 +84,6 @@ export default function Keys() @{
 		</button>
 		<output>{count}</output>
 	</section>
-}
-```
-
-```tsrx
-import { state } from '@markless/core';
-
-export default function Phases() @{
-	let phase = state('nothing yet');
-
-	<div onClickCapture={() => (phase = 'captured')}>
-		<button onClick={() => (phase = 'clicked')}>Dispatch</button>
-		<output>{phase}</output>
-	</div>
 }
 ```
 
@@ -124,9 +108,8 @@ export default function SaveButton() @{
 
 ## Forms are forms
 
-Nothing about a form is special here. The `input` event carries the new value, the `change` event
-on a checkbox tells you it flipped, and the `submit` event is where you stop the browser from
-navigating.
+Nothing about a form is special here. The `input` event carries the new value, the `change` event on
+a checkbox tells you it flipped, and the `submit` event is where you stop the browser navigating.
 
 ```tsrx
 import { state } from '@markless/core';
@@ -153,24 +136,23 @@ export default function Signup() @{
 
 The specification puts the rule this way: only browser-critical cancellation and propagation is
 allowed to run synchronously, and if the condition cannot be proven, compilation fails "rather than
-silently emitting a handler whose default action is too late"
-(`specs/framework/04-events-symbols-behaviors.md`, "Event handler arrays and sync policy").
+silently emitting a handler whose default action is too late".
 
 ## One thing to watch in a handler
 
 Read `event.target` rather than `event.currentTarget` if your handler does its work after an
-`await`. `currentTarget` is only populated while the browser is dispatching the event, and a
-handler that resumes later can find it empty. For everything you write on this page, which runs
-straight through, `currentTarget` is the right one and is what the examples use.
+`await`. `currentTarget` is only populated while the browser is dispatching the event, and a handler
+that resumes later can find it empty. Everything on this page runs straight through, so
+`currentTarget` is the right one and is what the examples use.
 
 <Collapsible sprite="star-badge" summary="Coming from another framework?" text="There is no synthetic event system, so there is no pooled event object, no wrapper class, and no separate documentation to learn. The event you receive is the one the browser dispatched. There is also no attribute in the shipped HTML pointing at your handler: the compiler records the node, the event name and the handler it needs, and the runtime wires that up at the container, so the handler chunk is fetched the first time it is genuinely needed." />
 
 ## Try it yourself
 
-Add a second line to the echo demo that shows how many characters you have typed. You only need
-`{name.length}`, and you do not need to touch the handler at all. Then swap `onInput` for `onChange`
-and notice when the echo updates instead: on every keystroke against on leaving the field. Both are
-the browser's own behaviour, unchanged.
+Add a line to the echo demo showing how many characters you have typed. You only need
+`{name.length}`, and the handler does not change. Then swap `onInput` for `onChange` and notice when
+the echo updates instead: on every keystroke against on leaving the field. Both are the browser's
+own behaviour, unchanged.
 
 Next: [what happens when part of the page comes and goes](/markless/concepts/conditionals).
 

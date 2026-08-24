@@ -1,5 +1,4 @@
 import PageMeta from '../../components/page-meta.tsrx';
-import Collapsible from '../../components/demos/collapsible.tsrx';
 import Callout from '../../components/demos/callout.tsrx';
 import ThemeToggle from '../../components/docs/theme-toggle.tsrx';
 import LikeHeart from '../../components/docs/like-heart.tsrx';
@@ -10,13 +9,13 @@ import LikeHeart from '../../components/docs/like-heart.tsrx';
 
 <ThemeToggle />
 
-This page is not a tutorial and does not read front to back. It is the list you scan when you know
-what you want and cannot remember how it is spelled. Every entry links to the page that teaches it.
+This page does not read front to back. It is the list you scan when you know what you want and
+cannot remember how it is spelled. Every entry links to the page that teaches it.
 
 ## The five calls
 
-All five are imported from `@markless/core` and used inside a component body. The lines under each
-one are the form, not a whole file: the page linked beside it has the file to copy.
+All five come from `@markless/core` and are used inside a component body. Each block below is the
+form, not a whole file; the linked page has a file to copy.
 
 ```tsrx
 import { computed, element, shared, state, storage } from '@markless/core';
@@ -85,7 +84,7 @@ reverse.
 ## The constructs
 
 Control flow is part of the language, written with a leading `@` inside markup. These too are forms
-rather than files, written inside a component body, and each one links to the page that runs it.
+rather than files, written inside a component body.
 
 ```tsrx
 @if (open) { <p>Shown</p> } @else { <p>Hidden</p> }
@@ -117,13 +116,14 @@ rather than files, written inside a component body, and each one links to the pa
 }
 ```
 
-The `index` and `key` clauses on `@for` are both optional in syntax and not both optional in
-practice: an interactive or stateful list needs a stable `key`, and `key i` is an explicit choice
-meaning that state follows the position rather than the item. `@empty` is the list's own branch for
-having no items.
+The `index` and `key` clauses on `@for` are optional in syntax and not both optional in practice: an
+interactive or stateful list needs a stable `key`, and `key i` is an explicit choice meaning state
+follows the position rather than the item. `@empty` is the list's own branch for having no items.
+See [conditionals](/markless/concepts/conditionals) and [lists](/markless/concepts/lists).
 
 `@try` / `@pending` / `@catch` is the only async status vocabulary. There is no status property to
-read in a template, so everything you want to show about progress goes in an arm.
+read in a template, so everything you want to show about progress goes in a block. See
+[async](/markless/concepts/async).
 
 ## The router
 
@@ -180,8 +180,8 @@ npm create markless@latest
 ```
 
 The interactive flow asks what you are building, what to call it, where it should run, and whether
-to install dependencies and initialize git, then shows a `Ready to create?` summary before writing
-anything.
+to install dependencies and start a repository, then shows a `Ready to create?` summary before
+writing anything. See [your first app](/markless/start/first-app).
 
 Four starters:
 
@@ -201,7 +201,7 @@ Flags for a run with no questions:
 --starter        minimal | app | docs | full-stack
 --format         node | deno | bun
 --no-install     write the files, skip installing dependencies
---no-git         write the files, skip git init
+--no-git         write the files, skip the repository setup
 ```
 
 ## The scripts in the generated `package.json`
@@ -287,7 +287,7 @@ variable. Markup is a statement, not an expression: put it where it should rende
 ### Async
 
 `MARKLESS_ASYNC_BOUNDARY_REQUIRED`. Markup reads an async `computed` with no `@try` around it. Wrap
-the reads in `@try`, and give it `@pending` and `@catch` arms.
+the reads in `@try`, and give it `@pending` and `@catch` blocks.
 
 `MARKLESS_ASYNC_POST_AWAIT_READ`. A reactive value is read after an `await` inside an async body,
 which cannot be resumed. Read the values you need before the `await` and use the locals.
@@ -362,8 +362,7 @@ path to it. Move the resource into `attach={...}`, make the value serializable, 
 
 ## Where to go next
 
-If you are looking for the idea behind all of this, read
-[how it works](/markless/how-it-works). If you are looking for the shortest path to something
-running, read [your first app](/markless/start/first-app).
+For the idea behind all of this, read [how it works](/markless/how-it-works). For the shortest path
+to something running, read [your first app](/markless/start/first-app).
 
 <LikeHeart />

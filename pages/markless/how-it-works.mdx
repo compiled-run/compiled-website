@@ -7,16 +7,16 @@ import LikeHeart from '../../components/docs/like-heart.tsrx';
 
 # Follow one click all the way down
 
-<PageMeta level="Under the hood" time="7 min" assumes="state" sprite="rays" />
+<PageMeta level="Under the hood" time="6 min" assumes="state" sprite="rays" />
 
 _Only after the API? Skip to [the reference](/markless/reference); nothing on this page is needed
 to ship._
 
 <ThemeToggle />
 
-Nothing on this page is needed to ship a working app. Read it because you want to know why the
-framework behaves the way it does, and because knowing where the cheap updates stop is the
-difference between a page that stays fast and a page that used to be fast.
+Read this because you want to know why the framework behaves the way it does, and because knowing
+where the cheap updates stop is the difference between a page that stays fast and a page that used
+to be fast.
 
 Take the counter from the first page. You click the button, the number goes up, and the screen
 changes. Something has to decide how much of the screen to change.
@@ -41,7 +41,7 @@ Tier 5  route swap                                         components execute
 ```
 
 Tier 1 is most state changes. Tier 2 is a list mutating. Tier 3 is an `@if` or a `@switch` flipping
-between branches. Tier 4 is a transition: a mount, an async boundary settling, an error arm taking
+between branches. Tier 4 is a transition: a mount, an async boundary settling, an error block taking
 over. Tier 5 is tier 4 at the scale of a whole page.
 
 The claim underneath the first three tiers is a strong one, and it is worth quoting rather than
@@ -52,18 +52,16 @@ paraphrasing:
 > execution is paid exactly once per appearance of content.
 
 Read the second sentence twice. It is not a promise that your code never runs in the browser. It is
-a promise about how often: once per appearance of content, and not again to keep the screen in
-step.
+a promise about how often: once per appearance of content, and not again to keep the screen in step.
 
 ## Try it: pick an action, read which tier catches it
 
-Click each action below. The first line is the tier, and the second line is the only one that
-matters:
+Click each action below. The first line is the tier, and the second line is the one that matters:
 
 <TierLadderDemo />
 
 The two actions at the bottom of that list do execute component code in the browser, and the
-specification is explicit about why that is allowed rather than a contradiction:
+specification says why that is allowed rather than a contradiction:
 
 > Doctrine note: executing components during a tier-4/5 render is INITIAL render happening in the
 > browser, which the unified render/resume model allows. "No hydration" forbids re-executing
@@ -82,7 +80,7 @@ When that happens, it does not quietly fall back:
 > If tier 3 cannot handle a flip (e.g. the @if contains a component), the compiler escalates AND
 > emits a diagnostic with a restructure suggestion.
 
-And the reason the diagnostic is mandatory rather than nice to have:
+And the reason that diagnostic is mandatory rather than nice to have:
 
 > Silent failure is a defect class.
 
@@ -96,9 +94,9 @@ On a server-rendered page, the framework's goal is stated as:
 
 > In SSR, component bodies execute during initial render and never during browser resume.
 
-What ships with the HTML is a small inline resumer. When the page loads, that resumer is allowed to
-find its container, read the compact payload scripts, build the locator tables, and install
-container-scoped listeners. The specification also lists what it must not do on startup, and the
+What ships with the HTML is a small inline resumer. When the page loads, that resumer finds its
+container, reads the compact payload scripts, builds the locator tables, and installs
+container-scoped listeners. The specification also lists what it must not do on startup, and that
 list is the interesting half:
 
 ```txt
@@ -114,8 +112,8 @@ diff or reconcile DOM
 decode unused feature blocks
 ```
 
-Then you click something. The resumer matches the real DOM target, resolves the ordered symbol
-rows, and imports just the symbols that click needs. After that:
+Then you click something. The resumer matches the real DOM target, resolves the ordered symbol rows,
+and imports just the symbols that click needs. After that:
 
 > Event dispatch after resume is graph-first. The handler writes graph state; the scheduler
 > invalidates graph subscribers; DOM update symbols patch concrete DOM nodes. Nothing re-renders,
@@ -129,8 +127,8 @@ does, not to what the page contains or what the framework supports".
 
 ## Rendering in the browser is a normal mode, not a fallback
 
-It is easy to read all of the above and conclude that client rendering is the degraded path. It is
-not. `render(App, { target })` starts from an empty target, creates the DOM and the live graph from
+It is easy to read all of that and conclude that client rendering is the degraded path. It is not.
+`render(App, { target })` starts from an empty target, creates the DOM and the live graph from
 scratch, and must work with no payload scripts and no resumer at all.
 
 The two modes share almost everything after setup: graph state, symbol resolution, event dispatch,
@@ -160,8 +158,8 @@ you can work out again belongs in a `computed`.
 
 Open your own app's built output and look at the size of what loads before you touch anything. Then
 click one button and watch the network panel fetch the chunk for that handler, and only that
-handler. That fetch is the whole model made visible: the page was described, the click was the
-first thing that needed code, and the code arrived then.
+handler. That fetch is the whole model made visible: the page was described, the click was the first
+thing that needed code, and the code arrived then.
 
 Next: [everything on one page, in the order you reach for it](/markless/reference).
 

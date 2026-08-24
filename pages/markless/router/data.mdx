@@ -28,12 +28,11 @@ export function App({ url, params }: PageProps) @{
 }
 ```
 
-`params` holds the pieces of the path that were in brackets, so a page at
-`pages/blog/[slug].tsrx` gets `params.slug`. `url` is the address that was asked for, split into
-the parts you normally want.
+`params` holds the pieces of the path that were in brackets, so a page at `pages/blog/[slug].tsrx`
+gets `params.slug`. `url` is the address that was asked for, split into the parts you normally want.
 
 Then the load is the thing you would have written anyway, and the waiting and the failure are the
-arms you already know. Here is the whole page file:
+blocks you already know. Here is the whole page file:
 
 ```tsrx
 import { computed } from '@markless/core';
@@ -53,28 +52,23 @@ export default function App({ url }: PageProps) @{
 }
 ```
 
-That is a `computed` whose body is `async`. It depends on `url` because it read `url`, so a
-different URL is a different value, worked out again, without you wiring anything up. The derive
-function takes no arguments: on 0.3.1 the published type is `computed<T>(derive: () => T)`, so
-there is nothing handed in for you to cancel with.
-
-`@try` / `@pending` / `@catch` is the only async status vocabulary there is. There is no
-`navigation.pending` and no status property you read in a template, so anything you want to show
-about progress is expressed structurally, in an arm.
+That is a `computed` whose body is `async`. It depends on `url` because it read `url`, so a different
+URL is a different value, worked out again, with nothing wired up by you. The derive function takes
+no arguments: on 0.3.1 the published type is `computed<T>(derive: () => T)`, so there is nothing
+handed in for you to cancel with.
 
 ## The server does not wait for the slow part
 
-This is the part worth understanding, because it changes what you put on a page. The server does
-not hold the whole document until every boundary settles. From the specification:
+This is worth understanding, because it changes what you put on a page. The server does not hold the
+whole document until every boundary settles:
 
 > The server flushes the document with each still-pending boundary showing its @pending arm between
 > its existing comment anchors, and keeps the response open. When a boundary settles, the server
 > appends to the same stream.
 
-The settled arm arrives as an inert `<template>`, which the browser parses without rendering, and a
-small executor moves that content into the boundary's anchors. In the specification's words:
-
-> The pending arm is genuinely replaced, not hidden and kept.
+The settled block arrives as an inert `<template>`, which the browser parses without rendering, and
+a small executor moves that content into place. In the specification's words: "The pending arm is
+genuinely replaced, not hidden and kept."
 
 ## Try it: step through one request
 
@@ -83,9 +77,9 @@ sequence you cannot watch inside a demo box, not a live request:
 
 <StreamStepsDemo />
 
-The reason the last step is cheap is worth saying out loud. A streamed commit is one fragment move
-plus record registration, and nothing else, because the framework has no runtime copy of the
-document to reconcile the new content against.
+The last step is cheap because a streamed commit is one fragment move plus record registration, and
+nothing else. The framework has no runtime copy of the document to reconcile the new content
+against.
 
 <Callout sprite="speech-bubble" title="Is streaming something I turn on?" text="It is the default posture for server rendering, and the specification says blocking render is the explicit opt-out. The reason it is safe as a default is that it degrades gracefully: a buffering proxy in front of your server delivers one complete document whose inert templates commit on parse, so early paint is lost and correctness never is. Structure decides the rest. An authored @pending arm is the boundary's declaration that it is willing to stream, because that arm is the waiting UI." />
 
@@ -100,7 +94,7 @@ have to hold a spinner over the whole layout to get it.
 ## Try it yourself
 
 Give a page an async `computed` that reads `params`, and put a slow call in it. Load the page and
-watch the `@pending` arm appear and then be replaced. Then add a second boundary next to the first
+watch the `@pending` block appear and then be replaced. Then add a second boundary beside the first
 with a faster call, and notice that the fast one does not wait for the slow one, because they are
 separate boundaries and each settles on its own.
 
