@@ -1,0 +1,51 @@
+import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+import Preview from '../../../components/ui/preview.tsrx';
+
+# checkbox
+
+<ThemeToggle />
+
+<Preview shows="One box with a label, ticked and unticked." />
+
+```tsrx
+import { checkbox } from '@markless/ui';
+
+export default function Terms() @{
+	<checkbox.root name="terms">
+		<checkbox.trigger>
+			<checkbox.indicator>Checked</checkbox.indicator>
+		</checkbox.trigger>
+		<checkbox.label>I have read the terms</checkbox.label>
+	</checkbox.root>
+}
+```
+
+A checkbox is on, off, or mixed — the third value is what `indeterminate` means to a form. The
+control a person clicks is a `<button>`; the thing a form receives is a hidden native input, added
+by writing `checkbox.field`. `name`, `value` and `required` are declared once on the root, so the
+two can never drift apart.
+
+## Anatomy
+
+- `checkbox.root` — holds the value and everything a form needs to know.
+- `checkbox.trigger` — the button a person clicks.
+- `checkbox.indicator` — the tick, inside the trigger.
+- `checkbox.label` — the words beside it.
+- `checkbox.description` — a sentence under the label.
+- `checkbox.error` — mounting it marks the control invalid.
+- `checkbox.field` — the hidden native input that carries it into a form.
+
+It writes `ui-checked`, `ui-mixed` and `ui-disabled` as its state changes.
+
+## Props on `checkbox.root`
+
+| Prop | Type | What it does |
+| --- | --- | --- |
+| `checked` | `boolean \| 'mixed'` | The value the checkbox shows. Omit it and it starts off. |
+| `disabled` | `boolean` | Nobody can change it. |
+| `required` | `boolean` | A tick is needed before the form submits. |
+| `name` | `string` | Submitted under this name by `checkbox.field`. |
+| `value` | `string` | Submitted instead of the browser default `"on"`. |
+| `onChange` | `(checked) => void` | Called with the new value when a person toggles it. |
+
+Everything a `<div>` accepts reaches the element too.

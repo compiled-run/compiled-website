@@ -1,0 +1,58 @@
+import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+import Preview from '../../../components/ui/preview.tsrx';
+
+# accordion
+
+<ThemeToggle />
+
+<Preview shows="Three questions. Opening one closes the last." />
+
+```tsrx
+import { accordion } from '@markless/ui';
+
+export default function Faq() @{
+	<accordion.root>
+		<accordion.item value="shipping">
+			<accordion.itemlabel>
+				<accordion.itemtrigger>When does my order ship?</accordion.itemtrigger>
+			</accordion.itemlabel>
+			<accordion.itemcontent>Orders leave within two working days.</accordion.itemcontent>
+		</accordion.item>
+		<accordion.item value="returns">
+			<accordion.itemlabel>
+				<accordion.itemtrigger>How do I return something?</accordion.itemtrigger>
+			</accordion.itemlabel>
+			<accordion.itemcontent>Start a return from your orders page.</accordion.itemcontent>
+		</accordion.item>
+	</accordion.root>
+}
+```
+
+A section is named by its `value`, and the root's `value` names the one that is showing. Nothing
+counts positions for you, so renaming a section is a rename and never a renumber. A panel that
+closes stays in the page — `hidden` decides whether it shows — so focus, scroll position and
+anything typed inside it all survive being closed and opened again.
+
+## Anatomy
+
+- `accordion.root` — holds the configuration and the value.
+- `accordion.item` — one section, named by its own `value`.
+- `accordion.itemlabel` — the heading the trigger sits in, and what names the panel.
+- `accordion.itemtrigger` — the button that opens and closes the section.
+- `accordion.itemcontent` — the panel.
+
+It writes `ui-open`, `ui-closed`, `ui-disabled`, `ui-multiple` and `ui-value` as its state changes.
+
+## Props on `accordion.root`
+
+| Prop | Type | What it does |
+| --- | --- | --- |
+| `value` | `string \| string[]` | Which section is showing. With `multiple` it is the list of sections showing. Omit it and everything starts closed. |
+| `multiple` | `boolean` | Several sections may show at once. Without it, opening one closes the rest. |
+| `collapsible` | `boolean` | Whether the section showing may be closed again, leaving nothing open. On by default. |
+| `disabled` | `boolean` | Nothing opens or closes while this is set. |
+| `disableUntilFound` | `boolean` | Closed panels are hidden outright, so the browser's find-in-page cannot reach the text inside them. |
+| `onChange` | `(value) => void` | Called with the new value when a person opens or closes a section. |
+
+Everything a `<div>` accepts reaches the element too. `accordion.item` takes its own `value` and its
+own `disabled`.
