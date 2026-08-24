@@ -1,0 +1,11 @@
+{
+  "unitId": "router-pages",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "blocked",
+  "reason": "Cannot write any file. The packet says my worktree lacks the three docs pages and names shared-checkout absolute paths, but my worktree is a worktree of the compiled-website checkout and contains all three, byte-identical (verified with diff). Writing the shared-checkout paths is refused by the worktree isolation hook, which redirects me to the worktree copy; writing the worktree copy is refused by the fable-opus scope guard, which only permits the shared-checkout absolutes. The two hooks contradict, leaving no writable path. Worktree is clean, no partial edits. Rewrite is drafted and ready to apply once the contract or isolation mode is corrected.",
+  "agentId": "a5510d18bdb0f3547",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:14:11.526Z"
+}

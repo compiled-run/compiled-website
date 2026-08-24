@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "summary": "Register-only voice pass on four concept pages. Rewrote openers that assumed reader history (state.mdx counting line, events.mdx script-tag line and DOM-docs line, conditionals.mdx bug opener), removed pitch and benefit assertions (conditionals.mdx 'never write the bug again' and 'That is what lets', state.mdx 'buys you' and 'whole lesson in one picture', computed.mdx 'That is what computed() is for' and the 'then you know this' heading). All code blocks, component props, links, facts, numbers, warnings, spec paths and NOTES.md finding 23 references preserved. No em dashes; hard wraps under 100 chars. No build run per packet.",
+  "files_changed": [
+    "pages/markless/concepts/state.mdx",
+    "pages/markless/concepts/computed.mdx",
+    "pages/markless/concepts/events.mdx",
+    "pages/markless/concepts/conditionals.mdx"
+  ],
+  "open_questions": []
+}

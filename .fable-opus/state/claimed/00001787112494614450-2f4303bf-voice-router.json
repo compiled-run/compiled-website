@@ -1,0 +1,19 @@
+{
+  "runId": "docs-voice",
+  "unitId": "voice-router",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/docs-voice/prompt-voice-router-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_012do66TwcmBS4ce3FZrykfP",
+  "promptId": "b9496fb6-c583-4a16-b32f-61535c1c577a",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "pages/markless/router/pages.mdx",
+    "pages/markless/router/links.mdx",
+    "pages/markless/router/data.mdx"
+  ],
+  "ts": "2026-08-19T04:08:14.613Z",
+  "pendingName": "00001787112494614450-2f4303bf-voice-router.json"
+}

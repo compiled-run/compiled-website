@@ -1,0 +1,19 @@
+{
+  "runId": "docs-voice",
+  "unitId": "voice-concepts-b",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/docs-voice/prompt-voice-concepts-b-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_012aDyx1xRWSJR7JsgGUVDtq",
+  "promptId": "b9496fb6-c583-4a16-b32f-61535c1c577a",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "pages/markless/concepts/async.mdx",
+    "pages/markless/concepts/lists.mdx",
+    "pages/markless/concepts/styling.mdx"
+  ],
+  "ts": "2026-08-19T04:08:03.317Z",
+  "pendingName": "00001787112483318951-c82cbc3b-voice-concepts-b.json"
+}

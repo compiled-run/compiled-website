@@ -46,7 +46,7 @@ export const nav: readonly NavSection[] = [
 				icon: 'what-is-markless',
 				number: '1',
 				description:
-					'What Markless is: a compiler that works out what changes while it builds your file, so the browser ships the update rather than the machinery for finding it.',
+					'What Markless is: the reliable way to build software with AI agents. Plain TypeScript functions, a compiler that checks the whole interface before anything ships, and nothing hidden to trip over.',
 			},
 			{
 				title: 'Your first app',

@@ -1,0 +1,19 @@
+{
+  "runId": "scoped-styles-fix",
+  "unitId": "defect-b4-symbol-module-arms",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/scoped-styles-fix/prompt-defect-b4-symbol-module-arms-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_01GNDV7B3s3cEVVPBWHqA7zu",
+  "promptId": "2794696f-9a11-42d7-91b5-eb0c3e7c4fcf",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "packages/compiler/src/passes/symbol-modules.ts",
+    "packages/compiler/test/compile-module.test.ts",
+    "packages/compiler/test/symbol-modules-scope-suffix.test.ts"
+  ],
+  "ts": "2026-08-19T21:25:58.731Z",
+  "pendingName": "00001787174758732420-1cdbd491-defect-b4-symbol-module-arms.json"
+}

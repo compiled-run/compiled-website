@@ -1,0 +1,9 @@
+{
+  "status": "blocked",
+  "summary": "Cannot write any file. The packet says my worktree lacks the three docs pages and names shared-checkout absolute paths, but my worktree is a worktree of the compiled-website checkout and contains all three, byte-identical (verified with diff). Writing the shared-checkout paths is refused by the worktree isolation hook, which redirects me to the worktree copy; writing the worktree copy is refused by the fable-opus scope guard, which only permits the shared-checkout absolutes. The two hooks contradict, leaving no writable path. Worktree is clean, no partial edits. Rewrite is drafted and ready to apply once the contract or isolation mode is corrected.",
+  "files_changed": [],
+  "open_questions": [
+    "Should this unit be re-dispatched to the non-isolated opus-worker so the shared-checkout paths are writable, or kept isolated with the file contract restated as worktree-relative paths (pages/markless/router/pages.mdx, links.mdx, data.mdx)?",
+    "If isolation is kept, how should fan-in build these docs, given the five parallel units would then write to five separate worktree branches rather than the one shared checkout the packet's parallel-safety rationale assumes?"
+  ]
+}

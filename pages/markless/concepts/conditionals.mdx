@@ -10,26 +10,27 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 <ThemeToggle />
 
-Here is a bug you have met. A panel with a message box in it. You type half a sentence, close the
-panel by accident, open it again, and your half sentence is not there.
+This bug gets shipped a lot. A panel with a message box in it. You type half a sentence, close the
+panel by accident, then open it again. Your half sentence is not there.
 
-That is not a glitch. It is the framework doing exactly what the code said, and once you can see
-why, the fix is one line and you will never write the bug again.
+That is not a glitch. It is the framework doing exactly what the code said. The fix is one line,
+and it follows from one rule about where a value is declared.
 
-**`@if` puts real elements into the page and takes them out again, and anything declared inside the
-branch goes out with them.**
+**`@if` puts real elements into the page and takes them out again.** Anything declared inside the
+branch goes out with them.
 
 ## Type, close, open
 
-Picture the three steps, because you can run them yourself in a minute: open the panel, type
-something into the field, close the panel, then open it again.
+Picture the three steps; you can run them yourself in a minute. Open the panel. Type something into
+the field. Close the panel, then open it again.
 
-<Callout sticker="spring" sprite="cross" title="Why there is no demo box on this page yet" text="Every other page here hands you something to click. This one does not, and the honest reason is that a component using @if does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. Both files below are real and are the specification's own example, so they are what you will run in your own project. The panels come back to this page the day the build accepts them. NOTES.md finding 23 in the site repository has the reproduction." />
+<Callout sticker="spring" sprite="cross" title="Why there is no demo box on this page yet" text="Every other page here hands you something to click. This one does not. The honest reason is that a component using @if does not compile on the framework build this site is pinned to: the compiler stops making progress and the build never finishes. Both files below are real, and they are what you will run in your own project. The panels come back to this page the day the build accepts them. NOTES.md finding 23 in the site repository has the reproduction." />
 
-Paste the file below into your own project and run those three steps, and your text is gone. The
-`draft` variable that was holding it lived inside the branch, so when the branch left the page the
-variable left with it. Opening the panel again did not restore anything. It built a new field with
-a new, empty `draft`.
+Paste the file below into your own project and run those three steps. Your text is gone. The `draft`
+variable that was holding it lived inside the branch, so when the branch left the page the variable
+left with it.
+
+Opening the panel again did not restore anything. It built a new field with a new, empty `draft`.
 
 Here is the file. The important line is the one indented inside the `@if`:
 
@@ -60,10 +61,10 @@ export default function DraftLost() @{
 Take `draft` out of the branch and put it in the component body, above the `@if`. Now the branch
 still comes and goes, but the value it reads does not.
 
-<Callout sticker="folder" sprite="cross" title="This one has no demo box either, and for the same reason" text="The fixed version uses @if too, so it cannot be a live box on this build any more than the broken one can. Run the same three steps on the file below in your own project, type, close, open, and the ending is different. NOTES.md finding 23 in the site repository has the reproduction." />
+<Callout sticker="folder" sprite="cross" title="This one has no demo box either, and for the same reason" text="The fixed version uses @if too, so it cannot be a live box on this build any more than the broken one can. Run the same three steps on the file below in your own project. Type, close, open. The ending is different. NOTES.md finding 23 in the site repository has the reproduction." />
 
-Your text comes back in your own project, and the only difference between the two components is
-which side of the `@if` the declaration sits on:
+Your text comes back in your own project. The only difference between the two components is which
+side of the `@if` the declaration sits on:
 
 ```tsrx
 import { state } from '@markless/core';
@@ -88,10 +89,11 @@ export default function DraftKept() @{
 
 The rule to carry away: **where you declare a value decides how long it lives.** Inside a branch
 means "for as long as this branch is on screen". Above it means "for as long as the component is".
+
 That is a choice you get to make, and sometimes the first one is what you want. A filter panel that
 should open fresh every time is better off declaring its own state inside the branch.
 
-<Callout sprite="speech-bubble" title="Will anything warn me?" text="Not today. The specification, in specs/framework/01-tsrx-host-contract.md, says the compiler should be able to explain this when local state appears inside a conditional branch, in these words: State declared inside @if is disposed when the branch is removed. Move it above the @if if it should persist. That message is a plan, not a thing you will see: the published 0.3.1 compiler carries no such diagnostic, and we checked by searching its build output for the word disposed and finding none. So this rule is one to remember rather than one you will be reminded of." />
+<Callout sprite="speech-bubble" title="Will anything warn me?" text="Not today. The compiler is meant to explain this when local state appears inside a conditional branch, in these words: State declared inside @if is disposed when the branch is removed. Move it above the @if if it should persist. That message is a plan, not a thing you will see. The published 0.3.1 compiler carries no such diagnostic, and we checked by searching its build output for the word disposed and finding none. So this rule is one to remember rather than one you will be reminded of." />
 
 ## The rest of the shapes
 
@@ -114,8 +116,8 @@ export default function Either() @{
 }
 ```
 
-When you are choosing between more than two, `@switch` reads better than a chain. It renders the
-one `@case` whose value matches, and `@default` catches everything else:
+When you are choosing between more than two, `@switch` reads better than a chain. It renders the one
+`@case` whose value matches. `@default` catches everything else:
 
 ```tsrx
 import { state } from '@markless/core';
@@ -141,24 +143,25 @@ export default function Pick() @{
 ```
 
 These are part of the language, not a trick played with JavaScript expressions inside the markup.
-That is what lets the compiler treat a branch as a real thing with a beginning and an end, rather
-than as an opaque expression it has to re-evaluate.
+So the compiler treats a branch as a real thing, with a beginning and an end. It is
+not an opaque expression the compiler has to re-evaluate.
 
 ## What actually happens when the condition flips
 
-Not much, and that is the point. Flipping a branch swaps a range of real DOM nodes in or out and
+Not much, and that is the point. Flipping a branch swaps a range of real DOM nodes in or out. It
 disposes the graph state that belonged to the branch. No component function runs again, not the one
-holding the `@if` and not any component inside it
-(`specs/framework/12-arm-rendering.md`, the arm rendering ladder). If a change ever needs more work
-than the tier it belongs to, the framework says so with a diagnostic rather than quietly doing more.
+holding the `@if` and not any component inside it.
 
-<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="If you are used to writing conditions as an expression, with a ternary or a logical and inside the markup, the shape here is a statement instead, and the difference is more than cosmetic. A branch has an identity the compiler can name, so it can be given its own scope, its own disposal and its own place in the page. That is why the draft in the first demo really is destroyed rather than merely hidden: there is no retained shadow copy of the tree anywhere for it to hide in." />
+If a change ever needs more work than the tier it belongs to, the framework says so with a
+diagnostic rather than quietly doing more.
+
+<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="If you are used to writing conditions as an expression, with a ternary or a logical and inside the markup, the shape here is a statement instead. The difference is more than cosmetic. A branch has an identity the compiler can name, so it can be given its own scope, its own disposal and its own place in the page. That is why the draft in the first demo really is destroyed rather than merely hidden: there is no retained shadow copy of the tree anywhere for it to hide in." />
 
 ## Try it yourself
 
 Take the second component and add a second field inside the branch, declared inside the `@if` this
-time, so one value survives the toggle and the other does not. Type into both, close, open. Seeing
-the two behaviours side by side in one panel is the fastest way to make the rule stick.
+time. One value then survives the toggle and the other does not. Type into both, close, open.
+Seeing the two behaviours side by side in one panel is the fastest way to make the rule stick.
 
 Next: [rows that keep their own state when the list moves](/markless/concepts/lists).
 

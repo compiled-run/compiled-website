@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "summary": "Register-only voice pass on four build pages. Ten targeted rewrites: removed assumed-reader-history phrasings (\"you already know\", \"the file you have been editing\", \"everyone who has done that knows how it ends\"), replaced two cold-read/framework-comparison openers with flat claims about the world, dropped two benefit assertions into plain statements, and reframed three \"Coming from another framework?\" prop texts to state what Markless does. All code blocks, links, component tags, non-text props, version numbers, NOTES.md finding references, diagnostics, spec citations, and honest missing-demo caveats preserved verbatim. No em dashes anywhere. No verify commands specified; worktree has no node_modules, so the build runs at fan-in.",
+  "files_changed": [
+    "pages/markless/build/components.mdx",
+    "pages/markless/build/elements.mdx",
+    "pages/markless/build/shared.mdx",
+    "pages/markless/build/storage.mdx"
+  ],
+  "open_questions": []
+}

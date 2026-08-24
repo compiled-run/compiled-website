@@ -1,0 +1,13 @@
+{
+  "status": "completed",
+  "summary": "Rewrote prose in four Building pages to the bite-size rhythm: split long sentences and paragraphs, added bold lead claims where a paragraph makes one claim, and kept second-person plain voice and British spellings. Removed all internal citations (specs/framework/01, 03, 04, and packages/core/agent/markless.md) plus the phrases quoted from its specification, The specification says, and that is the specification's wording, keeping each factual claim. Code blocks, imports, component tags, links, headings, diagnostic codes, version numbers and NOTES.md finding numbers are unchanged; verified no diff line touches fenced content and all 14 text props stay one-line and quote-clean.",
+  "files_changed": [
+    "pages/markless/build/components.mdx",
+    "pages/markless/build/elements.mdx",
+    "pages/markless/build/shared.mdx",
+    "pages/markless/build/storage.mdx"
+  ],
+  "open_questions": [
+    "Removing the packages/core/agent/markless.md citations in storage.mdx extends the packet's rule beyond specs/ paths. Revert if package-doc citations should stay."
+  ]
+}

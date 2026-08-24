@@ -1,0 +1,11 @@
+{
+  "unitId": "router-pages2",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "completed",
+  "reason": "Rewrote the prose of the three router docs pages to the bite-size rhythm: one idea per sentence, 2-4 sentence paragraphs, split nested clauses, ~100 char wraps preserved. Removed all internal spec citations and replaced data.mdx's two spec blockquotes with plain sentences carrying the same promise (flush with pending arms between comment anchors, response stays open, append on settle, pending arm genuinely replaced). Component text props on Callout/Collapsible got the same rhythm while staying single-line valid JSX. Code blocks, imports, component tags, links, headings, numbers and caveats unchanged; git diff confirms no changed lines inside code fences.",
+  "agentId": "af5da8fb8d421b76b",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:20:01.896Z"
+}

@@ -1,0 +1,11 @@
+{
+  "unitId": "concepts-b2",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "completed",
+  "reason": "Rewrote prose in async.mdx, lists.mdx and styling.mdx to the site's bite-size rhythm, calibrated against the shared checkout's finished index.mdx. Split long sentences to 8-18 words, paragraphs to 2-4 sentences, and gave Callout/Collapsible text props the same treatment while keeping each value on one line with no raw double quotes. Removed all spec-path citations and blockquoted spec text, restating every fact in plain sentences: async status vocabulary, the three deadline cases plus the no-blink and fast-path rules, keyed-row identity, and the scoped-style and bundler guarantees. Code blocks, imports, component tags, non-text props, links and headings unchanged.",
+  "agentId": "add90b1957c6b0134",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:18:36.335Z"
+}

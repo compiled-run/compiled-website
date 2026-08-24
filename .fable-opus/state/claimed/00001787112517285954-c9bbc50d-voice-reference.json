@@ -1,0 +1,17 @@
+{
+  "runId": "docs-voice",
+  "unitId": "voice-reference",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/docs-voice/prompt-voice-reference-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_01XJkDkiAeRJoTwJFnjdZN19",
+  "promptId": "b9496fb6-c583-4a16-b32f-61535c1c577a",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "pages/markless/reference.mdx"
+  ],
+  "ts": "2026-08-19T04:08:37.285Z",
+  "pendingName": "00001787112517285954-c9bbc50d-voice-reference.json"
+}

@@ -20,6 +20,8 @@
 	--raised: color-mix(in oklch, var(--paper) 80%, white);
 	--tinted: color-mix(in oklch, var(--yellow) 45%, var(--paper));
 	--tinted-quiet: color-mix(in oklch, var(--yellow) 35%, var(--paper));
+	/* The sidebar's hover wash: the page's ink at this strength over the paper. */
+	--hover-wash: 8%;
 	/* The explorer's listing slab, which is a dark block on the light theme. */
 	--slab: var(--ink);
 	--slab-ink: var(--paper);
@@ -104,8 +106,32 @@
 		url('/fonts/JoyElia-Bold.woff') format('woff');
 }
 
+/* Shantell Sans — self-hosted, SIL Open Font License. The body face: a marker
+   face designed for continuous reading, so Joy Elia decorates and Shantell
+   carries the paragraphs. One variable file covers the weight range. */
+@font-face {
+	font-family: 'Shantell Sans';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('/fonts/ShantellSans-latin-variable.woff2') format('woff2');
+}
+
 * {
 	font-family: 'Joy Elia';
+}
+
+/* Article prose reads in Shantell Sans; headings, sidebar, chips, buttons, and
+   code stay Joy Elia / mono. The `*` rule above beats inheritance, so inline
+   children are matched explicitly. Bold maps to the real 600 weight. */
+.prose :is(p, li, blockquote, dd, dt, td, th, figcaption, summary),
+.prose :is(p, li, blockquote, dd, dt, td, th, figcaption, summary)
+	:is(a, strong, em, b, i, mark, small, span) {
+	font-family: 'Shantell Sans', system-ui, sans-serif;
+}
+
+.prose :is(p, li, blockquote) :is(strong, b) {
+	font-weight: 600;
 }
 
 /* Body copy lands at about 20-21px on a desktop viewport: a step above the
@@ -311,15 +337,6 @@ html[data-theme='dark'] .theme-toggle-to-dark {
 
 html[data-theme='dark'] .theme-toggle-to-light {
 	display: inline-flex;
-}
-
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light']) .theme-toggle-to-dark {
-		display: none;
-	}
-	html:not([data-theme='light']) .theme-toggle-to-light {
-		display: inline-flex;
-	}
 }
 
 .header-link {
@@ -641,16 +658,26 @@ html[data-theme='dark'] .theme-toggle-to-light {
 	opacity: 0.55;
 }
 
+/* Hover is a wash of the page's own ink, so one rule reads right on both
+   grounds. The current page is not a filled row: its title alone is run over
+   with the yellow marker, dark ink on a pastel like everything else printed on
+   an accent. */
 .sidebar-link:hover {
-	background: var(--yellow);
-	color: var(--on-accent);
+	background: color-mix(in oklch, var(--ink) var(--hover-wash), transparent);
 }
 
 .sidebar-link.is-active {
-	border-color: var(--pink);
-	background: var(--tinted);
-	color: var(--ink);
 	font-weight: 700;
+}
+
+.sidebar-link.is-active .sidebar-text {
+	justify-self: start;
+	padding: 0.02em 0.28em;
+	margin-left: -0.28em;
+	background: var(--yellow);
+	color: var(--on-accent);
+	border-radius: 3px 5px 3px 6px;
+	transform: rotate(-0.8deg);
 }
 
 .sidebar-link.is-active .sidebar-num {
@@ -1173,6 +1200,7 @@ html[data-theme='dark'] {
 	--raised: oklch(26% 0.01 70);
 	--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
 	--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
+	--hover-wash: 11%;
 	--slab: oklch(11% 0.008 70);
 	--slab-ink: oklch(92% 0.012 85);
 	--grain-fiber-blend: soft-light;
@@ -1183,26 +1211,6 @@ html[data-theme='dark'] {
 	--sprite-dark: inline-block;
 }
 
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light']) {
-		--ink: oklch(93% 0.012 85);
-		--paper: oklch(18% 0.007 70);
-		--code-surface: oklch(32% 0.011 70);
-		--code-edge: color-mix(in oklch, var(--ink) 30%, transparent);
-		--raised: oklch(26% 0.01 70);
-		--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
-		--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
-		--slab: oklch(11% 0.008 70);
-		--slab-ink: oklch(92% 0.012 85);
-		--grain-fiber-blend: soft-light;
-		--grain-fiber-opacity: 0.3;
-		--grain-speck-blend: screen;
-		--grain-speck-opacity: 0.06;
-		--sprite-light: none;
-		--sprite-dark: inline-block;
-	}
-}
-
 /* Token colours are inline on each span: the light one as `color`, the dark one
    as `--shiki-dark` beside it. Swapping themes means reading the other channel.
    The hover doc is a span inside the block but is not code, so it is excluded. */
@@ -1211,14 +1219,6 @@ html[data-theme='dark'] {
    the single-theme highlighter produced. */
 html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
 	color: var(--shiki-dark) !important;
-}
-
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light'])
-		.shiki
-		span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
-		color: var(--shiki-dark) !important;
-	}
 }
 
 /* ---------------------------------------------------------------------------
@@ -1502,50 +1502,14 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	background: none;
 }
 
-/* Dark ground: headings are the pastel itself, lifted to a light tint for the
-   letters, with a deeper shade of the same hue as the offset silhouette, so the
-   words read as extruded chalk rather than white over pink. Light stays as it
-   was: ink letters, pastel silhouette. */
+/* Dark ground: ink-white letters with a deep muted purple offset silhouette,
+   sampled from the poster reference. Light stays as it was: ink letters,
+   pastel silhouette. */
 html[data-theme='dark'] h1,
 html[data-theme='dark'] .prose h2,
 html[data-theme='dark'] .prose h3 {
-	color: color-mix(in oklch, var(--shadow-accent) 78%, white);
-	--shadow-color: color-mix(in oklch, var(--shadow-accent) 55%, oklch(22% 0.03 300));
-}
-
-html[data-theme='dark'] h1 {
-	--shadow-accent: var(--purple);
-	--shadow-color: color-mix(in oklch, var(--pink) 70%, oklch(30% 0.06 350));
-}
-
-html[data-theme='dark'] .prose h2 {
-	--shadow-accent: var(--purple);
-}
-
-html[data-theme='dark'] .prose h3 {
-	--shadow-accent: var(--green-soft);
-}
-
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light']) h1,
-	html:not([data-theme='light']) .prose h2,
-	html:not([data-theme='light']) .prose h3 {
-		color: color-mix(in oklch, var(--shadow-accent) 78%, white);
-		--shadow-color: color-mix(in oklch, var(--shadow-accent) 55%, oklch(22% 0.03 300));
-	}
-
-	html:not([data-theme='light']) h1 {
-		--shadow-accent: var(--purple);
-		--shadow-color: color-mix(in oklch, var(--pink) 70%, oklch(30% 0.06 350));
-	}
-
-	html:not([data-theme='light']) .prose h2 {
-		--shadow-accent: var(--purple);
-	}
-
-	html:not([data-theme='light']) .prose h3 {
-		--shadow-accent: var(--green-soft);
-	}
+	color: var(--ink);
+	--shadow-color: oklch(34% 0.05 307);
 }
 
 html[data-theme='dark'] {
@@ -1556,6 +1520,7 @@ html[data-theme='dark'] {
 	--raised: oklch(26% 0.01 70);
 	--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
 	--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
+	--hover-wash: 11%;
 	--slab: oklch(11% 0.008 70);
 	--slab-ink: oklch(92% 0.012 85);
 	--grain-fiber-blend: soft-light;
@@ -1566,26 +1531,6 @@ html[data-theme='dark'] {
 	--sprite-dark: inline-block;
 }
 
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light']) {
-		--ink: oklch(93% 0.012 85);
-		--paper: oklch(18% 0.007 70);
-		--code-surface: oklch(32% 0.011 70);
-		--code-edge: color-mix(in oklch, var(--ink) 30%, transparent);
-		--raised: oklch(26% 0.01 70);
-		--tinted: color-mix(in oklch, var(--yellow) 14%, var(--paper));
-		--tinted-quiet: color-mix(in oklch, var(--yellow) 9%, var(--paper));
-		--slab: oklch(11% 0.008 70);
-		--slab-ink: oklch(92% 0.012 85);
-		--grain-fiber-blend: soft-light;
-		--grain-fiber-opacity: 0.3;
-		--grain-speck-blend: screen;
-		--grain-speck-opacity: 0.06;
-		--sprite-light: none;
-		--sprite-dark: inline-block;
-	}
-}
-
 /* Token colours are inline on each span: the light one as `color`, the dark one
    as `--shiki-dark` beside it. Swapping themes means reading the other channel.
    The hover doc is a span inside the block but is not code, so it is excluded. */
@@ -1594,14 +1539,6 @@ html[data-theme='dark'] {
    the single-theme highlighter produced. */
 html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
 	color: var(--shiki-dark) !important;
-}
-
-@media (prefers-color-scheme: dark) {
-	html:not([data-theme='light'])
-		.shiki
-		span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsrx-tip-body) {
-		color: var(--shiki-dark) !important;
-	}
 }
 
 /* ---------------------------------------------------------------------------

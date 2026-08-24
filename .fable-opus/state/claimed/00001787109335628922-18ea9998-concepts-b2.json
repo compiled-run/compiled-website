@@ -1,0 +1,19 @@
+{
+  "runId": "docs-rhythm",
+  "unitId": "concepts-b2",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/docs-rhythm/prompt-concepts-b2-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_017XuVxX64i8RqBKSWbfYFKt",
+  "promptId": "f9f340e1-e850-42ca-a229-c3bec24ba421",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "pages/markless/concepts/async.mdx",
+    "pages/markless/concepts/lists.mdx",
+    "pages/markless/concepts/styling.mdx"
+  ],
+  "ts": "2026-08-19T03:15:35.627Z",
+  "pendingName": "00001787109335628922-18ea9998-concepts-b2.json"
+}

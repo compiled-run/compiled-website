@@ -1,0 +1,11 @@
+{
+  "unitId": "reference",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "blocked",
+  "reason": "Cannot write the target file: two hooks refuse in opposite directions. The worktree isolation guard refuses the shared-checkout path named in the file contract and demands the worktree copy; the fable-opus scope guard refuses the worktree copy as outside the contract, which lists only the shared absolute path. No write was made (git status clean). The packet's premise that the worktree lacks this file is false: the worktree contains it, byte-identical to the shared copy. Separately, the worktree's index.mdx exemplar is the stale pre-rhythm version, so future isolated workers would calibrate against old prose. Rewrite is planned and ready to apply once the contract is resolvable.",
+  "agentId": "a2ba92a1c994a051b",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:14:21.092Z"
+}

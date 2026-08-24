@@ -1,0 +1,11 @@
+{
+  "unitId": "concepts-a",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "blocked",
+  "reason": "Could not write any file. The packet orders edits at shared-checkout absolute paths, but the worktree isolation hook refuses those and redirects to worktree copies; the fable-opus scope guard then refuses the worktree copies because it resolves them to worktree-relative paths that do not match the contract's absolutes. No path is writable, so no edits were made and the worktree is clean. The packet's premise is also wrong: my worktree does contain all four pages, byte-identical to the shared checkout (verified by diff). Re-dispatch with worktree-relative paths in the file contract, or to a non-isolated worker. Exemplar and all four pages are read; rewrite is planned.",
+  "agentId": "a25107d01df6f93f5",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:14:56.670Z"
+}

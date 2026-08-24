@@ -1,0 +1,11 @@
+{
+  "unitId": "concepts-b",
+  "runId": "docs-rhythm",
+  "attempt": 1,
+  "outcome": "blocked",
+  "reason": "Cannot write any file. The packet's File contract names three absolute paths in the shared compiled-website checkout, but this unit runs worktree-isolated: the isolation guard refuses edits to the shared-checkout path and redirects to the worktree copy, while the fable-opus scope guard refuses that worktree path as outside the contract. The two guards accept disjoint path sets, so no Edit/Write can succeed without circumventing one. Also, the packet's claim that the worktree lacks these files is wrong: all three exist there and diff byte-identical to the shared checkout. Read the exemplar and planned the full rewrite; no edits made.",
+  "agentId": "a3da0c601f2e73b90",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T03:13:23.636Z"
+}

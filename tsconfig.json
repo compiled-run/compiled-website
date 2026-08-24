@@ -22,6 +22,7 @@
 		"markless-router-env.d.ts",
 		"document.tsrx",
 		"pages",
+		"components",
 		"api",
 		"middleware",
 		"vite.config.ts"

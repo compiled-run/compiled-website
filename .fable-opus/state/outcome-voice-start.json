@@ -1,0 +1,11 @@
+{
+  "unitId": "voice-start",
+  "runId": "docs-voice",
+  "attempt": 1,
+  "outcome": "completed",
+  "reason": "Retuned register on three docs pages against the finished index.mdx voice. Fixed four assumed-context openers or asides (first-app's front-page counter reference, reading-tsrx's 'you will recognise' opener and 'counter you have been clicking', how-it-works' 'Read it because you want to know' and 'Take the counter from the first page' and 'two things you have already met'), plus one pitch aside and the 'Why not JSX, which I already know?' collapsible summary. All other paragraphs left untouched. Every quote, spec path, version number, install-failure receipt, code block, link and heading preserved; no em dashes; prose wraps near 100 chars, text props stay single-line.",
+  "agentId": "a9ca0ef49a67a7ab2",
+  "background": false,
+  "verdictDelivered": true,
+  "ts": "2026-08-19T04:10:23.825Z"
+}

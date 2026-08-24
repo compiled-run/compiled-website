@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "summary": "Register-only voice pass on the three concepts pages. Removed assumed-reader-context openers (\"You already know computed\", \"Every stylesheet you have ever written\", \"the same state you already have\", the keys-collapsible history claim), two pitch sentences (\"Here is the part that pays for the restriction\", \"The upside of that restriction is\"), and four superlative or virtue closers (\"best thing to click on the whole site\", \"Because honesty is worth more than a clean page\", \"clearest demonstration that exists\", \"the moment the idea lands\"). All code, spec quotes, version numbers, diagnostics, links, and NOTES.md findings 23/25/26 preserved. No em dashes; hard wraps kept near 100 chars.",
+  "files_changed": [
+    "pages/markless/concepts/async.mdx",
+    "pages/markless/concepts/lists.mdx",
+    "pages/markless/concepts/styling.mdx"
+  ],
+  "open_questions": []
+}

@@ -10,12 +10,12 @@ import LikeHeart from '../../../components/docs/like-heart.tsrx';
 
 <ThemeToggle />
 
-Every stylesheet you have ever written was a shared room. You call something `.card`, someone two
-folders away calls something else `.card`, and one of you loses, usually the one who loaded first
-and always the one who finds out last.
+A stylesheet is one shared room. Something in it gets called `.card`. Something two folders away
+is also called `.card`. One of them loses, usually the one that loaded first and always the one
+that finds out last.
 
-Here are two components. Both of them use the class name `card`, both of them say what `.card`
-looks like, and neither one wins, because neither one leaks.
+Here are two components. Both use the class name `card`. Both say what `.card` looks like. Neither
+one wins, because neither one leaks.
 
 **A `<style>` block written inside a component styles that component and nothing else, and no
 JavaScript runs to make that true.**
@@ -56,47 +56,46 @@ export default function SecondCard() @{
 }
 ```
 
-Put both on one page and the first card is blue and the second is green. Neither file mentions the
-other, neither one is more specific than the other, and the order you import them in does not
-matter.
+Put both on one page and the first card is blue, the second green. Neither file mentions the other.
+Neither one is more specific than the other. The order you import them in does not matter.
 
 ## The class name in your file is not the class name in the page
 
-The trick is one extra class, added for you at build time. Each component module that has a
-`<style>` block gets its own scope class, and the compiler puts that class in two places: on the
-selectors inside the block, and on the elements the component renders.
+The trick is one extra class, added for you at build time. Each component module with a `<style>`
+block gets its own scope class. The compiler puts that class in two places: on the selectors inside
+the block, and on the elements the component renders.
 
-So `.card` in the file becomes `.card.mk-1a6qykh` in the stylesheet, and the `<article>` goes out
-as `class="card mk-1a6qykh"`. The other component gets a different hash, so its `.card` rule
-describes a class combination that the first card's markup does not have. Two rules that looked
-identical in your editor cannot match each other's elements.
+So `.card` in the file becomes `.card.mk-1a6qykh` in the stylesheet. The `<article>` goes out as
+`class="card mk-1a6qykh"`. The other component gets a different hash. Its `.card` rule describes a
+class combination that the first card's markup does not have. Two rules that looked identical in
+your editor cannot match each other's elements.
 
-The specification says which parts of the file that treatment reaches: "Every selector's subject
-compound gains the scope class, at-rule blocks are descended, and `@keyframes` contents are left
-untransformed. Host elements the component renders gain the scope class in emitted HTML"
-(`specs/framework/01-tsrx-host-contract.md`, "Scoped style blocks").
+That treatment reaches a defined set of places. Every selector's subject compound gains the scope
+class. At-rule blocks are descended. `@keyframes` contents are left untransformed. Host elements
+the component renders gain the scope class in emitted HTML.
 
-Two things follow from that, and both are useful to know before you write your first block. Media
-queries and other at-rules are descended into, so the rules inside them are scoped like any other.
-Animation names are not touched, so a `@keyframes` you define is global and can be shared, which is
-almost always what you want.
+Two things follow, and both are useful before you write your first block. Media queries and other
+at-rules are descended into, so the rules inside them are scoped like any other. Animation names are
+not touched, so a `@keyframes` you define is global and can be shared. That is almost always what
+you want.
 
 ## Nothing runs to make it happen
 
 There is no runtime here at all. The compiled CSS is handed to the bundler as an ordinary
-stylesheet, "so Vite/Rolldown's CSS pipeline owns bundling and delivery; no JavaScript runs to
-apply styles" (`specs/framework/01-tsrx-host-contract.md`). The scope class is in the HTML the
-server sends. A reader with JavaScript disabled sees the styled page, because nothing was waiting
-on JavaScript.
+stylesheet. Vite/Rolldown's CSS pipeline owns bundling and delivery, and no JavaScript runs to
+apply styles.
+
+The scope class is in the HTML the server sends. A reader with JavaScript disabled sees the styled
+page, because nothing was waiting on JavaScript.
 
 That also means the usual costs of scoping are not here. No class names are generated while the
-page runs, no `<style>` element is written into the head as a component appears, and no first-paint
+page runs. No `<style>` element is written into the head as a component appears. No first-paint
 flash while a stylesheet is assembled.
 
 ## A class is an expression like any other
 
-`class` takes a value, and any expression will do. This is the same `state` you already have, so
-the class changes when the value changes:
+`class` takes a value, and any expression will do. `state` variables count, so the class changes
+when the value changes:
 
 ```tsrx
 import { state } from '@markless/core';
@@ -112,12 +111,12 @@ export function Classes() @{
 }
 ```
 
-The value is a string, and you build it with the ordinary tools: a ternary, a template literal, a
-small function that takes a couple of booleans and returns the string. There is no class-name
-helper to import, because there is nothing here that a helper would be helping with.
+The value is a string, and you build it with the ordinary tools. A ternary, a template literal, a
+small function that takes a couple of booleans and returns the string. There is no class-name helper
+to import, because there is nothing here that a helper would be helping with.
 
-The `style` attribute takes a string in the same way, and is the right choice for a value that
-comes from arithmetic rather than from a set of named looks:
+The `style` attribute takes a string in the same way. It is the right choice for a value that comes
+from arithmetic rather than from a set of named looks:
 
 ```tsrx
 import { state } from '@markless/core';
@@ -132,16 +131,16 @@ export function Bar() @{
 Reach for it when the number is genuinely continuous. A dozen named states belong in classes, where
 the stylesheet can see them.
 
-<Callout sticker="scribble" sprite="cross" title="Why there is no demo box on this page yet" text="Two cards side by side, one of them repainting when you press a button, would say all of this in a second. It is not here, and the reason is the framework build this site is pinned to. The scoped stylesheet a component compiles to is written into the build output and then never linked from the page that needs it, so a component whose only styling is its own style block renders unstyled here. The scope class itself is real and is in the served HTML, which is the half of the story that can be checked: the static card goes out as class='card mk-1a6qykh'. The other half of the finding is that an element whose class is an expression is emitted without the scope class at all, so on this build do not mix a style block with a class expression in the same component. NOTES.md finding 26 in the site repository has both reproductions, and the cards arrive the day the stylesheet reaches the page." />
+<Callout sticker="scribble" sprite="cross" title="Why there is no demo box on this page yet" text="Two cards side by side, one of them repainting when you press a button, would say all of this in a second. It is not here, and the reason is the framework build this site is pinned to. The scoped stylesheet a component compiles to is written into the build output, then never linked from the page that needs it. So a component whose only styling is its own style block renders unstyled here. The scope class itself is real and is in the served HTML, which is the half of the story that can be checked: the static card goes out as class='card mk-1a6qykh'. The other half of the finding is that an element whose class is an expression is emitted without the scope class at all. So on this build, do not mix a style block with a class expression in the same component. NOTES.md finding 26 in the site repository has both reproductions. The cards arrive the day the stylesheet reaches the page." />
 
-<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="This is closest to a CSS module, except that you do not import the class names and you do not rename anything: you write the plain name and the compiler adds a scope class beside it, so what you read in the file is what you read in the browser's element inspector. It is not CSS-in-JS: there is no runtime, no template literal compiled into a component, and no style element written while the page runs. Styles composed from a parent, and an escape hatch for deliberately global rules, are both named as unspecified in the host contract today, so a rule you want to be global belongs in an ordinary stylesheet you link yourself." />
+<Collapsible sprite="thought-bubble" summary="Coming from another framework?" text="This is closest to a CSS module, with two differences. You do not import the class names, and you do not rename anything: you write the plain name and the compiler adds a scope class beside it. So what you read in the file is what you read in the browser's element inspector. It is not CSS-in-JS either. There is no runtime, no template literal compiled into a component, and no style element written while the page runs. Styles composed from a parent are unspecified today, and so is an escape hatch for deliberately global rules. So a rule you want to be global belongs in an ordinary stylesheet you link yourself." />
 
 ## Try it yourself
 
 Give a component a `<style>` block, then look at the element in your browser's inspector. You will
 see your own class name next to a short hashed one, and the rule in the stylesheet carrying both.
-Then copy the whole component to a second file, change one colour, and put both on a page. Watching
-two identical selectors not fight is the moment the idea lands.
+Then copy the whole component to a second file, change one colour, and put both on a page. The two
+identical selectors do not fight.
 
 If you have not scaffolded a project of your own yet, that is the one thing left to do:
 [your first app](/markless/start/first-app) is a single command and four questions.

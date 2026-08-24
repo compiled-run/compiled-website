@@ -1,0 +1,9 @@
+{
+  "status": "blocked",
+  "summary": "Cannot write any target file. The worktree isolation hook refuses the packet's shared-checkout absolute paths and tells me to use the worktree copy; the fable-opus scope guard then refuses the worktree copy because it normalizes to a relative path that no contract entry matches. No spelling satisfies both, so no edits were made. Contrary to the packet, the worktree does contain all four pages at pages/markless/build/*.mdx, byte-identical to the shared checkout. Only pages/markless/index.mdx differs: the worktree holds the pre-rhythm version, so the exemplar lives solely in the shared checkout.",
+  "files_changed": [],
+  "open_questions": [
+    "Re-dispatch this unit to the non-isolated opus-worker so the shared-checkout paths are writable, or keep isolation and re-cut the file contract as worktree-relative paths (pages/markless/build/*.mdx)?",
+    "If isolation is kept, should the finished pages/markless/index.mdx exemplar be brought into the worktree, given the worktree copy is the old pre-rhythm version?"
+  ]
+}

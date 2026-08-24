@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "summary": "Rewrote the prose of four concepts pages to the bite-size rhythm: sentences carry one idea, paragraphs run 2-4 sentences, nested clauses split into separate sentences, hard wraps kept near 100 characters. Removed every internal spec-path citation and every 'the specification says' phrase, including the verbatim spec blockquote in computed.mdx, replacing them with plain sentences that carry the same claims. Callout and Collapsible text props got the same rhythm treatment while staying single-line and free of raw double quotes. Code blocks, imports, component tags, non-text props, links, and headings are unchanged, and no fact, number, warning, or caveat was dropped.",
+  "files_changed": [
+    "pages/markless/concepts/state.mdx",
+    "pages/markless/concepts/computed.mdx",
+    "pages/markless/concepts/events.mdx",
+    "pages/markless/concepts/conditionals.mdx"
+  ],
+  "open_questions": []
+}

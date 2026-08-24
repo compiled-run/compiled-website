@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "summary": "Rewrote prose in async.mdx, lists.mdx and styling.mdx to the site's bite-size rhythm, calibrated against the shared checkout's finished index.mdx. Split long sentences to 8-18 words, paragraphs to 2-4 sentences, and gave Callout/Collapsible text props the same treatment while keeping each value on one line with no raw double quotes. Removed all spec-path citations and blockquoted spec text, restating every fact in plain sentences: async status vocabulary, the three deadline cases plus the no-blink and fast-path rules, keyed-row identity, and the scoped-style and bundler guarantees. Code blocks, imports, component tags, non-text props, links and headings unchanged.",
+  "files_changed": [
+    "pages/markless/concepts/async.mdx",
+    "pages/markless/concepts/lists.mdx",
+    "pages/markless/concepts/styling.mdx"
+  ],
+  "open_questions": []
+}

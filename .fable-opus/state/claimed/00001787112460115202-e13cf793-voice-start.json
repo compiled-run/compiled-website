@@ -1,0 +1,19 @@
+{
+  "runId": "docs-voice",
+  "unitId": "voice-start",
+  "attempt": 1,
+  "promptPath": "/Users/jacksm5pro/dev/open-source/markless/.claude/worktrees/compiled-website/.fable-opus/runs/docs-voice/prompt-voice-start-attempt-1.md",
+  "subagentType": "opus-worker-isolated",
+  "toolUseId": "toolu_01UJBCgpjTpwvSwhikgNLcf2",
+  "promptId": "b9496fb6-c583-4a16-b32f-61535c1c577a",
+  "background": false,
+  "parallel": true,
+  "effort": null,
+  "contract": [
+    "pages/markless/start/first-app.mdx",
+    "pages/markless/start/reading-tsrx.mdx",
+    "pages/markless/how-it-works.mdx"
+  ],
+  "ts": "2026-08-19T04:07:40.114Z",
+  "pendingName": "00001787112460115202-e13cf793-voice-start.json"
+}
