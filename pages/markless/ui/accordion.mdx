@@ -1,18 +1,18 @@
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
-import Preview from '../../../components/ui/preview.tsrx';
+import AccordionDemo from '../../../components/demos/ui/accordion-demo.tsrx';
 
 # accordion
 
 <ThemeToggle />
 
-<Preview shows="Three questions. Opening one closes the last." />
+<AccordionDemo shows="Three questions. Opening one closes the last." />
 
 ```tsrx
 import { accordion } from '@markless/ui';
 
 export default function Faq() @{
-	<accordion.root>
-		<accordion.item value="shipping">
+	<accordion.root class="demo-accordion" value="ship">
+		<accordion.item value="ship">
 			<accordion.itemlabel>
 				<accordion.itemtrigger>When does my order ship?</accordion.itemtrigger>
 			</accordion.itemlabel>
@@ -24,35 +24,136 @@ export default function Faq() @{
 			</accordion.itemlabel>
 			<accordion.itemcontent>Start a return from your orders page.</accordion.itemcontent>
 		</accordion.item>
+		<accordion.item value="overseas">
+			<accordion.itemlabel>
+				<accordion.itemtrigger>Do you ship overseas?</accordion.itemtrigger>
+			</accordion.itemlabel>
+			<accordion.itemcontent>Everywhere but Antarctica, which keeps losing our parcels.</accordion.itemcontent>
+		</accordion.item>
 	</accordion.root>
 }
 ```
 
 A section is named by its `value`, and the root's `value` names the one that is showing. Nothing
 counts positions for you, so renaming a section is a rename and never a renumber. A panel that
-closes stays in the page — `hidden` decides whether it shows — so focus, scroll position and
+closes stays in the page, and `hidden` decides whether it shows, so focus, scroll position and
 anything typed inside it all survive being closed and opened again.
 
 ## Anatomy
 
-- `accordion.root` — holds the configuration and the value.
-- `accordion.item` — one section, named by its own `value`.
-- `accordion.itemlabel` — the heading the trigger sits in, and what names the panel.
-- `accordion.itemtrigger` — the button that opens and closes the section.
-- `accordion.itemcontent` — the panel.
+- `accordion.root` holds the configuration and the value.
+- `accordion.item` is one section, named by its own `value`.
+- `accordion.itemlabel` is the heading the trigger sits in, and what names the panel.
+- `accordion.itemtrigger` is the button that opens and closes the section.
+- `accordion.itemcontent` is the panel.
 
 It writes `ui-open`, `ui-closed`, `ui-disabled`, `ui-multiple` and `ui-value` as its state changes.
 
-## Props on `accordion.root`
+## Several open at once
+
+Set `multiple` and each section opens on its own instead of closing the last one. `value` is then
+the list of the sections showing.
+
+```tsrx
+<accordion.root multiple value={['ship', 'returns']}>
+```
+
+## Always one open
+
+The section showing may be closed again, leaving nothing open. Turn `collapsible` off and pressing
+the open trigger does nothing, so one section is always showing.
+
+```tsrx
+<accordion.root value="ship" collapsible={false}>
+```
+
+## Find in page
+
+A closed panel is `hidden="until-found"`, so a browser search reaches the text inside it and opens
+the section it lives in. Set `disableUntilFound` and closed panels are hidden outright, which puts
+that text out of the browser's reach.
+
+```tsrx
+<accordion.root disableUntilFound>
+```
+
+## Keyboard
+
+Focus lives on the triggers, and the walk steps over any trigger that is disabled.
+
+| Key | What it does |
+| --- | --- |
+| Down arrow | Focus the next trigger, wrapping round to the first. |
+| Up arrow | Focus the previous trigger, wrapping round to the last. |
+| Home | Focus the first trigger. |
+| End | Focus the last trigger. |
+| Enter or Space | Open or close the focused section. |
+
+## API
+
+Every prop is optional unless its row says otherwise, and the types below are the family's own.
+
+### `accordion.root`
 
 | Prop | Type | What it does |
 | --- | --- | --- |
-| `value` | `string \| string[]` | Which section is showing. With `multiple` it is the list of sections showing. Omit it and everything starts closed. |
+| `value` | `string \| readonly string[]` | Which section is showing. With `multiple` it is the list of sections showing. Omit it and everything starts closed. |
 | `multiple` | `boolean` | Several sections may show at once. Without it, opening one closes the rest. |
 | `collapsible` | `boolean` | Whether the section showing may be closed again, leaving nothing open. On by default. |
 | `disabled` | `boolean` | Nothing opens or closes while this is set. |
-| `disableUntilFound` | `boolean` | Closed panels are hidden outright, so the browser's find-in-page cannot reach the text inside them. |
-| `onChange` | `(value) => void` | Called with the new value when a person opens or closes a section. |
+| `disableUntilFound` | `boolean` | Closed panels are hidden outright, so find-in-page cannot reach the text inside them. |
+| `onChange` | `(value: string \| readonly string[]) => void` | Called with the new value when a person opens or closes a section. |
 
-Everything a `<div>` accepts reaches the element too. `accordion.item` takes its own `value` and its
-own `disabled`.
+| Attribute | Present when | What to key styling off |
+| --- | --- | --- |
+| `ui-multiple` | `multiple` is set | The whole accordion is in many-open mode. |
+| `ui-disabled` | `disabled` is set | Nothing in here responds. |
+
+Everything a `<div>` accepts reaches the element too, apart from `onChange`, which is the family's.
+
+### `accordion.item`
+
+| Prop | Type | What it does |
+| --- | --- | --- |
+| **`value`** | `string` | Required. This section's own name, and what the root's `value` matches against. |
+| `disabled` | `boolean` | This one section opens and closes for nobody. |
+
+| Attribute | Present when | What to key styling off |
+| --- | --- | --- |
+| `ui-value` | Always | Holds this section's name, so one selector can reach one section. |
+| `ui-open` | This section is showing | The open look. |
+| `ui-closed` | This section is not showing | The closed look. |
+| `ui-disabled` | This item or the root is disabled | The unreachable look. |
+
+Everything a `<div>` accepts reaches the element too.
+
+### `accordion.itemlabel`
+
+No props of its own. It renders an `<h3>`, and everything an `<h3>` accepts reaches the element.
+`accordion.itemcontent` points its `aria-labelledby` here, so the panel is named by this heading.
+
+### `accordion.itemtrigger`
+
+No props of its own. It renders a `<button>`, and everything a `<button>` accepts reaches the
+element. Your own `onClick` runs after the section has opened or closed.
+
+| Attribute | Present when | What to key styling off |
+| --- | --- | --- |
+| `ui-open` | Its section is showing | The pressed look, a turned chevron. |
+| `ui-closed` | Its section is not showing | The resting look. |
+| `aria-expanded` | Always | `true` or `false`, for a screen reader rather than your stylesheet. |
+| `aria-controls` | Always | The id of the panel this button opens. |
+| `disabled` | This item or the root is disabled | The native disabled state, so the button is skipped by the walk. |
+
+### `accordion.itemcontent`
+
+No props of its own. It renders a `<div>`, and everything a `<div>` accepts reaches the element.
+Your own `onBeforematch` runs after find-in-page has opened the section.
+
+| Attribute | Present when | What to key styling off |
+| --- | --- | --- |
+| `ui-open` | Its section is showing | The shown look. |
+| `ui-closed` | Its section is not showing | The hidden look. |
+| `role` | Always | `region`, which is what makes the panel a landmark. |
+| `aria-labelledby` | Always | The id of the `accordion.itemlabel` naming this panel. |
+| `hidden` | The section is closed | `until-found` normally, `true` with `disableUntilFound`, and gone while open. |

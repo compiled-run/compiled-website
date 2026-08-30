@@ -273,10 +273,10 @@ export const siteOrigin = 'https://compiled.run';
 export type Head = { readonly title: string; readonly description: string };
 
 /**
- * The document head for one pathname. Every page's title is its own, because
- * nineteen identical tabs and nineteen identical search results are nineteen
- * pages a reader cannot tell apart. An unknown path (a 404, say) falls back to
- * the site's own name and sentence rather than throwing.
+ * The document head for one pathname. Every page's title is its own, because a
+ * column of identical tabs and a column of identical search results are pages a
+ * reader cannot tell apart. An unknown path (a 404, say) falls back to the
+ * site's own name and sentence rather than throwing.
  */
 export function headFor(pathname: string): Head {
 	const entry = allFlat.find((one) => one.href === pathname);
@@ -406,7 +406,7 @@ export const uiNav: readonly NavSection[] = [
 				sprite: 'star-face',
 				number: '1',
 				description:
-					'Nineteen component families that ship the behaviour and the accessibility and nothing else: no styles, no class names, and no theme to argue with.',
+					'Component families that ship the behaviour and the accessibility and nothing else: no styles, no class names, and no theme to argue with.',
 			},
 		],
 	},
@@ -606,6 +606,22 @@ export function modeFor(pathname: string): Mode {
 /** The tree the sidebar paints for one pathname. */
 export function navFor(pathname: string): readonly NavSection[] {
 	return modeOf(pathname) === 'ui' ? uiNav : nav;
+}
+
+/** One sidebar row: a nav entry, plus whether the reader is standing on it. */
+export type SidebarEntry = NavEntry & { readonly active: boolean };
+export type SidebarSection = Omit<NavSection, 'entries'> & {
+	readonly entries: readonly SidebarEntry[];
+};
+
+// Worked out here rather than compared inside the sidebar's loop: a repeat over
+// a plain collection renders its rows once, so a row reading the pathname prop
+// is refused as frozen.
+export function sidebarFor(pathname: string): readonly SidebarSection[] {
+	return navFor(pathname).map((section) => ({
+		...section,
+		entries: section.entries.map((entry) => ({ ...entry, active: entry.href === pathname })),
+	}));
 }
 
 /**

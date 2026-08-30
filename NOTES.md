@@ -1526,3 +1526,42 @@ white border, and a ring around it was an edge around an edge. The drawing is gi
 `--theme-toggle-size` box, so the header slot and the fixed island still measure the same and the
 witness's `onSlot` check is unchanged. The witness now also reads the `src` of whichever button is
 displayed and checks the browser decoded it, in both themes.
+
+## 42. Wave 0: the preview frame is real, and two things learned wiring it up
+
+**A `@for` row may not read a component prop, and the sidebar was doing exactly that.** On the
+refreshed vendor set, `components/docs/sidebar.tsrx` stopped compiling with two
+`MARKLESS_REPEAT_ROWS_FROZEN` errors: both of its loops run over a plain collection, so their rows
+are built once on the server and never rebuilt, and each row was reading the `pathname` prop to
+decide whether a link is the current page. The compiler refuses that rather than serving rows frozen
+at their first-render values, which is the shape its own `frozen-rows` tests pin. The fix is on this
+side: `nav.ts` grew `sidebarFor(pathname)`, which hands the sidebar a copy of the tree with an
+`active` flag already on each entry, so a row reads only its own item.
+
+**An MDX page cannot wrap an imported component in another imported component.** The plan for the
+family pages was `<Preview shows="..."><AccordionDemo /></Preview>` written in the `.mdx`. The router
+refuses it: `Markless Router MDX only supports imported TSRX components as route-level MDX elements
+or static markdown children`. Component children in MDX are lowered to a static HTML string, so a
+component written between the tags has nowhere to go. The frame is therefore composed one level
+down, in `components/demos/ui/<family>-demo.tsrx`, which imports `Preview`, projects the family
+example into it, and takes the page's do-this-watch-that line as a `shows` string prop. The page
+renders one element: `<AccordionDemo shows="..." />`. `components/ui/preview.tsrx` stays props-only
+and stateless, as findings 25 and 29 require.
+
+**What the accordion page serves.** The server HTML is right, and it is the first live component on
+the site: three sections, `ui-value` on each item, `ui-open` on the first, `ui-closed` on the other
+two, `aria-expanded`, `aria-controls` and `aria-labelledby` all pointing at minted ids, and
+`hidden="until-found"` on both closed panels. The keyboard walk resumes and works in Chrome: Down,
+Up, Home and End move focus across all three triggers.
+
+**Live regression on the refreshed vendor set: a handler that writes state commits nothing.**
+Clicking a trigger changes nothing, and pressing Enter on a focused trigger changes nothing. This is
+not the accordion. The counter on `/markless/concepts/state`, untouched by this work and asserted
+working by the witness on 0.3.3, does not count up either. In both cases the resumer wakes
+(`markless: resumed — 0.0 KB app executed`), the console is clean, and **zero network requests
+follow the click**, so the click is never routed to a handler chunk at all. The keydown handler
+above proves handlers can load and run; what fails is the path from a handler that assigns to graph
+state to a DOM update. The last green build of this site was on the Aug 24 tarballs, and the sidebar
+fix above is required to build against the new ones at all, so there is no before-and-after build on
+one vendor set. Scope it as: the new tarball set, or the sidebar change, and the sidebar change
+alters no node counts and no island structure. This belongs to whoever reviews the vendor refresh.

@@ -10,7 +10,7 @@
 // shape.
 //
 // The list is inside a <details> so a phone gets one line of navigation instead
-// of nineteen. It has no `open` attribute, so it is shut by default and the
+// of the whole column. It has no `open` attribute, so it is shut by default and the
 // stylesheet opens it again above 70rem, where the column is beside the prose
 // rather than on top of it.
 //
@@ -20,10 +20,10 @@
 // payload, so a cell anywhere on this path never resumes (NOTES.md finding 19).
 // A <details> needs no script to open, which is the whole reason it is one.
 import Mascot from '../mascot.tsrx';
-import { modeFor, modes, navFor } from '../../nav.ts';
+import { modeFor, modes, sidebarFor } from '../../nav.ts';
 
 export default function Sidebar({ pathname }: { readonly pathname: string }) @{
-	const sections = navFor(pathname);
+	const sections = sidebarFor(pathname);
 	const here = modeFor(pathname);
 	const framework = modes.framework;
 	const library = modes.ui;
@@ -55,7 +55,7 @@ export default function Sidebar({ pathname }: { readonly pathname: string }) @{
 						@for (const entry of section.entries; key entry.href) {
 							<li>
 								<a
-									class={pathname === entry.href ? 'sidebar-link is-active' : 'sidebar-link'}
+									class={entry.active ? 'sidebar-link is-active' : 'sidebar-link'}
 									href={entry.href}
 								>
 									<span class="nav-icon">

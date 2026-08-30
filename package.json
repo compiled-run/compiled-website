@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@markless/core": "file:vendor/markless-core.tgz",
 		"@markless/router": "file:vendor/markless-router.tgz",
+		"@markless/ui": "file:vendor/markless-ui.tgz",
 		"destr": "^2.0.5",
 		"nitro": "3.0.260429-beta",
 		"vite-plus": "0.1.20"
@@ -39,7 +40,8 @@
 			"@markless/core": "file:vendor/markless-core.tgz",
 			"@markless/router": "file:vendor/markless-router.tgz",
 			"@markless/analyzer": "file:vendor/markless-analyzer.tgz",
-			"@markless/typescript-plugin": "file:vendor/markless-typescript-plugin.tgz"
+			"@markless/typescript-plugin": "file:vendor/markless-typescript-plugin.tgz",
+			"@markless/ui": "file:vendor/markless-ui.tgz"
 		}
 	},
 	"overrides": {
@@ -51,6 +53,7 @@
 		"@markless/core": "file:vendor/markless-core.tgz",
 		"@markless/router": "file:vendor/markless-router.tgz",
 		"@markless/analyzer": "file:vendor/markless-analyzer.tgz",
-		"@markless/typescript-plugin": "file:vendor/markless-typescript-plugin.tgz"
+		"@markless/typescript-plugin": "file:vendor/markless-typescript-plugin.tgz",
+		"@markless/ui": "file:vendor/markless-ui.tgz"
 	}
 }

@@ -9,3 +9,4 @@ dist/
 pnpm-lock.yaml
 .claude/
 .claude/
+.fable-opus/

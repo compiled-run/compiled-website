@@ -1,9 +1,0 @@
-{
-  "status": "completed",
-  "summary": "The packet's premise is falsified. No `falseValue: \"\"` exists anywhere in the docs site's fresh build: the empty-arm ternaries in hero-card.tsrx compile to {kind:\"class\",trueValue:\"hot mk-gxl5ud\",falseValue:\"mk-gxl5ud\"} in both SSR and client payloads (SSR chunk lines 4528-4573). Enumerated all 134 falseValue occurrences across .output; none empty. .output and the compiler dist share mtime Aug 19 21:50; one compiler copy installed. conditionalClassTarget (dist:9100) is reached unconditionally from dist:8883; no isAlwaysPresentValue bypass exists. Only stale artifact is .vercel/output (Aug 18), which predates the hero card. Noted one cosmetic residual: SSR emits class=\" mk-gxl5ud\" with a leading space on the empty arm. Could not run git reset e9353b0a: this worktree is the docs site repo, not the framework repo.",
-  "files_changed": [],
-  "open_questions": [
-    "Where was the quoted {\"trueValue\":\"hot mk-gxl5ud\",\"falseValue\":\"\"} actually read from? It exists in no artifact on disk now; most likely a pre-reinstall build. Cockpit should re-confirm the visual symptom still reproduces before dispatching a fix unit.",
-    "Does any hydration path compare class attribute strings exactly? If so the leading space in SSR's class=\" mk-gxl5ud\" vs the client target's \"mk-gxl5ud\" would diff on exactly the empty-arm shape."
-  ]
-}

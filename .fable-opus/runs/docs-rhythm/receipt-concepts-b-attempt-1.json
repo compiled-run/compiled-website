@@ -1,8 +1,0 @@
-{
-  "status": "blocked",
-  "summary": "Cannot write any file. The packet's File contract names three absolute paths in the shared compiled-website checkout, but this unit runs worktree-isolated: the isolation guard refuses edits to the shared-checkout path and redirects to the worktree copy, while the fable-opus scope guard refuses that worktree path as outside the contract. The two guards accept disjoint path sets, so no Edit/Write can succeed without circumventing one. Also, the packet's claim that the worktree lacks these files is wrong: all three exist there and diff byte-identical to the shared checkout. Read the exemplar and planned the full rewrite; no edits made.",
-  "files_changed": [],
-  "open_questions": [
-    "Should this unit be re-dispatched to the non-isolated opus-worker so the shared-checkout paths are writable, or should the File contract be restated as worktree-relative paths (pages/markless/concepts/async.mdx, lists.mdx, styling.mdx) so the isolated worker can edit its own copies and the harness commits them to the review branch?"
-  ]
-}
