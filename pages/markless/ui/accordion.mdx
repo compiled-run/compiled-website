@@ -1,11 +1,35 @@
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
 import AccordionDemo from '../../../components/demos/ui/accordion-demo.tsrx';
+import AccordionValue from '../../../components/demos/ui/accordion-value.tsrx';
+import AccordionMultiple from '../../../components/demos/ui/accordion-multiple.tsrx';
+import AccordionLocked from '../../../components/demos/ui/accordion-locked.tsrx';
+import AccordionDisabled from '../../../components/demos/ui/accordion-disabled.tsrx';
+import AccordionFind from '../../../components/demos/ui/accordion-find.tsrx';
 
 # accordion
 
 <ThemeToggle />
 
 <AccordionDemo shows="Three questions. Opening one closes the last." />
+
+## Overview
+
+A section is named by its `value`, and the root's `value` names the one that is showing. Nothing
+counts positions for you, so renaming a section is a rename and never a renumber. A panel that
+closes stays in the page, and `hidden` decides whether it shows, so focus, scroll position and
+anything typed inside it all survive being closed and opened again.
+
+## Key features
+
+- Sections are named, not numbered. Reorder them and nothing else changes.
+- Closed panels stay in the page, so state inside one is not thrown away.
+- A closed panel is `hidden="until-found"`, so the browser's find-in-page reaches its text and
+  opens the section it lives in.
+- One section open, several, or one that can never be closed, from two props.
+- Every state a stylesheet needs is an attribute: `ui-open`, `ui-closed`, `ui-disabled`,
+  `ui-multiple`, `ui-value`.
+
+## Structure
 
 ```tsrx
 import { accordion } from '@markless/ui';
@@ -34,13 +58,6 @@ export default function Faq() @{
 }
 ```
 
-A section is named by its `value`, and the root's `value` names the one that is showing. Nothing
-counts positions for you, so renaming a section is a rename and never a renumber. A panel that
-closes stays in the page, and `hidden` decides whether it shows, so focus, scroll position and
-anything typed inside it all survive being closed and opened again.
-
-## Anatomy
-
 - `accordion.root` holds the configuration and the value.
 - `accordion.item` is one section, named by its own `value`.
 - `accordion.itemlabel` is the heading the trigger sits in, and what names the panel.
@@ -49,10 +66,24 @@ anything typed inside it all survive being closed and opened again.
 
 It writes `ui-open`, `ui-closed`, `ui-disabled`, `ui-multiple` and `ui-value` as its state changes.
 
+## Managing which section is open
+
+The root's `value` is the name of the section showing. Change it and a different section shows;
+omit it and everything starts closed. `onChange` is called with the new value each time a person
+opens or closes a section.
+
+<AccordionValue shows="The value names the second section, so the second one is open." />
+
+```tsrx
+<accordion.root value="returns" onChange={(next) => console.log(next)}>
+```
+
 ## Several open at once
 
 Set `multiple` and each section opens on its own instead of closing the last one. `value` is then
 the list of the sections showing.
+
+<AccordionMultiple shows="Two panels open together. Opening the third leaves both alone." />
 
 ```tsrx
 <accordion.root multiple value={['ship', 'returns']}>
@@ -63,19 +94,38 @@ the list of the sections showing.
 The section showing may be closed again, leaving nothing open. Turn `collapsible` off and pressing
 the open trigger does nothing, so one section is always showing.
 
+<AccordionLocked shows="Press the open trigger and it stays open. Only the other one closes it." />
+
 ```tsrx
 <accordion.root value="ship" collapsible={false}>
+```
+
+## A section that will not open
+
+`disabled` on one item locks that section alone. The keyboard walk steps over its trigger, and the
+button is disabled natively, so nothing has to remember to skip it.
+
+<AccordionDisabled shows="The middle trigger is dead. Arrow keys jump straight past it." />
+
+```tsrx
+<accordion.item value="trade" disabled>
 ```
 
 ## Find in page
 
 A closed panel is `hidden="until-found"`, so a browser search reaches the text inside it and opens
-the section it lives in. Set `disableUntilFound` and closed panels are hidden outright, which puts
-that text out of the browser's reach.
+the section it lives in. Set `disableUntilFound` on the root and closed panels are hidden outright,
+which puts that text out of the browser's reach.
+
+<AccordionFind shows="Search the page for Antarctica. The closed section opens on the match." />
 
 ```tsrx
 <accordion.root disableUntilFound>
 ```
+
+**Why is the closed panel still in the page?** Because closing it writes `hidden`, never removes
+the element. Find-in-page needs the text to be there, the trigger's `aria-controls` needs the id to
+stay put, and anything typed inside the panel keeps its value.
 
 ## Keyboard
 
@@ -89,7 +139,7 @@ Focus lives on the triggers, and the walk steps over any trigger that is disable
 | End | Focus the last trigger. |
 | Enter or Space | Open or close the focused section. |
 
-## API
+## API reference
 
 Every prop is optional unless its row says otherwise, and the types below are the family's own.
 
