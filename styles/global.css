@@ -2218,68 +2218,6 @@ html[data-theme='dark'] .shiki span:not(.tsrx-tip):not(.tsrx-tip-title):not(.tsr
 	text-align: left;
 }
 
-/* The accordion demo. Layout is this site's; every state selector below is one
-   of the attributes the family writes, which is the whole styling story. */
-.demo-accordion {
-	display: grid;
-	gap: 0.5em;
-	width: min(32rem, 100%);
-}
-
-.demo-accordion [ui-value] {
-	border: 2px solid var(--code-edge);
-	border-radius: 6px;
-	background: var(--paper);
-	overflow: clip;
-}
-
-.demo-accordion [ui-value][ui-open] {
-	border-color: var(--pink);
-}
-
-.demo-accordion h3 {
-	margin: 0;
-	font-size: var(--step-0);
-}
-
-.demo-accordion button {
-	display: flex;
-	gap: 0.6em;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-	padding: 0.6em 0.8em;
-	border: 0;
-	background: transparent;
-	color: var(--ink);
-	font: inherit;
-	font-weight: 700;
-	text-align: left;
-	cursor: pointer;
-}
-
-.demo-accordion button::after {
-	content: '▾';
-	transition: transform 140ms ease;
-}
-
-.demo-accordion button[ui-open]::after {
-	transform: rotate(180deg);
-}
-
-.demo-accordion button:hover {
-	background: var(--tinted-quiet);
-}
-
-.demo-accordion button:disabled {
-	cursor: not-allowed;
-	opacity: 0.55;
-}
-
-.demo-accordion [role='region'] {
-	padding: 0 0.8em 0.7em;
-	font-size: var(--step--1);
-}
 
 /* The props table. `display: block` is what lets a table scroll inside its own
    column instead of pushing the whole document sideways on a phone. */
