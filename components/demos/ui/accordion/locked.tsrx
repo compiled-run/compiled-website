@@ -1,5 +1,5 @@
 import { accordion } from '@markless/ui';
-import Preview from '../../ui/preview.tsrx';
+import Preview from '../../../ui/preview.tsrx';
 
 export default function AccordionLocked({ shows }: { readonly shows: string }) @{
 	<Preview shows={shows}>

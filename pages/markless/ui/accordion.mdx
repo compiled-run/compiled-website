@@ -1,16 +1,11 @@
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
-import AccordionDemo from '../../../components/demos/ui/accordion-demo.tsrx';
-import AccordionValue from '../../../components/demos/ui/accordion-value.tsrx';
-import AccordionMultiple from '../../../components/demos/ui/accordion-multiple.tsrx';
-import AccordionLocked from '../../../components/demos/ui/accordion-locked.tsrx';
-import AccordionDisabled from '../../../components/demos/ui/accordion-disabled.tsrx';
-import AccordionFind from '../../../components/demos/ui/accordion-find.tsrx';
+import { Basic, Value, Multiple, Locked, Disabled, Find } from 'ui-demos:accordion';
 
 # accordion
 
 <ThemeToggle />
 
-<AccordionDemo shows="Three questions. Opening one closes the last." />
+<Basic shows="Three questions. Opening one closes the last." />
 
 ## Overview
 
@@ -72,7 +67,7 @@ The root's `value` is the name of the section showing. Change it and a different
 omit it and everything starts closed. `onChange` is called with the new value each time a person
 opens or closes a section.
 
-<AccordionValue shows="The value names the second section, so the second one is open." />
+<Value shows="The value names the second section, so the second one is open." />
 
 ```tsrx
 <accordion.root value="returns" onChange={(next) => console.log(next)}>
@@ -83,7 +78,7 @@ opens or closes a section.
 Set `multiple` and each section opens on its own instead of closing the last one. `value` is then
 the list of the sections showing.
 
-<AccordionMultiple shows="Two panels open together. Opening the third leaves both alone." />
+<Multiple shows="Two panels open together. Opening the third leaves both alone." />
 
 ```tsrx
 <accordion.root multiple value={['ship', 'returns']}>
@@ -94,7 +89,7 @@ the list of the sections showing.
 The section showing may be closed again, leaving nothing open. Turn `collapsible` off and pressing
 the open trigger does nothing, so one section is always showing.
 
-<AccordionLocked shows="Press the open trigger and it stays open. Only the other one closes it." />
+<Locked shows="Press the open trigger and it stays open. Only the other one closes it." />
 
 ```tsrx
 <accordion.root value="ship" collapsible={false}>
@@ -105,7 +100,7 @@ the open trigger does nothing, so one section is always showing.
 `disabled` on one item locks that section alone. The keyboard walk steps over its trigger, and the
 button is disabled natively, so nothing has to remember to skip it.
 
-<AccordionDisabled shows="The middle trigger is dead. Arrow keys jump straight past it." />
+<Disabled shows="The middle trigger is dead. Arrow keys jump straight past it." />
 
 ```tsrx
 <accordion.item value="trade" disabled>
@@ -117,7 +112,7 @@ A closed panel is `hidden="until-found"`, so a browser search reaches the text i
 the section it lives in. Set `disableUntilFound` on the root and closed panels are hidden outright,
 which puts that text out of the browser's reach.
 
-<AccordionFind shows="Search the page for Antarctica. The closed section opens on the match." />
+<Find shows="Search the page for Antarctica. The closed section opens on the match." />
 
 ```tsrx
 <accordion.root disableUntilFound>

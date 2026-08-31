@@ -1,16 +1,11 @@
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
-import CheckboxDemo from '../../../components/demos/ui/checkbox-demo.tsrx';
-import CheckboxValue from '../../../components/demos/ui/checkbox-value.tsrx';
-import CheckboxMixed from '../../../components/demos/ui/checkbox-mixed.tsrx';
-import CheckboxDisabled from '../../../components/demos/ui/checkbox-disabled.tsrx';
-import CheckboxForm from '../../../components/demos/ui/checkbox-form.tsrx';
-import CheckboxHelp from '../../../components/demos/ui/checkbox-help.tsrx';
+import { Basic, Value, Mixed, Disabled, Form, Help } from 'ui-demos:checkbox';
 
 # checkbox
 
 <ThemeToggle />
 
-<CheckboxDemo shows="One ticked box. The tick is the indicator, drawn only while the box is on." />
+<Basic shows="One ticked box. The tick is the indicator, drawn only while the box is on." />
 
 ## Overview
 
@@ -58,7 +53,7 @@ It writes `ui-checked`, `ui-mixed` and `ui-disabled` as its state changes.
 `checked` on the root is the whole value. Omit it and the box starts off. `onChange` is called with
 the new value each time a person toggles it, so your own variable can hold it.
 
-<CheckboxValue shows="Two boxes: the first starts off, the second starts on." />
+<Value shows="Two boxes: the first starts off, the second starts on." />
 
 ```tsrx
 <checkbox.root>…</checkbox.root>
@@ -70,7 +65,7 @@ the new value each time a person toggles it, so your own variable can hold it.
 Set `checked="mixed"` for the row that stands over a part-ticked list. The trigger reports
 `aria-checked="mixed"`, and `checkbox.field` sets the native input's `indeterminate` for you.
 
-<CheckboxMixed shows="A parent box in the mixed state. Its indicator is a dash, not a tick." />
+<Mixed shows="A parent box in the mixed state. Its indicator is a dash, not a tick." />
 
 ```tsrx
 <checkbox.root checked="mixed" name="all">
@@ -91,7 +86,7 @@ glyph you put inside it is yours.
 `disabled` on the root disables the trigger outright and puts `ui-disabled` on both the root and
 the button, so one selector reaches the whole thing.
 
-<CheckboxDisabled shows="A ticked box that will not toggle. The button is disabled natively." />
+<Disabled shows="A ticked box that will not toggle. The button is disabled natively." />
 
 ```tsrx
 <checkbox.root checked disabled>
@@ -108,7 +103,7 @@ Write `checkbox.field` and a visually hidden `<input type="checkbox">` joins the
 configuration of its own: `name`, `value` and `required` come from the root, and a `required` box
 that is not ticked stops the submit the way a native one does.
 
-<CheckboxForm shows="A form field named newsletter. Submitting it unticked is refused." />
+<Form shows="A form field named newsletter. Submitting it unticked is refused." />
 
 ```tsrx
 <checkbox.root required name="newsletter" value="weekly">
@@ -127,7 +122,7 @@ through `aria-describedby`, the error first, wherever the two parts sit in the m
 `checkbox.error` only when there is an error: mounting it is what sets `aria-invalid` on the
 trigger.
 
-<CheckboxHelp shows="A required box with a hint under it and an error under that." />
+<Help shows="A required box with a hint under it and an error under that." />
 
 ```tsrx
 <checkbox.root required>
