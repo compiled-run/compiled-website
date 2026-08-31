@@ -170,12 +170,19 @@ h1 {
 	line-height: 115%;
 }
 
-/* Paper grain over the whole viewport */
+/* Paper grain over the whole page. Absolute, not fixed: a fixed layer with a
+   blend mode forces the compositor to re-blend the full viewport on every
+   scrolled frame (the sidebar only felt smooth because its scroller is
+   narrow); an absolute layer scrolls with the paper as one blended unit. */
+body {
+	position: relative;
+}
 body::before,
 body::after {
 	content: '';
-	position: fixed;
+	position: absolute;
 	inset: 0;
+	min-height: 100vh;
 	z-index: 999999999;
 	pointer-events: none;
 }
