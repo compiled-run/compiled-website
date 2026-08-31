@@ -537,6 +537,76 @@ export const uiNav: readonly NavSection[] = [
 		],
 	},
 	{
+		title: 'Overlays',
+		stroke: 'pink',
+		sprite: 'square',
+		entries: [
+			{
+				title: 'drawer',
+				href: '/markless/ui/drawer',
+				sprite: 'corner-bracket',
+				number: '1',
+				description:
+					'A dialog that arrives from one edge and can be swiped back out, with its surface staying in the page while closed.',
+			},
+			{
+				title: 'hovercard',
+				href: '/markless/ui/hovercard',
+				sprite: 'speech-bubble',
+				number: '2',
+				description:
+					'A preview that appears while the pointer rests on a link, and leaves when it moves on. Pointer only, on purpose.',
+			},
+			{
+				title: 'popover',
+				href: '/markless/ui/popover',
+				sprite: 'plus',
+				number: '3',
+				description:
+					'A surface anchored to the button that opened it, dismissed by Escape or a press anywhere beyond it.',
+			},
+			{
+				title: 'tooltip',
+				href: '/markless/ui/tooltip',
+				sprite: 'dashes',
+				number: '4',
+				description:
+					'A short label that appears on hover or focus and names the control it points at, for a screen reader too.',
+			},
+		],
+	},
+	{
+		title: 'Collections',
+		stroke: 'purple',
+		sprite: 'dots',
+		entries: [
+			{
+				title: 'gridlist',
+				href: '/markless/ui/gridlist',
+				sprite: 'dashes',
+				number: '1',
+				description:
+					'Rows of rich content with one tab stop for the grid and the arrow keys walking rows and the cells inside them.',
+			},
+			{
+				title: 'table',
+				href: '/markless/ui/table',
+				sprite: 'hash',
+				number: '2',
+				description:
+					'A real table with sortable column headers, where the sort state lives on the family and lands in the markup.',
+			},
+			{
+				title: 'resizable',
+				href: '/markless/ui/resizable',
+				sprite: 'arrow-straight',
+				number: '3',
+				description:
+					'Panels split by draggable separators, each one reporting its share to a screen reader as it moves.',
+			},
+		],
+	},
+	{
 		title: 'Display',
 		stroke: 'green',
 		sprite: 'rays',
