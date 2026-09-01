@@ -19,7 +19,7 @@ anything typed inside it all survive being closed and opened again.
 - Sections are named, not numbered. Reorder them and nothing else changes.
 - Closed panels stay in the page, so state inside one is not thrown away.
 - A closed panel is `hidden="until-found"`, so the browser's find-in-page reaches its text and
-  opens the section it lives in.
+  opens the section it lives in. A disabled section's panel is hidden outright instead.
 - One section open, several, or one that can never be closed, from two props.
 - Every state a stylesheet needs is an attribute: `ui-open`, `ui-closed`, `ui-disabled`,
   `ui-multiple`, `ui-value`.
@@ -177,8 +177,9 @@ button is disabled natively, so nothing has to remember to skip it.
 ## Find in page
 
 A closed panel is `hidden="until-found"`, so a browser search reaches the text inside it and opens
-the section it lives in. Set `disableUntilFound` on the root and closed panels are hidden outright,
-which puts that text out of the browser's reach.
+the section it lives in. A disabled section's panel is hidden outright, since a section that refuses
+to open must not be searched into. Set `disableUntilFound` on the root and every closed panel is
+hidden outright, which puts that text out of the browser's reach.
 
 <Find shows="Search the page for Antarctica. The closed section opens on the match." />
 
