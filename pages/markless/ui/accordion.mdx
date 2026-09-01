@@ -1,4 +1,6 @@
 import ThemeToggle from '../../../components/docs/theme-toggle.tsrx';
+import KeyboardTable from '../../../components/docs/keyboard-table.tsrx';
+import ApiTable from '../../../components/docs/api-table.tsrx';
 import { Basic, Value, Multiple, Locked, Disabled, Find } from 'ui-demos:accordion';
 
 # accordion
@@ -118,13 +120,13 @@ That is the whole file behind the demo above, styling included. The open look ke
 
 Focus lives on the triggers, and the walk steps over any trigger that is disabled.
 
-| Key | What it does |
-| --- | --- |
-| Down arrow | Focus the next trigger, wrapping round to the first. |
-| Up arrow | Focus the previous trigger, wrapping round to the last. |
-| Home | Focus the first trigger. |
-| End | Focus the last trigger. |
-| Enter or Space | Open or close the focused section. |
+<KeyboardTable rows={[
+	{ keys: ['Down'], does: 'Focus the next trigger, wrapping round to the first.' },
+	{ keys: ['Up'], does: 'Focus the previous trigger, wrapping round to the last.' },
+	{ keys: ['Home'], does: 'Focus the first trigger.' },
+	{ keys: ['End'], does: 'Focus the last trigger.' },
+	{ keys: ['Enter', 'Space'], join: 'or', does: 'Open or close the focused section.' }
+]} />
 
 ## Managing which section is open
 
@@ -181,24 +183,24 @@ Every prop is optional unless its row says otherwise. State arrives as `ui-*` at
 
 ### `accordion.root`
 
-| Prop | Type | What it does |
-| --- | --- | --- |
-| `value` | `string \| readonly string[]` | Which section is showing. With `multiple` it is the list of sections showing. Omit it and everything starts closed. |
-| `multiple` | `boolean` | Several sections may show at once. Without it, opening one closes the rest. |
-| `collapsible` | `boolean` | Whether the section showing may be closed again, leaving nothing open. On by default. |
-| `disabled` | `boolean` | Nothing opens or closes while this is set. |
-| `disableUntilFound` | `boolean` | Closed panels are hidden outright, so find-in-page cannot reach the text inside them. |
-| `onChange` | `(value: string \| readonly string[]) => void` | Called with the new value when a person opens or closes a section. |
+<ApiTable rows={[
+	{ name: 'value', type: 'string | readonly string[]', does: 'Which section is showing. With `multiple` it is the list of sections showing. Omit it and everything starts closed.' },
+	{ name: 'multiple', type: 'boolean', does: 'Several sections may show at once. Without it, opening one closes the rest.' },
+	{ name: 'collapsible', type: 'boolean', does: 'Whether the section showing may be closed again, leaving nothing open. On by default.' },
+	{ name: 'disabled', type: 'boolean', does: 'Nothing opens or closes while this is set.' },
+	{ name: 'disableUntilFound', type: 'boolean', does: 'Closed panels are hidden outright, so find-in-page cannot reach the text inside them.' },
+	{ name: 'onChange', type: '(value: string | readonly string[]) => void', does: 'Called with the new value when a person opens or closes a section.' }
+]} />
 
 Renders a `<div>`, which everything but `onChange` passes through to. Writes `ui-multiple` and
 `ui-disabled`.
 
 ### `accordion.item`
 
-| Prop | Type | What it does |
-| --- | --- | --- |
-| **`value`** | `string` | Required. This section's own name, and what the root's `value` matches against. |
-| `disabled` | `boolean` | This one section opens and closes for nobody. |
+<ApiTable rows={[
+	{ name: 'value', type: 'string', required: true, does: "Required. This section's own name, and what the root's `value` matches against." },
+	{ name: 'disabled', type: 'boolean', does: 'This one section opens and closes for nobody.' }
+]} />
 
 Renders a `<div>`, which everything else passes through to. Writes `ui-value`, `ui-open`,
 `ui-closed` and `ui-disabled`.

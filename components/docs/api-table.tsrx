@@ -6,10 +6,6 @@
 // (`.tsrx-hover` plus `.tsrx-tip`), reused deliberately: the dashed underline, the
 // keyboard focus and the screen-reader label are then the site's one idiom rather
 // than a second one that has to be kept in step.
-//
-// NOT WIRED INTO A PAGE YET, and it renders correctly: see the note in
-// keyboard-table.tsrx. Two of these on accordion.mdx left the page's accordion
-// demos dead (NOTES.md findings 11, 14 and 25).
 export type ApiRow = {
 	/** The prop, written as the consumer writes it. */
 	readonly name: string;
