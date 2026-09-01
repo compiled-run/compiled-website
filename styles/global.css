@@ -972,6 +972,63 @@ html {
 }
 
 /* ---------------------------------------------------------------------------
+   Keycaps in the keyboard tables (components/docs/keyboard-table.tsrx). A real
+   `<kbd>` drawn as a key: the heavier bottom edge is what makes a chip read as
+   something you press rather than a bordered word.
+   --------------------------------------------------------------------------- */
+
+.kbd-cap {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.35em;
+}
+
+.kbd-cap + .kbd-cap {
+	margin-left: 0.35em;
+}
+
+/* Empty on the first keycap of a row, so it reserves nothing there. */
+.kbd-join:empty {
+	display: none;
+}
+
+.kbd {
+	display: inline-block;
+	padding: 0.05em 0.5em;
+	font-family: inherit;
+	font-size: var(--step--1);
+	font-weight: 700;
+	line-height: 1.7;
+	color: var(--ink);
+	background: var(--code-surface);
+	border: 2px solid var(--code-edge);
+	border-bottom-width: 3px;
+	border-radius: 6px;
+	white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   Props tables (components/docs/api-table.tsrx). The type lives in the hover doc
+   on the prop name, styled by `.tsrx-hover` further up, so only the name and the
+   inline code inside a description need saying here.
+   --------------------------------------------------------------------------- */
+
+.api-prop.is-required {
+	font-weight: 700;
+}
+
+/* A description is split on its backticks and every piece comes back as a
+   `<code>`, because the element cannot be chosen per piece without `@if`. The
+   pieces that were never in backticks give the inline-code look back here, so
+   the ones that were keep `.prose code` exactly as the rest of the page has it. */
+.prose code.api-text {
+	padding: 0;
+	background: none;
+	color: inherit;
+	font-size: inherit;
+}
+
+/* ---------------------------------------------------------------------------
    Page meta: the level, reading time and prerequisite line that sits directly
    under every H1. Small, quiet, and the same shape on every page.
    --------------------------------------------------------------------------- */

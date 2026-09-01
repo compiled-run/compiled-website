@@ -408,6 +408,14 @@ export const uiNav: readonly NavSection[] = [
 				description:
 					'Component families that ship the behaviour and the accessibility and nothing else: no styles, no class names, and no theme to argue with.',
 			},
+			{
+				title: 'Styling',
+				href: '/markless/ui/styling',
+				sprite: 'flower',
+				number: '2',
+				description:
+					'Every family writes its state onto the element as a ui- attribute, so a plain CSS selector styles it: no class to toggle, nothing to keep in sync.',
+			},
 		],
 	},
 	{
